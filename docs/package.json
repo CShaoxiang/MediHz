@@ -1,0 +1,15 @@
+{
+  "name": "docs",
+  "version": "1.0.0",
+  "description": "",
+  "license": "ISC",
+  "author": "",
+  "type": "commonjs",
+  "main": "index.js",
+  "scripts": {
+    "wbs": "mmdc -i wbs.mmd -o wbs.svg"
+  },
+  "devDependencies": {
+    "@mermaid-js/mermaid-cli": "^11.15.0"
+  }
+}
