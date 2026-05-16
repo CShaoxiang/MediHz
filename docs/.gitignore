@@ -1,4 +1,8 @@
 wbs.svg
+css/
+icons/
+scripts/
+gantt.html
 
 #--------------------------------------------------#
 # The following was generated with gitignore.nvim: #

@@ -7,7 +7,8 @@
   "type": "commonjs",
   "main": "index.js",
   "scripts": {
-    "wbs": "mmdc -i wbs.mmd -o wbs.svg"
+    "wbs": "mmdc -i wbs.mmd -o wbs.svg",
+    "gantt": "tj3 gantt.tjp"
   },
   "devDependencies": {
     "@mermaid-js/mermaid-cli": "^11.15.0"

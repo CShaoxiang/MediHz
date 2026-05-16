@@ -1,0 +1,390 @@
+project medihz "MediHz" 2026-07-27-0:00-+1000 - 2026-11-19-0:00-+1100 {
+    timezone        "Australia/Melbourne"
+    timeformat      "%Y-%m-%d"
+    now             2026-07-27
+    weekstartsmonday
+    workinghours mon - sun 9:00 - 12:00, 13:00 - 18:00
+}
+
+leaves holiday "Mid-Semester Break" 2026-09-21 +5d
+
+resource team "MediHz Development Team" {
+    resource dev1 "Developer 1"
+    resource dev2 "Developer 2"
+    resource dev3 "Developer 3"
+    resource dev4 "Developer 4"
+    resource dev5 "Developer 5"
+}
+
+task sprints "Sprints" {
+    task ms_s1  "S1 start" { start 2026-07-27 milestone }
+    task ms_s2  "S2 start" { start 2026-08-10 milestone }
+    task ms_s3  "S3 start" { start 2026-08-24 milestone }
+    task ms_s4  "S4 start" { start 2026-09-07 milestone }
+    task ms_s5  "S5 start" { start 2026-09-26 milestone }
+    task ms_s6  "S6 start" { start 2026-10-10 milestone }
+    task ms_s7  "S7 start" { start 2026-10-24 milestone }
+    task ms_s8  "S8 start" { start 2026-11-07 milestone }
+    task ms_end "Project complete" { start 2026-11-19 milestone }
+}
+
+task t1 "1. Project Setup" {
+    task t1 "1.1 Repository & Tooling" {
+        task t1 "1.1.1 Git repo" {
+            effort 2d
+            allocate dev1
+        }
+
+        task t2 "1.1.2 Branching strategy" {
+            effort 5d
+            allocate dev2
+        }
+    }
+
+    task t2 "1.2 Frontend Scaffold" {
+        task t1 "1.2.1 Frontend framework setup" {
+            depends t1.t1.t1
+            effort 6d
+            allocate dev2
+        }
+
+        task t2 "1.2.2 Component library & styling" {
+            depends t1.t2.t1
+            effort 7d
+            allocate dev2
+        }
+
+        task t3 "1.2.3 Routing structure" {
+            depends t1.t2.t1
+            effort 7d
+            allocate dev3
+        }
+    }
+
+    task t3 "1.3 Backend Scaffold" {
+        task t1 "1.3.1 Backend framework setup" {
+            depends t1.t1.t1
+            effort 10d
+            allocate dev4
+        }
+
+        task t2 "1.3.2 API structure" {
+            depends t1.t3.t1
+            effort 7d
+            allocate dev4
+        }
+    }
+
+    task t4 "1.4 Database Setup" {
+        task t1 "1.4.1 Schema design" {
+            depends t1.t1.t1
+            effort 12d
+            allocate dev5
+        }
+
+        task t2 "1.4.2 Migrations setup" {
+            depends t1.t4.t1, t1.t3.t1, t5.t2.t3
+            effort 10d
+            allocate dev1
+        }
+
+        task t3 "1.4.3 Local dev database" {
+            depends t1.t4.t1, t1.t3.t1
+            effort 7d
+            allocate dev5
+        }
+    }
+}
+
+task t2 "2. Audio Handling" {
+    task t1 "2.1 Batch Audio Upload" {
+        task t1 "2.1.1 WAV/MP3 format support" {
+            task design "Design" {
+                effort 7d
+                allocate dev1
+            }
+            task impl "Implementation" {
+                depends t1.t2.t2
+                effort 12d
+                allocate dev1
+            }
+        }
+
+        task t2 "2.1.2 Configurable batch size" {
+            depends t2.t1.t1
+            effort 10d
+            allocate dev1
+        }
+    }
+
+    task t2 "2.2 Audio Visualisation" {
+        task t1 "2.2.1 Waveform rendering" {
+            task design "Design" {
+                effort 7d
+                allocate dev2
+            }
+            task impl "Implementation" {
+                depends t1.t2.t2, !design
+                effort 12d
+                allocate dev2
+            }
+        }
+
+        task t2 "2.2.2 Spectrograph rendering" {
+            task design "Design" {
+                depends t2.t2.t1.design
+                effort 5d
+                allocate dev3
+            }
+            task impl "Implementation" {
+                depends t2.t2.t1.impl, !design
+                effort 12d
+                allocate dev3
+            }
+        }
+
+        task t3 "2.2.3 Zoom controls" {
+            depends t2.t2.t1.impl
+            effort 7d
+            allocate dev4
+        }
+
+        task t4 "2.2.4 Frequency range limiting" {
+            task design "Design" {
+                depends t2.t2.t2.design
+                effort 6d
+                allocate dev5
+            }
+            task impl "Implementation" {
+                depends !design
+                effort 8d
+                allocate dev5
+            }
+        }
+    }
+
+    task t3 "2.3 Audio Playback" {
+        task t1 "2.3.1 Timestamp seeking" {
+            task design "Design" {
+                depends t2.t2.t1.design
+                effort 6d
+                allocate dev1
+            }
+            task impl "Implementation" {
+                depends t2.t2.t1.impl, !design
+                effort 10d
+                allocate dev1
+            }
+        }
+
+        task t2 "2.3.2 Playback controls" {
+            task design "Design" {
+                depends t2.t2.t1.design
+                effort 6d
+                allocate dev2
+            }
+            task impl "Implementation" {
+                depends t2.t2.t1.impl, !design
+                effort 10d
+                allocate dev2
+            }
+        }
+    }
+
+    task t4 "2.4 Audio Extraction" {
+        task design "Design" {
+            depends t2.t2
+            effort 7d
+            allocate dev3
+        }
+        task impl "Implementation" {
+            depends !design
+            effort 10d
+            allocate dev3
+        }
+    }
+}
+
+task t3 "3. Annotation System" {
+    task t1 "3.1 Annotation Tools" {
+        task t1 "3.1.1 Start/end point selection" {
+            depends t2.t2.t1.impl
+            effort 8d
+            allocate dev4
+        }
+
+        task t2 "3.1.2 Label application" {
+            task design "Design" {
+                effort 6d
+                allocate dev5
+            }
+            task impl "Implementation" {
+                depends t3.t1.t1, t1.t4.t1, !design
+                effort 10d
+                allocate dev5
+            }
+        }
+    }
+
+    task t2 "3.2 Pre-packaged Labels" {
+        task design "Design" {
+            effort 8d
+            allocate dev1
+        }
+        
+        task t1 "3.2.1 HF_Lung_V1 respiratory labels" {
+            depends !design
+            effort 7d
+            allocate dev2
+        }
+
+        task t2 "3.2.2 CirCor cardiovascular labels" {
+            depends !design
+            effort 7d
+            allocate dev3
+        }
+    }
+
+    task t3 "3.3 Export" {
+        task t1 "3.3.1 JSON export for ML" {
+            task design "Design" {
+                effort 7d
+                allocate dev4
+            }
+            task impl "Implementation" {
+                depends t1.t4.t1, !design
+                effort 12d
+                allocate dev4
+            }
+        }
+
+        task t2 "3.3.2 FHIR export for healthcare" {
+            task design "Design" {
+                depends t3.t3.t1.design
+                effort 10d
+                allocate dev5
+            }
+            task impl "Implementation" {
+                depends t3.t3.t1.impl, !design
+                effort 7d
+                allocate dev5
+            }
+        }
+    }
+}
+
+task t4 "4. Real-time Collaboration" {
+    task t1 "4.1 Project Management" {
+        task t1 "4.1.1 Project creation" {
+            task design "Design" {
+                effort 7d
+                allocate dev1
+            }
+            task impl "Implementation" {
+                depends t1.t4.t1, !design
+                effort 12d
+                allocate dev1
+            }
+        }
+
+        task t2 "4.1.2 User membership" {
+            task design "Design" {
+                depends t4.t1.t1
+                effort 5d
+                allocate dev2
+            }
+            task impl "Implementation" {
+                depends !design
+                effort 10d
+                allocate dev2
+            }
+        }
+    }
+
+    task t2 "4.2 Real-time Sync" {
+        task design "Design" {
+            depends t3.t1.t2
+            effort 10d
+            allocate dev3
+        }
+        task impl "Implementation" {
+            depends !design
+            effort 12d
+            allocate dev3
+        }
+    }
+}
+
+task t5 "5. Infrastructure & Deployment" {
+    task t1 "5.1 Authentication" {
+        task t1 "5.1.1 Google OAuth integration" {
+            task design "Design" {
+                effort 6d
+                allocate dev4
+            }
+            task impl "Implementation" {
+                depends t1.t4.t1, !design
+                effort 12d
+                allocate dev4
+            }
+        }
+    }
+
+    task t2 "5.2 CI/CD Pipeline" {
+        task t1 "5.2.1 Test runner integration" {
+            depends t1.t2.t1, t1.t3.t1
+            effort 7d
+            allocate dev5
+        }
+
+        task t2 "5.2.2 Linter & formatter config" {
+            depends t1.t2.t1, t1.t3.t1
+            effort 7d
+            allocate dev1
+        }
+
+        task t3 "5.2.3 Deployment automation" {
+            depends t1.t2.t3, t1.t3.t2, t1.t4.t1
+            effort 7d
+            allocate dev2
+        }
+    }
+}
+
+task t6 "6. Non-Functional Requirements" {
+    task t1 "6.1 Usability" {
+        task t1 "6.1.1 WCAG AA conformance" {
+            depends t1, t2, t3, t4
+            effort 14d
+            allocate dev3
+        }
+    }
+
+    task t2 "6.2 Security & Compliance" {
+        task t1 "6.2.1 Health data encryption" {
+            depends t5.t2.t3
+            effort 9d
+            allocate dev4
+        }
+
+        task t2 "6.2.2 Regulatory compliance checks" {
+            depends t1, t2, t3, t4
+            effort 14d
+            allocate dev5
+        }
+    }
+}
+
+taskreport gantt "gantt" {
+    headline "MediHz"
+    columns name          { title "Task" },
+            start,
+            end,
+            duration,
+            effort,
+            chart         { scale day width 1800 }
+    timeformat "%Y-%m-%d"
+    loadunit days
+    sorttasks tree
+    formats html
+}
