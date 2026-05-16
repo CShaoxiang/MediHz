@@ -378,10 +378,6 @@ task t6 "6. Non-Functional Requirements" {
 taskreport gantt "gantt" {
     headline "MediHz"
     columns name          { title "Task" },
-            start,
-            end,
-            duration,
-            effort,
             chart         { scale day width 1800 }
     timeformat "%Y-%m-%d"
     loadunit days
