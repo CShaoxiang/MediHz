@@ -1,4 +1,5 @@
-wbs.svg
+*.svg
+*.png
 css/
 icons/
 scripts/

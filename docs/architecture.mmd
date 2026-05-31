@@ -1,0 +1,41 @@
+flowchart TB
+    subgraph CLIENT["Client"]
+        SPA["React Web Application"]
+    end
+
+    subgraph IDP["Identity (External)"]
+        OIDC["OIDC Provider<br />(Google Default)"]
+    end
+
+    subgraph INFRA["Backend Infrastructure"]
+        direction TB
+        subgraph APP["Application"]
+            direction TB
+            REST["REST API"]
+            HUB["SignalR WebSockets<br />(Annotations)"]
+            SVC["Service"]
+            REST --> SVC
+            REST -- "Identity Validation" --> OIDC
+            HUB --> SVC
+        end
+        subgraph DATA["Persistence"]
+            direction TB
+            DB[("Relational Database<br/>SQLite / PostgreSQL")]
+            OBJ[("Object Storage<br/>Filesystem / S3")]
+        end
+        SVC -- "EntityFramework Core" --> DB
+        SVC -- "IStorageService" --> OBJ
+    end
+
+    SPA -- "Sign-In" --> OIDC
+    SPA -- "REST / HTTPS<br/>(API & File Upload)" --> REST
+    SPA <-- "WSS<br />(Annotations)" --> HUB
+
+    classDef client fill:#e3f2fd,stroke:#1565c0,color:#0d2a4d;
+    classDef idp fill:#fff3e0,stroke:#e65100,color:#3d1f00;
+    classDef app fill:#e8f5e9,stroke:#2e7d32,color:#10300f;
+    classDef data fill:#f3e5f5,stroke:#6a1b9a,color:#2a0d33;
+    class SPA client;
+    class OIDC idp;
+    class REST,HUB,SVC app;
+    class DB,OBJ data;
