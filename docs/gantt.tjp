@@ -1,4 +1,4 @@
-project medihz "MediHz" 2026-07-27-0:00-+1000 - 2026-11-19-0:00-+1100 {
+project medihz "MediHz" 2026-07-27-0:00-+1000 - 2026-10-23-0:00-+1100 {
     timezone        "Australia/Melbourne"
     timeformat      "%Y-%m-%d"
     now             2026-07-27
@@ -23,9 +23,7 @@ task sprints "Sprints" {
     task ms_s4  "S4 start" { start 2026-09-07 milestone }
     task ms_s5  "S5 start" { start 2026-09-26 milestone }
     task ms_s6  "S6 start" { start 2026-10-10 milestone }
-    task ms_s7  "S7 start" { start 2026-10-24 milestone }
-    task ms_s8  "S8 start" { start 2026-11-07 milestone }
-    task ms_end "Project complete" { start 2026-11-19 milestone }
+    task ms_s7  "Project Complete" { start 2026-10-23 milestone }
 }
 
 task t1 "1. Project Setup" {
