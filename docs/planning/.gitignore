@@ -1,0 +1,6 @@
+*.svg
+*.png
+css/
+icons/
+scripts/
+gantt.html
