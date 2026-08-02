@@ -1,0 +1,8 @@
+<Solution>
+  <Folder Name="/src/">
+    <Project Path="src/MediHz.Api/MediHz.Api.csproj" />
+    <Project Path="src/MediHz.Application/MediHz.Application.csproj" />
+    <Project Path="src/MediHz.Domain/MediHz.Domain.csproj" />
+    <Project Path="src/MediHz.Infrastructure/MediHz.Infrastructure.csproj" />
+  </Folder>
+</Solution>
