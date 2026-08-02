@@ -2,17 +2,38 @@
 
 MediHz is a light-weight audio annotation tool for use by medical professionals in the healthcare industry. It aims to provide a simple and intuitive interface for creating annotations on audio files collaboratively at scale.
 
-## Contributing
-
-## Quickstart
-
-TODO.
-
 ## Technology Stack
 
 - Backend: .NET Core.
 - Frontend: React, TypeScript.
 - Database: PostgreSQL.
+
+## Project Structure
+
+- `MediHz.Domain` — core domain types with no external dependencies.
+- `MediHz.Application` — service interfaces and DTOs. Depends on `Domain`.
+- `MediHz.Infrastructure` — service implementations (i.e. persistence, storage, external services).
+- `MediHz.Api` — HTTP controllers, SignalR hubs, and app startup (`Program.cs`).
+
+## Quickstart
+
+### Backend
+
+Prerequisites:
+- .NET 10 SDK.
+
+```bash
+git clone <repo-url>
+cd MediHz
+dotnet restore
+dotnet run --project src/MediHz.Api -lp development
+```
+
+Runs the project in development mode on port 5001. API reference available at <http://localhost:5001/scalar/v1>.
+
+### Frontend
+
+TODO.
 
 ## Development Process
 
@@ -42,10 +63,10 @@ MRs should follow the MR template in the repo. Which is automatically used when 
 
 The MR title should align with [Commit Names](#commits).
 
-#### CD/CD
+#### CI/CD
 
-TBD
+TODO.
 
 ### Deployment
 
-TBD
+TODO.
