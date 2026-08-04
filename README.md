@@ -14,6 +14,7 @@ MediHz is a light-weight audio annotation tool for use by medical professionals 
 - `MediHz.Application` — service interfaces and DTOs. Depends on `Domain`.
 - `MediHz.Infrastructure` — service implementations (i.e. persistence, storage, external services).
 - `MediHz.Api` — HTTP controllers, SignalR hubs, and app startup (`Program.cs`).
+- `MediHz.Web` — React Frontend
 
 ## Quickstart
 
@@ -33,8 +34,12 @@ Runs the project in development mode on port 5001. API reference available at <h
 
 ### Frontend
 
-TODO.
-
+```bash
+git clone <repo-url>
+cd MediHz/src/MediHz.web
+npm run dev
+```
+Runs and hosts the frontend. Click on local host link provided in console to appear on web.
 ## Development Process
 
 1. Create a branch according to the [Branching Strategy](#branching-strategy).
