@@ -1,7 +1,7 @@
-import type { ButtonProps } from "./Button";
+import type { ButtonProps } from './Button'
 
 interface ButtonGroupProps {
-  buttons?: ButtonProps[];
+  buttons?: ButtonProps[]
 }
 
 export default function ButtonGroup({ buttons = [] }: ButtonGroupProps) {
@@ -17,5 +17,5 @@ export default function ButtonGroup({ buttons = [] }: ButtonGroupProps) {
         </button>
       ))}
     </div>
-  );
+  )
 }

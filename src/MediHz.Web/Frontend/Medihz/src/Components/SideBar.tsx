@@ -1,27 +1,23 @@
-import type { ReactNode } from "react";
-import ListGroup from "./ListGroup";
-import type { ButtonProps } from "./Button";
-import Button from "./Button";
+import type { ReactNode } from 'react'
+import ListGroup from './ListGroup'
+import type { ButtonProps } from './Button'
+import Button from './Button'
 
 interface ListSection {
-  heading: string;
-  items: string[];
-  onSelect?: (item: string) => void;
+  heading: string
+  items: string[]
+  onSelect?: (item: string) => void
 }
 
 interface SideBarProps {
-  title?: string;
-  buttons?: ButtonProps[];
-  lists?: ListSection[];
-  children?: ReactNode;
+  title?: string
+  buttons?: ButtonProps[]
+  lists?: ListSection[]
+  children?: ReactNode
 }
 
 //Side bar can take in both buttons and listgroups
-export default function SideBar({
-  title = "Sidebar",
-  buttons = [],
-  lists = []
-}: SideBarProps) {
+export default function SideBar({ title = 'Sidebar', buttons = [], lists = [] }: SideBarProps) {
   return (
     <aside className="ml-4">
       <nav className="half-sidebar h-full min-h-0 flex flex-col overflow-hidden rounded-3xl bg-purple-700 p-4 text-white shadow">
@@ -32,10 +28,7 @@ export default function SideBar({
           {buttons.length > 0 && (
             <div className="mb-4 button gap">
               {buttons.map((button) => (
-                <Button
-                  label={button.label}
-                  onClick={() => button.onClick?.(button.label)}
-                />
+                <Button label={button.label} onClick={() => button.onClick?.(button.label)} />
               ))}
             </div>
           )}
@@ -43,7 +36,7 @@ export default function SideBar({
             <div className="list-container min-h-0 flex-1 rounded-2xl bg-white/10 p-3">
               <ListGroup
                 items={lists[0]?.items || []}
-                heading={lists[0]?.heading || ""}
+                heading={lists[0]?.heading || ''}
                 onSelect={lists[0]?.onSelect || (() => {})}
               />
             </div>
@@ -51,5 +44,5 @@ export default function SideBar({
         </div>
       </nav>
     </aside>
-  );
+  )
 }

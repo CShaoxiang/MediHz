@@ -1,6 +1,5 @@
-@import "tailwindcss";
-@import "bootstrap/dist/css/bootstrap.min.css";
-
+@import 'tailwindcss';
+@import 'bootstrap/dist/css/bootstrap.min.css';
 
 * {
   box-sizing: border-box;
@@ -12,7 +11,8 @@
   display: flex;
 }
 
-html, body {
+html,
+body {
   height: 100%;
   width: 100%;
   overflow: hidden;
@@ -37,7 +37,7 @@ html, body {
   border-radius: 9999px;
 }
 
-.half-sidebar{
+.half-sidebar {
   width: clamp(200px, 15vw, 260px);
   height: clamp(320px, 42vh, 520px);
   box-sizing: border-box;
@@ -68,7 +68,7 @@ html, body {
   transform: scale(1.1);
 }
 
-.card-img-top{
+.card-img-top {
   min-height: 0%;
   max-height: 30%;
 }
@@ -94,13 +94,13 @@ html, body {
   z-index: 1;
 }
 
-.button{
+.button {
   display: inline-flex;
   overflow: visible;
   transition: transform 0.3s ease;
 }
 
-.button:hover{
+.button:hover {
   transform: scale(1.05);
 }
 
@@ -116,7 +116,9 @@ html, body {
   color: white;
   border: none;
   cursor: pointer;
-  transition: background-color 0.3s ease, transform 0.3s ease;
+  transition:
+    background-color 0.3s ease,
+    transform 0.3s ease;
   padding: 0.5rem 1rem;
   transform-origin: center;
 }
@@ -126,28 +128,29 @@ html, body {
   transform: scale(1.05);
 }
 
-.list-group{
+.list-group {
   max-width: 100%;
   overflow-wrap: break-word;
   word-break: break-word;
   min-height: 0;
 }
 
-.list-container{
+.list-container {
   overflow: hidden;
   min-height: 0;
   display: flex;
   flex-direction: column;
 }
 
-.flex-container{
+.flex-container {
   overflow: hidden;
   min-width: 0;
   display: flex;
   flex-direction: row;
 }
 
-.modal, .overlay{
+.modal,
+.overlay {
   width: 100vw;
   height: 100vh;
   top: 0;
@@ -156,22 +159,28 @@ html, body {
   bottom: 0;
   position: fixed;
   transform: translateY(0);
-  transition: opacity 0.5s linear, transform 0.5s ease, display 0.5s allow-discrete; 
+  transition:
+    opacity 0.5s linear,
+    transform 0.5s ease,
+    display 0.5s allow-discrete;
 }
 
-.overlay{
+.overlay {
   background: rgba(49, 49, 49, 0.8);
   transition-property: opacity;
-  transition: opacity 0.5s linear, display 0.5s allow-discrete;
+  transition:
+    opacity 0.5s linear,
+    display 0.5s allow-discrete;
 }
 
-@starting-style{
-  .modal,.overlay{
+@starting-style {
+  .modal,
+  .overlay {
     opacity: 0;
     transform: translate(10px);
   }
 }
 
-.spinner{
-  color: #8200db
+.spinner {
+  color: #8200db;
 }

@@ -1,6 +1,6 @@
 export interface ButtonProps {
-  label: string;
-  onClick?: (item: string) => void;
+  label: string
+  onClick?: (item: string) => void
 }
 
 export default function Button(props: ButtonProps) {
@@ -11,5 +11,5 @@ export default function Button(props: ButtonProps) {
     >
       {props.label}
     </button>
-  );
+  )
 }

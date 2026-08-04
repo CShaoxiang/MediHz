@@ -1,17 +1,14 @@
-import { useState } from "react";
-import {
-  MdOutlineKeyboardArrowDown,
-  MdOutlineKeyboardArrowUp
-} from "react-icons/md";
-import Button, { type ButtonProps } from "./Button";
+import { useState } from 'react'
+import { MdOutlineKeyboardArrowDown, MdOutlineKeyboardArrowUp } from 'react-icons/md'
+import Button, { type ButtonProps } from './Button'
 
 interface DropdownProp {
-  label: string;
-  buttons?: ButtonProps[];
+  label: string
+  buttons?: ButtonProps[]
 }
 
-export default function Dropdown({ label = "", buttons = [] }: DropdownProp) {
-  const [isOpen, setIsOpen] = useState(false);
+export default function Dropdown({ label = '', buttons = [] }: DropdownProp) {
+  const [isOpen, setIsOpen] = useState(false)
 
   return (
     <div className="relative w-fit rounded-3xl border-3 border-purple-700 bg-purple-100">
@@ -41,5 +38,5 @@ export default function Dropdown({ label = "", buttons = [] }: DropdownProp) {
         </div>
       )}
     </div>
-  );
+  )
 }
