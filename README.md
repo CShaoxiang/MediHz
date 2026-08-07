@@ -22,16 +22,30 @@ MediHz is a light-weight audio annotation tool for use by medical professionals 
 
 Prerequisites:
 - .NET 10 SDK.
-
 ```bash
 git clone <repo-url>
 cd MediHz
 dotnet restore
 dotnet run --project src/MediHz.Api -lp development
 ```
-
 Runs the project in development mode on port 5001. API reference available at <http://localhost:5001/scalar/v1>.
 
+### Database Setup:
+
+Start PostgreSQL:
+```bash
+docker compose up -d
+```
+Apply the latest EF Core migration:
+```bash
+dotnet ef database update --project src/MediHz.Infrastructure --startup-project src/MediHz.Api
+```
+To update the latest table and apply the migration :
+```bash
+dotnet ef migrations add <Placerholder-migration-name> --project src/MediHz.Infrastructure --startup-project src/MediHz.Api
+
+dotnet ef database update --project src/MediHz.Infrastructure --startup-project src/MediHz.Api
+```
 ### Frontend
 
 ```bash

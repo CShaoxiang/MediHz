@@ -692,4 +692,7 @@ thumb
 sketch
 
 # Additional files built by Visual Studio
+.idea/
+src/.gitignore
+
 
