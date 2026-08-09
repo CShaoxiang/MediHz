@@ -1,3 +1,4 @@
+import { useEffect, useState } from "react";
 import SideBar from "../Components/SideBar";
 import NavBar from "../Components/NavBar";
 import Button from "../Components/Button";
@@ -5,9 +6,18 @@ import Modal from "../Components/Modal";
 import WaveformView from "../Components/WaveformView";
 
 export default function MainPage() {
+  const [apiMessage, setApiMessage] = useState("");
+
   const handleSelectItem = (item: string) => {
     console.log(item);
   };
+
+  useEffect(() => {
+    fetch("http://localhost:5001/api/sample")
+      .then((response) => response.json())
+      .then((data) => setApiMessage(data.message))
+      .catch((error) => console.error("API error:", error));
+  }, []);
 
   return (
     <main className="App">
@@ -44,6 +54,7 @@ export default function MainPage() {
           />
         </aside>
 
+        <p>{apiMessage}</p>
         <WaveformView />
       </div>
     </main>
