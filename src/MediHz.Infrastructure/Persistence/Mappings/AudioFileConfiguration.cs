@@ -43,12 +43,15 @@ public class AudioFileConfiguration : IEntityTypeConfiguration<AudioFile>
 
         builder.Property(audioFile => audioFile.Channels)
             .IsRequired();
-
-        builder.Property(audioFile => audioFile.ProjectId).IsRequired();
-        builder.Property(audioFile => audioFile.UploaderId).IsRequired();
+        // Add these back once Projects and Users have been implemented
+        // builder.Property(audioFile => audioFile.ProjectId).IsRequired();
+        // builder.Property(audioFile => audioFile.UploaderId).IsRequired();
 
         builder.HasIndex(audioFile => audioFile.ProjectId);
         builder.HasIndex(audioFile => audioFile.UploaderId);
+        
+        builder.Property(audioFile => audioFile.SizeBytes)
+            .IsRequired();
         
         // Relationships
         

@@ -1,11 +1,13 @@
 import { BrowserRouter, NavLink, Route, Routes } from 'react-router-dom';
 import MainPage from './Pages/main';
+import ProjectOverview from './Pages/ProjectOverview';
 
 function App() {
   return (
     <BrowserRouter>
       <Routes>
         <Route path="/" element={<MainPage />} />
+        <Route path="/project-overview" element={<ProjectOverview />} />
       </Routes>
     </BrowserRouter>
   );
