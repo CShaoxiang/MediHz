@@ -2,6 +2,7 @@
 
   <ItemGroup>
     <ProjectReference Include="..\MediHz.Domain\MediHz.Domain.csproj" />
+    <FrameworkReference Include="Microsoft.AspNetCore.App" />
   </ItemGroup>
 
   <PropertyGroup>

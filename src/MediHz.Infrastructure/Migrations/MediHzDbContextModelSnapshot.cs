@@ -88,17 +88,20 @@ namespace MediHz.Infrastructure.Migrations
                     b.Property<int>("Format")
                         .HasColumnType("integer");
 
-                    b.Property<Guid>("ProjectId")
+                    b.Property<Guid?>("ProjectId")
                         .HasColumnType("uuid");
 
                     b.Property<decimal>("SampleRate")
                         .HasPrecision(8, 2)
                         .HasColumnType("numeric(8,2)");
 
+                    b.Property<long>("SizeBytes")
+                        .HasColumnType("bigint");
+
                     b.Property<DateTimeOffset?>("UpdatedAtUtc")
                         .HasColumnType("timestamp with time zone");
 
-                    b.Property<Guid>("UploaderId")
+                    b.Property<Guid?>("UploaderId")
                         .HasColumnType("uuid");
 
                     b.HasKey("Id");
@@ -219,14 +222,12 @@ namespace MediHz.Infrastructure.Migrations
                     b.HasOne("MediHz.Domain.Projects.Project", "Project")
                         .WithMany("AudioFiles")
                         .HasForeignKey("ProjectId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
+                        .OnDelete(DeleteBehavior.Cascade);
 
                     b.HasOne("MediHz.Domain.Users.User", "User")
                         .WithMany()
                         .HasForeignKey("UploaderId")
-                        .OnDelete(DeleteBehavior.Restrict)
-                        .IsRequired();
+                        .OnDelete(DeleteBehavior.Restrict);
 
                     b.Navigation("Project");
 

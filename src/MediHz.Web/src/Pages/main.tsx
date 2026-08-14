@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { useNavigate } from "react-router-dom";
 import SideBar from "../Components/SideBar";
 import NavBar from "../Components/NavBar";
 import Button from "../Components/Button";
@@ -7,9 +8,14 @@ import WaveformView from "../Components/WaveformView";
 
 export default function MainPage() {
   const [apiMessage, setApiMessage] = useState("");
+  const navigate = useNavigate();
 
   const handleSelectItem = (item: string) => {
     console.log(item);
+  };
+
+  const goToProjectOverview = () => {
+    navigate("/project-overview");
   };
 
   useEffect(() => {
@@ -23,7 +29,7 @@ export default function MainPage() {
     <main className="App">
       <header className="p-3">
         <NavBar>
-          <Button label="Hello" onClick={handleSelectItem} />
+          <Button label="Project Overview" onClick={goToProjectOverview} />
           <Button label="Hello" onClick={handleSelectItem} />
           <Button label="Hello" onClick={handleSelectItem} />
           <Modal buttonLabel="Modal" modalHeader="Modal Header">

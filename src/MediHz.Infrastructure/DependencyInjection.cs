@@ -1,7 +1,10 @@
+using MediHz.Application.Abstractions.AudioFiles;
+using MediHz.Application.Abstractions.Storage;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using MediHz.Infrastructure.Persistence;
+using MediHz.Infrastructure.Services;
 
 namespace MediHz.Infrastructure;
 
@@ -14,7 +17,10 @@ public static class DependencyInjection
 
         services.AddDbContext<MediHzDbContext>(options =>
             options.UseNpgsql(connectionString));
-
+        
+        services.AddScoped<IAudioFileUploadService,  AudioFileUploadService>();
+        
+        services.AddScoped<IStorageService, LocalStorageService>();
         return services;
     }
 }
