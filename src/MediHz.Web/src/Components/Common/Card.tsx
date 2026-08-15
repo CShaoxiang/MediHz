@@ -3,14 +3,14 @@ import Button, { type ButtonProps } from './Button'
 interface CardProp {
   imageSrc?: string
   title: string
-  text: string
+  text?: string
   btnProp?: ButtonProps
 }
 
 export default function Card({
-  imageSrc = 'src/Test Image/istockphoto-2148659111-612x612.jpg',
+  imageSrc = 'src/Assets/istockphoto-2148659111-612x612.jpg',
   title = 'Card',
-  text = 'Text',
+  text,
   btnProp,
 }: CardProp) {
   return (
@@ -21,7 +21,7 @@ export default function Card({
       <div className="card-body">
         <h5 className="card-title">{title}</h5>
         <div></div>
-        <p className="card-text"> {text} </p>
+        {text && <p className="card-text"> {text} </p>}
         {btnProp && <Button label={btnProp?.label} onClick={btnProp?.onClick} />}
       </div>
     </div>

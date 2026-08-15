@@ -25,6 +25,5 @@ public class MediHzDbContext : DbContext
         
         //Load all configurations 
         modelBuilder.ApplyConfigurationsFromAssembly(typeof(MediHzDbContext).Assembly);
-        
     }
 }

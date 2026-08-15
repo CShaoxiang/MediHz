@@ -5,13 +5,14 @@ using MediHz.Domain.Users;
 
 namespace MediHz.Domain.Projects;
 
-public class Project : EntityBase
+public class Project(string Name, Guid ownerId) : EntityBase
 {
-    public String Name { get; set; } = string.Empty;
-    public Guid OwnerId { get; set; }
-    public User Owner { get; set; } = null!;
-    public ICollection<ProjectMember> Members { get; set; } = new List<ProjectMember>();
-    public ICollection<AudioFile> AudioFiles { get; set; } = new List<AudioFile>();
+    public string Name { get; set; } = Name;
+    public Guid OwnerId { get; set; } = ownerId;
+    // TODO: Add back user functionality once implemented
+    // public User Owner { get; set; } = null!;
+    // public ICollection<ProjectMember> Members { get; set; } = [];
+    public ICollection<AudioFile> AudioFiles { get; set; } = [];
 }
 
 public enum ProjectMemberRole

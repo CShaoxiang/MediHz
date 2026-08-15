@@ -24,9 +24,10 @@ public class ProjectConfiguration : IEntityTypeConfiguration<Project>
         // Relationships
         
         // Restrict : Prevent owner from being deleted if own project
-        builder.HasOne(project => project.Owner)
-            .WithMany(user => user.OwnedProjects)
-            .HasForeignKey(project => project.OwnerId)
-            .OnDelete(DeleteBehavior.Restrict);
+        // TODO: Add this back oncce Project<->User mapping is restored.
+        // builder.HasOne(project => project.Owner)
+        //     .WithMany(user => user.OwnedProjects)
+        //     .HasForeignKey(project => project.OwnerId)
+        //     .OnDelete(DeleteBehavior.Restrict);
     }
 }

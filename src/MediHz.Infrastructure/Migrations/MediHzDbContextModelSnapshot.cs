@@ -140,9 +140,14 @@ namespace MediHz.Infrastructure.Migrations
                     b.Property<DateTimeOffset?>("UpdatedAtUtc")
                         .HasColumnType("timestamp with time zone");
 
+                    b.Property<Guid?>("UserId")
+                        .HasColumnType("uuid");
+
                     b.HasKey("Id");
 
                     b.HasIndex("OwnerId");
+
+                    b.HasIndex("UserId");
 
                     b.ToTable("Projects", (string)null);
                 });
@@ -236,23 +241,13 @@ namespace MediHz.Infrastructure.Migrations
 
             modelBuilder.Entity("MediHz.Domain.Projects.Project", b =>
                 {
-                    b.HasOne("MediHz.Domain.Users.User", "Owner")
+                    b.HasOne("MediHz.Domain.Users.User", null)
                         .WithMany("OwnedProjects")
-                        .HasForeignKey("OwnerId")
-                        .OnDelete(DeleteBehavior.Restrict)
-                        .IsRequired();
-
-                    b.Navigation("Owner");
+                        .HasForeignKey("UserId");
                 });
 
             modelBuilder.Entity("MediHz.Domain.Projects.ProjectMember", b =>
                 {
-                    b.HasOne("MediHz.Domain.Projects.Project", null)
-                        .WithMany("Members")
-                        .HasForeignKey("ProjectId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
                     b.HasOne("MediHz.Domain.Users.User", null)
                         .WithMany()
                         .HasForeignKey("UserId")
@@ -263,8 +258,6 @@ namespace MediHz.Infrastructure.Migrations
             modelBuilder.Entity("MediHz.Domain.Projects.Project", b =>
                 {
                     b.Navigation("AudioFiles");
-
-                    b.Navigation("Members");
                 });
 
             modelBuilder.Entity("MediHz.Domain.Users.User", b =>
