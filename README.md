@@ -46,6 +46,7 @@ dotnet ef migrations add <Placerholder-migration-name> --project src/MediHz.Infr
 
 dotnet ef database update --project src/MediHz.Infrastructure --startup-project src/MediHz.Api
 ```
+
 ### Frontend
 
 ```bash
@@ -54,6 +55,7 @@ cd MediHz/src/MediHz.web
 npm run dev
 ```
 Runs and hosts the frontend. Click on local host link provided in console to appear on web.
+
 ## Development Process
 
 1. Create a branch according to the [Branching Strategy](#branching-strategy).

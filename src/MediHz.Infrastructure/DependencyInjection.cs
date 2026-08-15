@@ -5,6 +5,8 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using MediHz.Infrastructure.Persistence;
 using MediHz.Infrastructure.Services;
+using MediHz.Application.Abstractions.Projects;
+using MediHz.Infrastructure.Persistence.Services.Projects;
 
 namespace MediHz.Infrastructure;
 
@@ -19,8 +21,9 @@ public static class DependencyInjection
             options.UseNpgsql(connectionString));
         
         services.AddScoped<IAudioFileUploadService,  AudioFileUploadService>();
-        
         services.AddScoped<IStorageService, LocalStorageService>();
+        services.AddScoped<IProjectService, ProjectService>();
+
         return services;
     }
 }
