@@ -1,5 +1,6 @@
 using MediHz.Api.Extensions;
 using MediHz.Infrastructure;
+using MediHz.Application;
 using Scalar.AspNetCore;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -9,6 +10,7 @@ builder.Services.AddControllers();
 builder.Services.AddSignalR();
 builder.Services.AddHealthChecks();
 builder.Services.AddOpenApi();
+builder.Services.AddApplication(builder.Configuration);
 builder.Services.AddInfrastructure(builder.Configuration);
 
 builder.Services.AddCors(options =>

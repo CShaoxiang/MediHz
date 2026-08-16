@@ -5,5 +5,6 @@
     <Project Path="src/MediHz.Application/MediHz.Application.csproj" />
     <Project Path="src/MediHz.Domain/MediHz.Domain.csproj" />
     <Project Path="src/MediHz.Infrastructure/MediHz.Infrastructure.csproj" />
+    <Project Path="src/MediHz.Tests/MediHz.Tests.csproj" />
   </Folder>
 </Solution>

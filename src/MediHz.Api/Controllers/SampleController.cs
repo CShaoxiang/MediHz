@@ -1,3 +1,4 @@
+using MediHz.Application.Handlers;
 using Microsoft.AspNetCore.Mvc;
 
 namespace MediHz.Api.Controllers;
@@ -6,8 +7,13 @@ namespace MediHz.Api.Controllers;
 // TODO: Delete once not needed.
 [Route("api/[controller]")]
 [ApiController]
-public class SampleController : ControllerBase
+public class SampleController(ISampleHandler sampleHandler) : ControllerBase
 {
     [HttpGet]
-    public IActionResult Get() => Ok(new { message = "Hello, world!" });
+    [ProducesResponseType(typeof(string), StatusCodes.Status200OK)]
+    public async Task<IActionResult> Get()
+    {
+        var request = new SampleRequest("SampleName");
+        return Ok(await sampleHandler.Handle(request));
+    }
 }
