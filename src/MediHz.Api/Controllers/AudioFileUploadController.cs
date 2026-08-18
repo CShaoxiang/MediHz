@@ -31,6 +31,10 @@ public class AudioFileUploadController(IAudioFileUploadService audioFileUploadSe
         var result = await audioFileUploadService.UploadBatchAsync(files, cancellationToken);
         var successCount = result.Items.Count(i => i.Status == Status.Success);
         var failureCount = result.Items.Count - successCount;
+        if (successCount == 0)
+        {
+            return StatusCode(StatusCodes.Status400BadRequest, result);
+        }
         if (failureCount > 0 && successCount > 0)
         {
             return StatusCode(StatusCodes.Status207MultiStatus, result);
