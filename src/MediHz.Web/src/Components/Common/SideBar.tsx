@@ -28,7 +28,7 @@ export default function SideBar({ title = 'Sidebar', buttons = [], lists = [] }:
           {buttons.length > 0 && (
             <div className="mb-4 button gap">
               {buttons.map((button) => (
-                <Button label={button.label} onClick={() => button.onClick?.(button.label)} />
+                <Button key={button.label} label={button.label} onClick={() => button.onClick?.(button.label)} />
               ))}
             </div>
           )}
