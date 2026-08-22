@@ -124,6 +124,13 @@ export default function WaveformRender({audio}: WaveformProp) {
   const handleEditing = () => {
     setEditing(!toggleEditing)
   }
+
+  const formatTime = (time: number) => {
+    const minutes = Math.floor(time / 60)
+    const seconds = Math.floor(time % 60)
+    return `${minutes}:${seconds.toString().padStart(2, '0')}`
+  }
+  
   const [volume, setVolume] = useState(100)
   return (
     <div className="space-y-4">
@@ -137,9 +144,7 @@ export default function WaveformRender({audio}: WaveformProp) {
             onChange={movePlaybar}
           />
           <HoverInfo>
-            {Math.floor(playbar / 60)}:{Math.floor(playbar / 1)}/
-            {Math.floor((audioDuration.current || 0) / 60)}:
-            {Math.floor((audioDuration.current || 0) / 1)}
+            {formatTime(playbar)} / {formatTime(audioDuration.current || 0)}
           </HoverInfo>
         </div>
         <div className="flex gap-2 items-center">
