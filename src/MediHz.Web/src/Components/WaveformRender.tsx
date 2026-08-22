@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react'
+import { useEffect, useRef, useState, type ChangeEvent } from 'react'
 import WaveSurfer from 'wavesurfer.js'
 import RegionsPlugin from 'wavesurfer.js/dist/plugins/regions.js'
 import Button from './Common/Button'
@@ -9,7 +9,7 @@ interface WaveformProp {
   audio: string
 }
 
-export default function WaveformRender({audio}: WaveformProp) {
+export default function WaveformRender({ audio }: WaveformProp) {
   const waveformRef = useRef<HTMLDivElement | null>(null)
   const waveSurferInstance = useRef<WaveSurfer | null>(null)
 
@@ -19,6 +19,8 @@ export default function WaveformRender({audio}: WaveformProp) {
   const [playbar, setPlaybar] = useState(0)
   const [toggleHighlight, setHighlight] = useState(false)
   const [toggleEditing, setEditing] = useState(false)
+  const [startTime, setStartTime] = useState<number | null>(null)
+  const [endTime, setEndTime] = useState<number | null>(null)
 
   const audioDuration = useRef<number>(null)
 
@@ -51,18 +53,23 @@ export default function WaveformRender({audio}: WaveformProp) {
 
     //Tells region data
     regions.on('region-clicked', (region) => {
-      console.log(region.start + ' ' + region.end)
+      setStartTime(region.start)
+      setEndTime(region.end)
     })
 
     //Tells region that was updated
     regions.on('region-updated', (region) => {
-      console.log(region.id)
+      setStartTime(region.start)
+      setEndTime(region.end)
     })
 
     //Set editing on newly created regions based on current editing mode
     regions.on('region-created', (region) => {
       region.drag = false
       region.resize = false
+
+      setStartTime(region.start)
+      setEndTime(region.end)
     })
 
     wavesurfer.load(audio)
@@ -107,14 +114,16 @@ export default function WaveformRender({audio}: WaveformProp) {
     waveSurferInstance.current?.playPause()
   }
 
-  const changeVolume = (event) => {
-    setVolume(event.target.value)
-    waveSurferInstance.current?.setVolume(event.target.value / 100)
+  const changeVolume = (event: ChangeEvent<HTMLInputElement>) => {
+    const newVolume = Number(event.target.value)
+    setVolume(newVolume)
+    waveSurferInstance.current?.setVolume(newVolume / 100)
   }
 
-  const movePlaybar = (event) => {
-    waveSurferInstance.current?.setTime(event.target.value)
-    setPlaybar(event.target.value)
+  const movePlaybar = (event: ChangeEvent<HTMLInputElement>) => {
+    const newTime = Number(event.target.value)
+    waveSurferInstance.current?.setTime(newTime)
+    setPlaybar(newTime)
   }
 
   const handleHighlight = () => {
@@ -125,9 +134,11 @@ export default function WaveformRender({audio}: WaveformProp) {
     setEditing(!toggleEditing)
   }
   const [volume, setVolume] = useState(100)
+
   return (
     <div className="space-y-4">
       <div ref={waveformRef} className="w-full bg-violet-100 rounded-3xl shadow overflow-hidden" />
+
       <>
         <div className="-ml-1 -mr-1 info-box-parent">
           <Slider
@@ -136,24 +147,37 @@ export default function WaveformRender({audio}: WaveformProp) {
             state={playbar}
             onChange={movePlaybar}
           />
+
           <HoverInfo>
             {Math.floor(playbar / 60)}:{Math.floor(playbar / 1)}/
             {Math.floor((audioDuration.current || 0) / 60)}:
             {Math.floor((audioDuration.current || 0) / 1)}
           </HoverInfo>
         </div>
+
         <div className="flex gap-2 items-center">
           <Button
             label={toggleHighlight ? 'Disable Highlight' : 'Highlight'}
             onClick={handleHighlight}
           />
+
           <Button label={toggleEditing ? 'Disable Editing' : 'Editing'} onClick={handleEditing} />
+
           <Button label="Play/Pause" onClick={playPause} />
+
           <div className="flex align-center font-bold">Volume</div>
+
           <div className="max-w-20 mt-2">
             <Slider min={0} max={100} state={volume} onChange={changeVolume} />
           </div>
         </div>
+
+        {startTime !== null && endTime !== null && (
+          <div className="flex gap-4 text-sm">
+            <p>Start: {startTime.toFixed(2)}s</p>
+            <p>End: {endTime.toFixed(2)}s</p>
+          </div>
+        )}
       </>
     </div>
   )
