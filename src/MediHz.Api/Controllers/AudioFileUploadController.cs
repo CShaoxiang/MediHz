@@ -1,12 +1,12 @@
-﻿using MediHz.Application.Abstractions.AudioFiles;
 using MediHz.Application.DTOs.AudioFiles;
+using MediHz.Application.Handlers;
 using Microsoft.AspNetCore.Mvc;
 
 namespace MediHz.Api.Controllers;
 
 [Route("api/[controller]")]
 [ApiController]
-public class AudioFileUploadController(IAudioFileUploadService audioFileUploadService) : ControllerBase
+public class AudioFileUploadController(IAudioFileUploadHandler audioFileUploadHandler) : ControllerBase
 {
     [HttpPost("batch")]
     [Consumes("multipart/form-data")]
@@ -18,28 +18,19 @@ public class AudioFileUploadController(IAudioFileUploadService audioFileUploadSe
         [FromForm] List<IFormFile> files,
         CancellationToken cancellationToken)
     {
-        if (files.Count == 0)
+        var request = new AudioFileUploadRequest(files, cancellationToken);
+        var response = await audioFileUploadHandler.Handle(request);
+
+        if (response.Problem != null)
         {
-            return BadRequest(new ProblemDetails
-            {
-                Title = "No files uploaded",
-                Detail = "At least one audio file must be supplied in the request.",
-                Status = StatusCodes.Status400BadRequest
-            });
+            return BadRequest(response.Problem);
         }
 
-        var result = await audioFileUploadService.UploadBatchAsync(files, cancellationToken);
-        var successCount = result.Items.Count(i => i.Status == Status.Success);
-        var failureCount = result.Items.Count - successCount;
-        if (successCount == 0)
+        if (response.StatusCode == StatusCodes.Status201Created)
         {
-            return StatusCode(StatusCodes.Status400BadRequest, result);
+            return CreatedAtAction(nameof(UploadBatch), new { batchId = response.Result!.BatchId }, response.Result);
         }
-        if (failureCount > 0 && successCount > 0)
-        {
-            return StatusCode(StatusCodes.Status207MultiStatus, result);
-        }
-        
-        return CreatedAtAction(nameof(UploadBatch), new { batchId = result.BatchId }, result);
+
+        return StatusCode(response.StatusCode, response.Result);
     }
 }
