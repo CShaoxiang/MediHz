@@ -9,7 +9,9 @@
 - Modal
 - Navigation Bar
 - Side Bar
-- Waveform View (Placeholder)
+- Slider
+- Playbar
+- Waveform Render
 
 ### `Button`
 Properties:
@@ -51,7 +53,7 @@ Properties:
     - setState: Dispatch<SetStateAction<boolean>>
     - children: ReactNode (optional)
 
-### `Navigation Bar`
+### `NavBar`
 Properties:
 
     - children: ReactNode (optional)
@@ -64,10 +66,23 @@ Properties:
     - `list` properties[] (optional)
     - children?: ReactNode (optional)
 
-### `WaveformView`
+### `Slider`
+Properties: 
+
+    - min: int
+    - max: int
+    - state: number (the variable produced from a useState)
+    - onChange: (event: any) => void (usually to call the set function of [state])
+
+### `Playbar`
+Properties:
+
+    - audioDuration: RefObject<number|null>
+    - state: number
+    - onChange:  Dispatch<SetStateAction<number>>
+
+
+### `WaveformRender`
 Properties: (Not finalised)
 
-    - id: number
-    - label: string
-    - startPercent: number
-    - widthPercent: number
+    - audio: string (audio filepath)
