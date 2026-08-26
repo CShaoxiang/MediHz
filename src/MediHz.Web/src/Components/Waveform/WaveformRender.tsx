@@ -1,24 +1,35 @@
 import { useEffect, useRef, useState, type ChangeEvent } from 'react'
 import WaveSurfer from 'wavesurfer.js'
 import RegionsPlugin from 'wavesurfer.js/dist/plugins/regions.js'
-import Button from './Common/Button'
-import Slider from './Common/Slider'
-import HoverInfo from './Common/HoverInfo'
+import Button from '../Common/Button'
+import Slider from '../Common/Slider'
+import HoverInfo from '../Common/HoverInfo'
+
+//Icons
+import { FiMusic, FiPause, FiPlay } from 'react-icons/fi'
+import Playbar from './Playbar'
 
 interface WaveformProp {
   audio: string
 }
 
 export default function WaveformRender({ audio }: WaveformProp) {
+  // Waveform rendering
   const waveformRef = useRef<HTMLDivElement | null>(null)
   const waveSurferInstance = useRef<WaveSurfer | null>(null)
 
+  // Region Plugin Rendering
   const regionInstance = useRef<RegionsPlugin>(null)
   const disableSelection = useRef<() => void>(null)
 
+  // Waveform interactions
   const [playbar, setPlaybar] = useState(0)
-  const [toggleHighlight, setHighlight] = useState(false)
-  const [toggleEditing, setEditing] = useState(false)
+  const [highlight, setHighlight] = useState(false)
+  const [editing, setEditing] = useState(false)
+  const [play, setPlay] = useState(false)
+  const [volSlide, setVolSlide] = useState(false)
+
+  // Getting Timestamp
   const [startTime, setStartTime] = useState<number | null>(null)
   const [endTime, setEndTime] = useState<number | null>(null)
 
@@ -88,7 +99,7 @@ export default function WaveformRender({ audio }: WaveformProp) {
   useEffect(() => {
     if (!regionInstance.current) return
 
-    if (toggleHighlight) {
+    if (highlight) {
       disableSelection.current = regionInstance.current.enableDragSelection({
         color: 'rgba(181, 50, 68, 0.2)',
       })
@@ -97,7 +108,7 @@ export default function WaveformRender({ audio }: WaveformProp) {
 
     disableSelection.current?.()
     disableSelection.current = null
-  }, [toggleHighlight])
+  }, [highlight])
 
   // Manages toggled editing
   useEffect(() => {
@@ -105,12 +116,13 @@ export default function WaveformRender({ audio }: WaveformProp) {
 
     // Update all existing regions
     regionInstance.current.getRegions().forEach((region) => {
-      region.drag = toggleEditing
-      region.resize = toggleEditing
+      region.drag = editing
+      region.resize = editing
     })
-  }, [toggleEditing])
+  }, [editing])
 
   const playPause = () => {
+    setPlay(!play)
     waveSurferInstance.current?.playPause()
   }
 
@@ -127,11 +139,11 @@ export default function WaveformRender({ audio }: WaveformProp) {
   }
 
   const handleHighlight = () => {
-    setHighlight(!toggleHighlight)
+    setHighlight(!highlight)
   }
 
   const handleEditing = () => {
-    setEditing(!toggleEditing)
+    setEditing(!editing)
   }
 
   const formatTime = (time: number) => {
@@ -139,21 +151,15 @@ export default function WaveformRender({ audio }: WaveformProp) {
     const seconds = Math.floor(time % 60)
     return `${minutes}:${seconds.toString().padStart(2, '0')}`
   }
-  
+
   const [volume, setVolume] = useState(100)
 
   return (
     <div className="space-y-4">
-      <div ref={waveformRef} className="w-full bg-violet-100 rounded-3xl shadow overflow-hidden" />
+      <div ref={waveformRef} className="w-full bg-violet-100 rounded-3xl shadow overflow-hidden"/>
 
-      <>
         <div className="-ml-1 -mr-1 info-box-parent">
-          <Slider
-            min={0}
-            max={audioDuration.current ? audioDuration.current : 0}
-            state={playbar}
-            onChange={movePlaybar}
-          />
+          <Playbar audioDuration={audioDuration} state={playbar} onChange={setPlaybar}/>
 
           <HoverInfo>
             {formatTime(playbar)} / {formatTime(audioDuration.current || 0)}
@@ -161,20 +167,25 @@ export default function WaveformRender({ audio }: WaveformProp) {
         </div>
 
         <div className="flex gap-2 items-center">
-          <Button
-            label={toggleHighlight ? 'Disable Highlight' : 'Highlight'}
-            onClick={handleHighlight}
-          />
+          <Button onClick={playPause}>
+            {play ? (
+              <FiPause className="icon-small size-7" />
+            ) : (
+              <FiPlay className="icon-small size-7" />
+            )}
+          </Button>
+          <Button onClick={() => setVolSlide(!volSlide)}>
+            <FiMusic className="icon-small size-7" />
+          </Button>
 
-          <Button label={toggleEditing ? 'Disable Editing' : 'Editing'} onClick={handleEditing} />
+          {volSlide && (
+            <div className="max-w-20 mt-2">
+              <Slider min={0} max={100} state={volume} onChange={changeVolume} />
+            </div>
+          )}
 
-          <Button label="Play/Pause" onClick={playPause} />
-
-          <div className="flex align-center font-bold">Volume</div>
-
-          <div className="max-w-20 mt-2">
-            <Slider min={0} max={100} state={volume} onChange={changeVolume} />
-          </div>
+          <Button label={highlight ? 'Disable Highlight' : 'Highlight'} onClick={handleHighlight} />
+          <Button label={editing ? 'Disable Editing' : 'Editing'} onClick={handleEditing} />
         </div>
 
         {startTime !== null && endTime !== null && (
@@ -183,7 +194,6 @@ export default function WaveformRender({ audio }: WaveformProp) {
             <p>End: {endTime.toFixed(2)}s</p>
           </div>
         )}
-      </>
     </div>
   )
 }
