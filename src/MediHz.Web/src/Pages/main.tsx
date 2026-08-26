@@ -1,8 +1,6 @@
 import { useEffect, useState } from 'react'
 import SideBar from '../Components/Common/SideBar'
-import WaveformView from '../Components/WaveformView'
-import WaveformRender from '../Components/WaveformRender'
-import Slider from '../Components/Common/Slider'
+import WaveformRender from '../Components/Waveform/WaveformRender'
 
 export default function MainPage() {
   const [apiMessage, setApiMessage] = useState('')

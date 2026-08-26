@@ -210,3 +210,13 @@ body {
 .info-box-child{
   display: none;
 }
+
+.icon-small{
+  font-size: 35px;
+  color: white;
+}
+
+.icon-border{
+  background-color: #8200db;
+  border-radius: 9999px;
+}
