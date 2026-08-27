@@ -1,29 +1,19 @@
-import Button, { type ButtonProps } from './Button'
-
-interface CardProp {
-  imageSrc?: string
+interface CardProps {
   title: string
-  text?: string
-  btnProp?: ButtonProps
+  onClick: () => void
 }
 
 export default function Card({
-  imageSrc = 'src/Assets/istockphoto-2148659111-612x612.jpg',
-  title = 'Card',
-  text,
-  btnProp,
-}: CardProp) {
+  title,
+  onClick,
+}: CardProps) {
   return (
-    <div className="card">
-      <div className="card-img-top overflow-hidden">
-        <img src={imageSrc} alt="..." />
-      </div>
-      <div className="card-body">
-        <h5 className="card-title">{title}</h5>
-        <div></div>
-        {text && <p className="card-text"> {text} </p>}
-        {btnProp && <Button label={btnProp?.label} onClick={btnProp?.onClick} />}
-      </div>
-    </div>
-  )
+    <button
+      type="button"
+      onClick={onClick}
+      className="flex w-full flex-col rounded-lg border-2 border-dotted border-medihzprimary p-4 text-left shadow-lg transition-transform duration-300 hover:scale-105 focus:outline-none focus-visible:ring-2 focus-visible:ring-medihzprimary"
+    >
+      <h5 className="text-lg font-semibold text-gray-800">{title}</h5>
+    </button>
+  );
 }

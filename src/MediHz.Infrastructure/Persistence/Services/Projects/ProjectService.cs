@@ -29,7 +29,14 @@ public class ProjectService(MediHzDbContext dbContext) : IProjectService
 
     public async Task<ProjectDto?> GetByIdAsync(Guid projectId, CancellationToken cancellationToken = default)
     {
-        throw new NotImplementedException();
+        var project = await dbContext.Projects.FirstOrDefaultAsync(p => p.Id == projectId, cancellationToken);
+        if (project is null)
+        {
+            return null;
+        }
+        
+        // TODO: User logic
+        return new ProjectDto(project.Id, project.Name, project.OwnerId, "Owner", project.CreatedAtUtc);
     }
 
     public async Task<IReadOnlyList<ProjectDto>> GetForUserAsync(Guid userId, CancellationToken cancellationToken = default)

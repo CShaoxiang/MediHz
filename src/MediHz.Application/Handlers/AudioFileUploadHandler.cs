@@ -1,48 +1,36 @@
 using MediHz.Application.Abstractions.AudioFiles;
+using MediHz.Application.Abstractions.Projects;
 using MediHz.Application.DTOs.AudioFiles;
 using Microsoft.AspNetCore.Http;
-using Microsoft.AspNetCore.Mvc;
 
 namespace MediHz.Application.Handlers;
 
-public record AudioFileUploadRequest(List<IFormFile> Files, CancellationToken CancellationToken = default);
+public record AudioFileUploadRequest(Guid ProjectId, List<IFormFile> Files);
 
-public record AudioFileUploadResponse(
-    int StatusCode, 
-    BatchAudioFileUploadResultDto? Result = null, 
-    ProblemDetails? Problem = null);
+public interface IAudioFileUploadHandler : IRequestHandler<AudioFileUploadRequest, BatchAudioFileUploadResultDto>;
 
-public interface IAudioFileUploadHandler : IRequestHandler<AudioFileUploadRequest, AudioFileUploadResponse>;
-
-public class AudioFileUploadHandler(IAudioFileUploadService audioFileUploadService) : IAudioFileUploadHandler
+public class AudioFileUploadHandler(IProjectService projectService, IAudioFileUploadService audioFileUploadService) : IAudioFileUploadHandler
 {
-    public async Task<AudioFileUploadResponse> Handle(AudioFileUploadRequest request)
+    public async Task<Result<BatchAudioFileUploadResultDto>> Handle(AudioFileUploadRequest request, CancellationToken cancellationToken)
     {
-        if (request.Files.Count == 0)
-        {
-            return new AudioFileUploadResponse(
-                StatusCodes.Status400BadRequest,
-                Problem: new ProblemDetails
-                {
-                    Title = "No files uploaded",
-                    Detail = "At least one audio file must be supplied in the request.",
-                    Status = StatusCodes.Status400BadRequest
-                });
-        }
+        // Validate project 
+        var project = await projectService.GetByIdAsync(request.ProjectId, cancellationToken);
+        if (project == null)
+            return Result<BatchAudioFileUploadResultDto>.Failure("Project not found", "The specified project does not exist.");
 
-        var result = await audioFileUploadService.UploadBatchAsync(request.Files, request.CancellationToken);
+        if (request.Files.Count == 0)
+            return Result<BatchAudioFileUploadResultDto>.Failure("No files uploaded", "At least one audio file must be supplied in the request.");
+
+        var result = await audioFileUploadService.UploadBatchAsync(request.ProjectId, request.Files, cancellationToken);
         var successCount = result.Items.Count(i => i.Status == Status.Success);
         var failureCount = result.Items.Count - successCount;
-        
+
         if (successCount == 0)
-        {
-            return new AudioFileUploadResponse(StatusCodes.Status400BadRequest, Result: result);
-        }
+            return Result<BatchAudioFileUploadResultDto>.Failure("Failed to upload files", $"Failed to upload all {result.Items.Count} files.");
+
         if (failureCount > 0 && successCount > 0)
-        {
-            return new AudioFileUploadResponse(StatusCodes.Status207MultiStatus, Result: result);
-        }
-        
-        return new AudioFileUploadResponse(StatusCodes.Status201Created, Result: result);
+            return Result<BatchAudioFileUploadResultDto>.Success(result, StatusCodes.Status207MultiStatus);
+
+        return Result<BatchAudioFileUploadResultDto>.Success(result, StatusCodes.Status201Created);
     }
 }

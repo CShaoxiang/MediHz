@@ -88,7 +88,7 @@ namespace MediHz.Infrastructure.Migrations
                     b.Property<int>("Format")
                         .HasColumnType("integer");
 
-                    b.Property<Guid?>("ProjectId")
+                    b.Property<Guid>("ProjectId")
                         .HasColumnType("uuid");
 
                     b.Property<decimal>("SampleRate")
@@ -227,16 +227,17 @@ namespace MediHz.Infrastructure.Migrations
                     b.HasOne("MediHz.Domain.Projects.Project", "Project")
                         .WithMany("AudioFiles")
                         .HasForeignKey("ProjectId")
-                        .OnDelete(DeleteBehavior.Cascade);
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
 
-                    b.HasOne("MediHz.Domain.Users.User", "User")
+                    b.HasOne("MediHz.Domain.Users.User", "Uploader")
                         .WithMany()
                         .HasForeignKey("UploaderId")
                         .OnDelete(DeleteBehavior.Restrict);
 
                     b.Navigation("Project");
 
-                    b.Navigation("User");
+                    b.Navigation("Uploader");
                 });
 
             modelBuilder.Entity("MediHz.Domain.Projects.Project", b =>

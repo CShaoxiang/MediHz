@@ -1,6 +1,7 @@
 using FluentAssertions;
 using MediHz.Application.Abstractions.Storage;
 using MediHz.Application.DTOs.AudioFiles;
+using MediHz.Domain.Projects;
 using MediHz.Infrastructure.Persistence;
 using MediHz.Infrastructure.Services;
 using Microsoft.AspNetCore.Http;
@@ -11,8 +12,9 @@ using System.Text;
 
 namespace MediHz.Tests.UnitTests.Services;
 
-public class AudioFileUploadServiceTests()
+public class AudioFileUploadServiceTests
 {
+    private readonly Project _project;
     private readonly Mock<IStorageService> _storageServiceMock = new();
     private readonly Mock<ILogger<AudioFileUploadService>> _loggerMock = new();
     private readonly MediHzDbContext _dbContext = new(new DbContextOptionsBuilder<MediHzDbContext>()
@@ -20,6 +22,13 @@ public class AudioFileUploadServiceTests()
         .Options);
     
     private AudioFileUploadService _service => new(_storageServiceMock.Object, _dbContext, _loggerMock.Object);
+
+    public AudioFileUploadServiceTests() {
+        // TODO: Needs valid owner when user functionality is aligned
+        _project = new Project("Sample Project Name", Guid.NewGuid());
+        _dbContext.Projects.Add(_project);
+        _dbContext.SaveChanges();
+    }
 
     [Fact]
     public async Task UploadBatchAsync_ShouldReturnFailure_WhenFileIsEmpty()
@@ -31,7 +40,7 @@ public class AudioFileUploadServiceTests()
         fileMock.Setup(f => f.ContentType).Returns("audio/mp3");
 
         // Act
-        var result = await _service.UploadBatchAsync(new List<IFormFile> { fileMock.Object });
+        var result = await _service.UploadBatchAsync(_project.Id, [fileMock.Object]);
 
         // Assert
         result.Items.Should().ContainSingle();
@@ -52,7 +61,7 @@ public class AudioFileUploadServiceTests()
         fileMock.Setup(f => f.OpenReadStream()).Returns(wavStream);
 
         // Act
-        var result = await _service.UploadBatchAsync(new List<IFormFile> { fileMock.Object });
+        var result = await _service.UploadBatchAsync(_project.Id, [fileMock.Object]);
 
         // Assert
         result.Items.Should().ContainSingle();
@@ -77,7 +86,7 @@ public class AudioFileUploadServiceTests()
             .ReturnsAsync("exampleProjectId/newfile.wav");
 
         // Act
-        var result = await _service.UploadBatchAsync(new List<IFormFile> { fileMock.Object });
+        var result = await _service.UploadBatchAsync(_project.Id, [fileMock.Object]);
 
         // Assert
         result.Items.Should().ContainSingle();

@@ -2,28 +2,33 @@ import { useState } from "react";
 import Button from "../Common/Button";
 import type { Project } from "../../Types/projects";
 import { createProject } from "../../Api/projects";
+import type { OmitId } from "../../Types/helpers";
 
 interface IProps {
   onSubmit: (project: Project) => void;
 }
 
 export default function CreateProjectForm({onSubmit} : IProps) {
-    const [project, setProject] = useState<Project>({
+    const [project, setProject] = useState<OmitId<Project>>({
         name: ""
     })
 
-    const validateProject = (project : Project): boolean => {
+    const validateProject = (project: OmitId<Project>): boolean => {
         return project.name.trim() !== ""
     }
     
-    const handleSubmit = () => {
+    const handleSubmit = async () => {
       if (!validateProject(project)) {
         alert("Invalid project details");
         return;
       }
 
-      createProject(project)
-      onSubmit(project);
+      createProject(project).then((result) => {
+        if (result.ok)
+          onSubmit(result.value);
+        else
+          console.error(result.error);
+      }).catch((e) => console.error(e));
     }
 
     return (

@@ -3,9 +3,9 @@ using MediHz.Application.Abstractions.AudioFiles;
 using MediHz.Application.Abstractions.Storage;
 using MediHz.Domain.Audio;
 using MediHz.Infrastructure.Persistence;
-using MediHz.Infrastructure.Services;
 using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Logging;
+using NLayer.NAudioSupport;
 using NAudio.Wave;
 
 namespace MediHz.Infrastructure.Services;
@@ -18,7 +18,9 @@ public class AudioFileUploadService(
     private const int MaxDurationSeconds = 1800;
     private const int MinDurationSeconds = 1;
     private const int MinSampleRate = 5000;
+
     public async Task<BatchAudioFileUploadResultDto> UploadBatchAsync(
+        Guid projectId,
         IReadOnlyList<IFormFile> files,
         CancellationToken cancellationToken = default)
     {
@@ -30,7 +32,7 @@ public class AudioFileUploadService(
             TimeSpan duration;
             int sampleRate;
             int channels;
-            
+
             if (file.Length == 0)
             {
                 fileResults.Add(new AudioFileUploadResultDto(Guid.NewGuid(), file.FileName, null, 0, Status.Failure, "File is empty"));
@@ -42,7 +44,7 @@ public class AudioFileUploadService(
                 using WaveStream waveStream = format switch
                 {
                     AudioFileFormat.Wav => new WaveFileReader(fileStream),
-                    AudioFileFormat.Mp3 => new Mp3FileReader(fileStream),
+                    AudioFileFormat.Mp3 => new Mp3FileReaderBase(fileStream, wf => new Mp3FrameDecompressor(wf)),
                     _ => throw new NotSupportedException("Format not supported for metadata extraction")
                 };
                 // Extract metadata from audio file
@@ -65,38 +67,40 @@ public class AudioFileUploadService(
                 }
                 if (sampleRate < MinSampleRate)
                 {
-                    logger.LogError("Audio file {FileName} does not reach the minimum sample rate of {MinRate}", file.FileName,  MinSampleRate);
+                    logger.LogError("Audio file {FileName} does not reach the minimum sample rate of {MinRate}", file.FileName, MinSampleRate);
                     fileResults.Add(new AudioFileUploadResultDto(Guid.NewGuid(), file.FileName, null, 0, Status.Failure, "File does not reach minimum sample rate"));
                     continue;
                 }
-            }catch (Exception ex)
+            }
+            catch (Exception ex)
             {
                 // 4. Verification fails here if the file is corrupted or not a valid audio file
                 logger.LogWarning(ex, "Failed to parse audio headers for file {FileName}", file.FileName);
                 fileResults.Add(new AudioFileUploadResultDto(Guid.NewGuid(), file.FileName, null, file.Length, Status.Failure, "Invalid or corrupted audio file"));
                 continue;
             }
-            
+
             try
             {
                 // Build AudioFile DB entity if all requirements are satisfied
+                // TODO: UploaderId when User implementation is in
                 var audioFile = new AudioFile
                 {
                     FileName = file.FileName,
+                    ProjectId = projectId,
                     Format = format,
                     SizeBytes = file.Length,
-                    Duration = (decimal)duration.TotalSeconds, 
+                    Duration = (decimal)duration.TotalSeconds,
                     SampleRate = sampleRate,
                     Channels = channels
                 };
-                
-                // TODO: Just leaving a note to amend this ones projects are implemented
+
                 // Need to reset fileStream position before saving 
                 fileStream.Position = 0;
-                string relativePath = Path.Combine(audioFile.ProjectId?.ToString() ?? "exampleProjectId", $"{audioFile.Id}.{audioFile.Format.ToString().ToLower()}");
+                string relativePath = Path.Combine(audioFile.ProjectId.ToString(), $"{audioFile.Id}.{audioFile.Format.ToString().ToLower()}");
                 relativePath = await storageService.SaveFileAsync(fileStream, relativePath, cancellationToken);
                 dbContext.AudioFiles.Add(audioFile);
-                
+
                 fileResults.Add(new AudioFileUploadResultDto(audioFile.Id, audioFile.FileName, audioFile.Format.ToString(), audioFile.SizeBytes, Status.Success, null));
             }
             catch (Exception ex)
@@ -110,7 +114,7 @@ public class AudioFileUploadService(
         {
             await dbContext.SaveChangesAsync(cancellationToken);
         }
-        
+
         return new BatchAudioFileUploadResultDto(
             Guid.NewGuid(),
             fileResults
