@@ -12,6 +12,7 @@
       <PrivateAssets>all</PrivateAssets>
     </PackageReference>
     <PackageReference Include="NAudio" Version="2.3.0" />
+    <PackageReference Include="NLayer.NAudioSupport" Version="2.0.1" />
     <PackageReference Include="Npgsql.EntityFrameworkCore.PostgreSQL" Version="10.0.3" />
   </ItemGroup>
 

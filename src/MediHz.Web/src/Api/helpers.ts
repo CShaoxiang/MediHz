@@ -1,8 +1,10 @@
+import type { ApiResult } from "../Types/api";
+
 const API_BASE = "/api";
 
 export async function apiGet<T = unknown>(
   path: string,
-): Promise<T> {
+): Promise<ApiResult<T>> {
   console.info("Fetching data with GET", { path });
   const response = await fetch(`${API_BASE}/${path}`, {
     method: "GET",
@@ -12,21 +14,17 @@ export async function apiGet<T = unknown>(
   });
 
   console.info("Response received", { status: response.status, statusText: response.statusText });
-  
-  if (!response.ok) {
-    throw new Error(`Failed to fetch data: ${response.statusText}`);
-  }
 
-  const text = await response.text();
-  const json = await JSON.parse(text);
-
-  return json;
+  const result = await response.json();
+  return response.ok 
+      ? { ok: true, value: result } 
+      : { ok: false, error: result };
 }
 
 export async function apiPostForm<T = unknown>(
   path: string,
   body: Record<string, unknown>,
-): Promise<T> {
+): Promise<ApiResult<T>> {
   console.info("Sending data with POST", { path, body });
   const response = await fetch(`${API_BASE}/${path}`, {
     method: "POST",
@@ -38,14 +36,10 @@ export async function apiPostForm<T = unknown>(
 
   console.info("Response received", { status: response.status, statusText: response.statusText });
   
-  if (!response.ok) {
-    throw new Error(`Failed to send data: ${response.statusText}`);
-  }
-
-  const text = await response.text();
-  const json = await JSON.parse(text);
-
-  return json;
+  const result = await response.json();
+  return response.ok 
+      ? { ok: true, value: result } 
+      : { ok: false, error: result };
 }
 
 function toFormData(fields: Record<string, unknown>): FormData {

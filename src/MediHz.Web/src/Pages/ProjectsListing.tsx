@@ -4,16 +4,22 @@ import Modal from "../Components/Common/Modal";
 import CreateProjectForm from "../Components/Projects/CreateProjectForm";
 import { fetchProjects } from "../Api/projects";
 import type { Project } from "../Types/projects";
+import { useNavigate } from "react-router-dom";
+import Grid from "../Components/Common/Grid";
 
-export default function ProjectsPage () {
+export default function ProjectsListingPage () {
     const [isOpen, setIsOpen] = useState(false);
     const [projects, setProjects] = useState<Project[]>([]);
+    const navigate = useNavigate();
 
     useEffect(() => {
-      fetchProjects().then((apiProjects) => {
-        setProjects(apiProjects)
+      fetchProjects().then((result) => {
+        if (result.ok)
+          setProjects(result.value);
+        else
+          console.error(result.error);
       }).catch((e) => console.error(e));
-    }, [])
+    }, []);
     
 
     const handleOnSubmit = (createdProject: Project) => {
@@ -21,14 +27,18 @@ export default function ProjectsPage () {
         setIsOpen(false);
     }
 
+    const handleClickProject = (projectId: string) => {
+        navigate(`/projects/${projectId}`);
+    }
+
     return (
       <>
-        <div className="grid grid-cols-5">
-          <Card title={"Create Project"} btnProp={{label: "Create", onClick: () => setIsOpen(true)}} />
+        <Grid>
+          <Card title={"Create Project"} onClick={() => setIsOpen(true)} />
           {projects.map((project, i) => (
-            <Card key={i} title={project.name} btnProp={{label: "Enter", onClick: () => {}}} />
+            <Card key={i} title={project.name} onClick={() => handleClickProject(project.id)} />
           ))}
-        </div>
+        </Grid>
         <Modal modalHeader={""} state={isOpen} setState={setIsOpen}>
           <CreateProjectForm onSubmit={handleOnSubmit} />
         </Modal>

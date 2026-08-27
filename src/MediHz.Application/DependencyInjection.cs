@@ -8,7 +8,6 @@ public static class DependencyInjection
 {
     public static IServiceCollection AddApplication(this IServiceCollection services, IConfiguration configuration)
     {
-        services.AddScoped<ISampleHandler, SampleHandler>();
         services.AddScoped<IAudioFileUploadHandler, AudioFileUploadHandler>();
 
         return services;

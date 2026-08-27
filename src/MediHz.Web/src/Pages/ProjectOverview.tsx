@@ -1,17 +1,45 @@
 import Card from "../Components/Common/Card";
 import AudioUploader from "../Components/AudioUploader"
+import type { AudioFile } from "../Types/audio";
+import { useEffect, useState } from "react";
+import { fetchProjectAudioFiles } from "../Api/projects";
+import { useParams } from "react-router-dom";
+import Grid from "../Components/Common/Grid";
 
-export default function ProjectOverview() {
+type PageParams = {
+    projectId: string
+}
+
+export default function ProjectOverviewPage() {
+    const [audioFiles, setAudioFiles] = useState<AudioFile[]>([]);
+    const { projectId } = useParams<PageParams>();
+
+    useEffect(() => {
+      if (projectId) {
+        fetchProjectAudioFiles(projectId).then((result) => {
+          if (result.ok)
+            setAudioFiles(result.value);
+          else
+            console.error(result.error)
+        }).catch((e) => console.error(e));
+      } else {
+          console.warn("projectId is undefined");
+      }
+    }, [projectId]);
+
+    const onUploadFiles = (uploadedFiles: AudioFile[]) => {
+      setAudioFiles(current => [...uploadedFiles, ...current]);
+    }
+
     return (
        <div className="">
            <h1 className="text-2xl font-bold p-4 text-center">Project Overview</h1>
-           <div className="grid grid-cols-[repeat(auto-fit,minmax(18rem,1fr))] gap-4 p-4 max-w-7xl mx-auto">
-               <AudioUploader/>
-               <Card title="Audio 1" text="Placeholder for audio file 1"/>
-               <Card title="Audio 2" text="Placeholder for audio file 2"/>
-               <Card title="Audio 3" text="Placeholder for audio file 3"/>
-               <Card title="Audio 4" text="Placeholder for audio file 4"/>
-           </div>
+           <Grid>
+             {projectId && <AudioUploader projectId={projectId} onUploadFiles={onUploadFiles} />}
+             {audioFiles.map((audioFile, i) => (
+               <Card key={i} title={audioFile.fileName} onClick={() => {}} />
+             ))}
+           </Grid>
        </div>
     );
 }

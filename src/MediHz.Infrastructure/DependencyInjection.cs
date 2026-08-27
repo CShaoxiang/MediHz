@@ -23,6 +23,7 @@ public static class DependencyInjection
         services.AddScoped<IAudioFileUploadService,  AudioFileUploadService>();
         services.AddScoped<IStorageService, LocalStorageService>();
         services.AddScoped<IProjectService, ProjectService>();
+        services.AddScoped<IAudioFileService, AudioFileService>();
 
         return services;
     }

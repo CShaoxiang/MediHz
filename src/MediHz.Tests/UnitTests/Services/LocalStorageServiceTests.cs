@@ -1,6 +1,5 @@
 using FluentAssertions;
 using MediHz.Infrastructure.Services;
-using System.IO;
 using System.Text;
 
 namespace MediHz.Tests.UnitTests.Services;
