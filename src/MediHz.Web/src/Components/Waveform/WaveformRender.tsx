@@ -34,6 +34,25 @@ export default function WaveformRender({ audio }: WaveformProp) {
   const [endTime, setEndTime] = useState<number | null>(null)
 
   const audioDuration = useRef<number>(null)
+  const [zoom, setZoom] = useState(20)
+
+  // Zoom Controls
+  const zoomIn = () => {
+    const newZoom = Math.min(zoom + 100, 1000)
+    setZoom(newZoom)
+    waveSurferInstance.current?.zoom(newZoom)
+  }
+
+  const zoomOut = () => {
+    const newZoom = Math.max(zoom - 100, 20)
+    setZoom(newZoom)
+    waveSurferInstance.current?.zoom(newZoom)
+  }
+
+  const resetZoom = () => {
+    setZoom(20)
+    waveSurferInstance.current?.zoom(20)
+  }
 
   //Intalises Audio Waveform configs
   useEffect(() => {
@@ -49,6 +68,8 @@ export default function WaveformRender({ audio }: WaveformProp) {
       cursorWidth: 2,
       cursorColor: '#000000',
       normalize: true,
+      minPxPerSec: 20,
+      fillParent: true,
     })
 
     const regions = wavesurfer.registerPlugin(RegionsPlugin.create())
@@ -156,44 +177,51 @@ export default function WaveformRender({ audio }: WaveformProp) {
 
   return (
     <div className="space-y-4">
-      <div ref={waveformRef} className="w-full bg-violet-100 rounded-3xl shadow overflow-hidden"/>
+      <div
+        ref={waveformRef}
+        className="w-full bg-violet-100 rounded-3xl shadow overflow-x-auto overflow-y-hidden"
+      />
 
-        <div className="-ml-1 -mr-1 info-box-parent">
-          <Playbar audioDuration={audioDuration} state={playbar} onChange={setPlaybar}/>
+      <div className="-ml-1 -mr-1 info-box-parent">
+        <Playbar audioDuration={audioDuration} state={playbar} onChange={setPlaybar} />
 
-          <HoverInfo>
-            {formatTime(playbar)} / {formatTime(audioDuration.current || 0)}
-          </HoverInfo>
-        </div>
+        <HoverInfo>
+          {formatTime(playbar)} / {formatTime(audioDuration.current || 0)}
+        </HoverInfo>
+      </div>
 
-        <div className="flex gap-2 items-center">
-          <Button onClick={playPause}>
-            {play ? (
-              <FiPause className="icon-small size-7" />
-            ) : (
-              <FiPlay className="icon-small size-7" />
-            )}
-          </Button>
-          <Button onClick={() => setVolSlide(!volSlide)}>
-            <FiMusic className="icon-small size-7" />
-          </Button>
-
-          {volSlide && (
-            <div className="max-w-20 mt-2">
-              <Slider min={0} max={100} state={volume} onChange={changeVolume} />
-            </div>
+      <div className="flex gap-2 items-center">
+        <Button onClick={playPause}>
+          {play ? (
+            <FiPause className="icon-small size-7" />
+          ) : (
+            <FiPlay className="icon-small size-7" />
           )}
+        </Button>
+        <Button onClick={() => setVolSlide(!volSlide)}>
+          <FiMusic className="icon-small size-7" />
+        </Button>
 
-          <Button label={highlight ? 'Disable Highlight' : 'Highlight'} onClick={handleHighlight} />
-          <Button label={editing ? 'Disable Editing' : 'Editing'} onClick={handleEditing} />
-        </div>
-
-        {startTime !== null && endTime !== null && (
-          <div className="flex gap-4 text-sm">
-            <p>Start: {startTime.toFixed(2)}s</p>
-            <p>End: {endTime.toFixed(2)}s</p>
+        {volSlide && (
+          <div className="max-w-20 mt-2">
+            <Slider min={0} max={100} state={volume} onChange={changeVolume} />
           </div>
         )}
+
+        <Button label={highlight ? 'Disable Highlight' : 'Highlight'} onClick={handleHighlight} />
+        <Button label={editing ? 'Disable Editing' : 'Editing'} onClick={handleEditing} />
+
+        <Button label="Zoom In" onClick={zoomIn} />
+        <Button label="Zoom Out" onClick={zoomOut} />
+        <Button label="Reset Zoom" onClick={resetZoom} />
+      </div>
+
+      {startTime !== null && endTime !== null && (
+        <div className="flex gap-4 text-sm">
+          <p>Start: {startTime.toFixed(2)}s</p>
+          <p>End: {endTime.toFixed(2)}s</p>
+        </div>
+      )}
     </div>
   )
 }
