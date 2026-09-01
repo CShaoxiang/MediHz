@@ -1,5 +1,5 @@
 using MediHz.Application.DTOs.AudioFiles;
-using MediHz.Application.Handlers;
+using MediHz.Application.Handlers.Audio;
 using Microsoft.AspNetCore.Mvc;
 
 namespace MediHz.Api.Controllers;

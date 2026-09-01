@@ -2,6 +2,8 @@ using Microsoft.AspNetCore.Mvc;
 
 namespace MediHz.Application.Handlers;
 
+public record EmptyRequest();
+
 public record Result<T>(int StatusCode, T? Value, ProblemDetails? Problem)
 {
     public static Result<T> Success(T value, int statusCode = 200) => new(statusCode, value, null);

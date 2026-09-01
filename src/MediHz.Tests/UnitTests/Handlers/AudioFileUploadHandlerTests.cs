@@ -3,19 +3,20 @@ using MediHz.Application.Abstractions.AudioFiles;
 using MediHz.Application.Abstractions.Projects;
 using MediHz.Application.DTOs.AudioFiles;
 using MediHz.Application.DTOs.Projects;
-using MediHz.Application.Handlers;
+using MediHz.Application.Handlers.Audio;
 using Microsoft.AspNetCore.Http;
 using Moq;
+using Xunit.Abstractions;
 
 namespace MediHz.Tests.UnitTests.Handlers;
 
-public class AudioFileUploadHandlerTests
+public class AudioFileUploadHandlerTests : UnitTestBase
 {
     private readonly Mock<IProjectService> _projectServiceMock = new();
     private readonly Mock<IAudioFileUploadService> _audioFileUploadServiceMock = new();
     private AudioFileUploadHandler _handler => new(_projectServiceMock.Object, _audioFileUploadServiceMock.Object);
 
-    public AudioFileUploadHandlerTests()
+    public AudioFileUploadHandlerTests(ITestOutputHelper output) : base(output)
     {
         _projectServiceMock
             .Setup(s => s.GetByIdAsync(It.IsAny<Guid>(), It.IsAny<CancellationToken>()))

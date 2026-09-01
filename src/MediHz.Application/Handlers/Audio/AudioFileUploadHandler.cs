@@ -3,7 +3,7 @@ using MediHz.Application.Abstractions.Projects;
 using MediHz.Application.DTOs.AudioFiles;
 using Microsoft.AspNetCore.Http;
 
-namespace MediHz.Application.Handlers;
+namespace MediHz.Application.Handlers.Audio;
 
 public record AudioFileUploadRequest(Guid ProjectId, List<IFormFile> Files);
 
