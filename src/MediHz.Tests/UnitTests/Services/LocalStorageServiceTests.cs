@@ -1,16 +1,17 @@
 using FluentAssertions;
 using MediHz.Infrastructure.Services;
 using System.Text;
+using Xunit.Abstractions;
 
 namespace MediHz.Tests.UnitTests.Services;
 
-public class LocalStorageServiceTests() : IDisposable
+public class LocalStorageServiceTests(ITestOutputHelper output) : UnitTestBase(output)
 {
     private readonly LocalStorageService _service = new();
     private readonly string _testBasePath = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), "MediHz", "Storage");
     private readonly string _testRunId = Guid.NewGuid().ToString();
 
-    public void Dispose()
+    public override async Task DisposeAsync()
     {
         // Cleanup only the files created by these tests
         var runFolder = Path.Combine(_testBasePath, _testRunId);
@@ -18,6 +19,8 @@ public class LocalStorageServiceTests() : IDisposable
         {
             Directory.Delete(runFolder, true);
         }
+
+        await base.DisposeAsync();
     }
 
     [Fact]
