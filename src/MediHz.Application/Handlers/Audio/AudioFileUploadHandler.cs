@@ -1,4 +1,5 @@
 using MediHz.Application.Abstractions.AudioFiles;
+using MediHz.Application.Abstractions.Auth;
 using MediHz.Application.Abstractions.Projects;
 using MediHz.Application.DTOs.AudioFiles;
 using Microsoft.AspNetCore.Http;
@@ -9,12 +10,18 @@ public record AudioFileUploadRequest(Guid ProjectId, List<IFormFile> Files);
 
 public interface IAudioFileUploadHandler : IRequestHandler<AudioFileUploadRequest, BatchAudioFileUploadResultDto>;
 
-public class AudioFileUploadHandler(IProjectService projectService, IAudioFileUploadService audioFileUploadService) : IAudioFileUploadHandler
+public class AudioFileUploadHandler(
+    IProjectService projectService,
+    IAudioFileUploadService audioFileUploadService,
+    ICurrentUser currentUser) : IAudioFileUploadHandler
 {
     public async Task<Result<BatchAudioFileUploadResultDto>> Handle(AudioFileUploadRequest request, CancellationToken cancellationToken)
     {
         // Validate project 
-        var project = await projectService.GetByIdAsync(request.ProjectId, cancellationToken);
+        var project = await projectService.GetByIdAsync(
+            request.ProjectId,
+            currentUser.UserId,
+            cancellationToken);
         if (project == null)
             return Result<BatchAudioFileUploadResultDto>.Failure("Project not found", "The specified project does not exist.");
 

@@ -1,5 +1,6 @@
 using FluentAssertions;
 using MediHz.Application.Abstractions.AudioFiles;
+using MediHz.Application.Abstractions.Auth;
 using MediHz.Application.Abstractions.Projects;
 using MediHz.Application.DTOs.AudioFiles;
 using MediHz.Application.DTOs.Projects;
@@ -14,12 +15,18 @@ public class AudioFileUploadHandlerTests : UnitTestBase
 {
     private readonly Mock<IProjectService> _projectServiceMock = new();
     private readonly Mock<IAudioFileUploadService> _audioFileUploadServiceMock = new();
-    private AudioFileUploadHandler _handler => new(_projectServiceMock.Object, _audioFileUploadServiceMock.Object);
+    private readonly Mock<ICurrentUser> _currentUserMock = new();
+    private readonly Guid _userId = Guid.NewGuid();
+    private AudioFileUploadHandler _handler => new(
+        _projectServiceMock.Object,
+        _audioFileUploadServiceMock.Object,
+        _currentUserMock.Object);
 
     public AudioFileUploadHandlerTests(ITestOutputHelper output) : base(output)
     {
+        _currentUserMock.SetupGet(user => user.UserId).Returns(_userId);
         _projectServiceMock
-            .Setup(s => s.GetByIdAsync(It.IsAny<Guid>(), It.IsAny<CancellationToken>()))
+            .Setup(s => s.GetByIdAsync(It.IsAny<Guid>(), _userId, It.IsAny<CancellationToken>()))
             .ReturnsAsync(new ProjectDto(Guid.NewGuid(), "Test Project", Guid.NewGuid(), "", DateTime.Now));
     }
 
@@ -30,7 +37,7 @@ public class AudioFileUploadHandlerTests : UnitTestBase
         var request = new AudioFileUploadRequest(Guid.NewGuid(), []);
 
         _projectServiceMock
-            .Setup(s => s.GetByIdAsync(It.IsAny<Guid>(), It.IsAny<CancellationToken>()))
+            .Setup(s => s.GetByIdAsync(It.IsAny<Guid>(), _userId, It.IsAny<CancellationToken>()))
             .ReturnsAsync((ProjectDto?)null);
 
         // Act

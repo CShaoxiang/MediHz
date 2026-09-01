@@ -140,14 +140,9 @@ namespace MediHz.Infrastructure.Migrations
                     b.Property<DateTimeOffset?>("UpdatedAtUtc")
                         .HasColumnType("timestamp with time zone");
 
-                    b.Property<Guid?>("UserId")
-                        .HasColumnType("uuid");
-
                     b.HasKey("Id");
 
                     b.HasIndex("OwnerId");
-
-                    b.HasIndex("UserId");
 
                     b.ToTable("Projects", (string)null);
                 });
@@ -163,12 +158,22 @@ namespace MediHz.Infrastructure.Migrations
                     b.Property<DateTimeOffset>("JoinedAt")
                         .HasColumnType("timestamp with time zone");
 
+                    b.Property<Guid>("ProjectId1")
+                        .HasColumnType("uuid");
+
                     b.Property<int>("Role")
                         .HasColumnType("integer");
 
+                    b.Property<Guid>("UserId1")
+                        .HasColumnType("uuid");
+
                     b.HasKey("ProjectId", "UserId");
 
+                    b.HasIndex("ProjectId1");
+
                     b.HasIndex("UserId");
+
+                    b.HasIndex("UserId1");
 
                     b.ToTable("ProjectMembers", (string)null);
                 });
@@ -192,12 +197,20 @@ namespace MediHz.Infrastructure.Migrations
                         .HasMaxLength(320)
                         .HasColumnType("character varying(320)");
 
+                    b.Property<string>("ProviderToken")
+                        .IsRequired()
+                        .HasMaxLength(255)
+                        .HasColumnType("character varying(255)");
+
                     b.Property<DateTimeOffset?>("UpdatedAtUtc")
                         .HasColumnType("timestamp with time zone");
 
                     b.HasKey("Id");
 
                     b.HasIndex("Email")
+                        .IsUnique();
+
+                    b.HasIndex("ProviderToken")
                         .IsUnique();
 
                     b.ToTable("Users", (string)null);
@@ -242,27 +255,57 @@ namespace MediHz.Infrastructure.Migrations
 
             modelBuilder.Entity("MediHz.Domain.Projects.Project", b =>
                 {
-                    b.HasOne("MediHz.Domain.Users.User", null)
+                    b.HasOne("MediHz.Domain.Users.User", "Owner")
                         .WithMany("OwnedProjects")
-                        .HasForeignKey("UserId");
+                        .HasForeignKey("OwnerId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.Navigation("Owner");
                 });
 
             modelBuilder.Entity("MediHz.Domain.Projects.ProjectMember", b =>
                 {
+                    b.HasOne("MediHz.Domain.Projects.Project", null)
+                        .WithMany("Members")
+                        .HasForeignKey("ProjectId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("MediHz.Domain.Projects.Project", "Project")
+                        .WithMany()
+                        .HasForeignKey("ProjectId1")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
                     b.HasOne("MediHz.Domain.Users.User", null)
                         .WithMany()
                         .HasForeignKey("UserId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
+
+                    b.HasOne("MediHz.Domain.Users.User", "User")
+                        .WithMany("Members")
+                        .HasForeignKey("UserId1")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Project");
+
+                    b.Navigation("User");
                 });
 
             modelBuilder.Entity("MediHz.Domain.Projects.Project", b =>
                 {
                     b.Navigation("AudioFiles");
+
+                    b.Navigation("Members");
                 });
 
             modelBuilder.Entity("MediHz.Domain.Users.User", b =>
                 {
+                    b.Navigation("Members");
+
                     b.Navigation("OwnedProjects");
                 });
 #pragma warning restore 612, 618

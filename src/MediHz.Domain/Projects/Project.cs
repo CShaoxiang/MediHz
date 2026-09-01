@@ -9,9 +9,8 @@ public class Project(string Name, Guid ownerId) : EntityBase
 {
     public string Name { get; set; } = Name;
     public Guid OwnerId { get; set; } = ownerId;
-    // TODO: Add back user functionality once implemented
-    // public User Owner { get; set; } = null!;
-    // public ICollection<ProjectMember> Members { get; set; } = [];
+    public User Owner { get; set; } = null!;
+    public ICollection<ProjectMember> Members { get; set; } = [];
     public ICollection<AudioFile> AudioFiles { get; set; } = [];
 }
 
