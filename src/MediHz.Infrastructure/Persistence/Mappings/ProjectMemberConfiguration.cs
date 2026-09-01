@@ -24,10 +24,10 @@ public class ProjectMemberConfiguration : IEntityTypeConfiguration<ProjectMember
         
         // Cascade : Remove all members if project delete 
         // TODO: Add this back oncce Project<->User mapping is restored.
-        // builder.HasOne<Project>()
-        //     .WithMany(project => project.Members)
-        //     .HasForeignKey(member => member.ProjectId)
-        //     .OnDelete(DeleteBehavior.Cascade);
+        builder.HasOne<Project>()
+            .WithMany(project => project.Members)
+            .HasForeignKey(member => member.ProjectId)
+            .OnDelete(DeleteBehavior.Cascade);
         
         // Cascade :  Delete all 
         builder.HasOne<User>()

@@ -1,6 +1,10 @@
+using System.Text;
 using MediHz.Api.Extensions;
 using MediHz.Infrastructure;
 using MediHz.Application;
+using MediHz.Infrastructure.Services;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.IdentityModel.Tokens;
 using Scalar.AspNetCore;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -23,6 +27,26 @@ builder.Services.AddCors(options =>
             .AllowAnyMethod();
     });
 });
+// Add jwt Bearer authentication by default, define validation method
+var jwtOptions = builder.Configuration.GetSection(JwtOptions.SectionName).Get<JwtOptions>() ?? throw new InvalidOperationException("Missing jwt configuration"); 
+builder.Services
+    .AddAuthentication(JwtBearerDefaults.AuthenticationScheme )
+    .AddJwtBearer(options =>
+        {
+            options.MapInboundClaims = false;
+            options.TokenValidationParameters = new TokenValidationParameters
+            {
+                ValidateIssuer = true,
+                ValidIssuer = jwtOptions.Issuer,
+                ValidateAudience = true,
+                ValidAudience = jwtOptions.Audience,
+                ValidateIssuerSigningKey = true,
+                IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(jwtOptions.Key)),
+                ValidateLifetime = true,
+                ClockSkew = TimeSpan.FromMinutes(5)
+            };
+        }
+    );
 
 var app = builder.Build();
 app.UseCors("Frontend");
@@ -34,6 +58,7 @@ if (app.Environment.IsDevelopment())
 }
 
 app.UseHttpsRedirection();
+app.UseAuthentication();
 app.UseAuthorization();
 
 // Endpoints

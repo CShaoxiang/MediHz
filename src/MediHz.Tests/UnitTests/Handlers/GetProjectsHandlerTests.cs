@@ -1,5 +1,6 @@
 using AutoFixture;
 using FluentAssertions;
+using MediHz.Application.Abstractions.Auth;
 using MediHz.Application.Abstractions.Projects;
 using MediHz.Application.DTOs.Projects;
 using MediHz.Application.Handlers;
@@ -13,12 +14,15 @@ namespace MediHz.Tests.UnitTests.Handlers;
 public class GetProjectsHandlerTests : UnitTestBase
 {
     private readonly Mock<IProjectService> _projectServiceMock = new();
+    private readonly Mock<ICurrentUser> _currentUserMock = new();
+    private readonly Guid _userId = Guid.NewGuid();
 
     private GetProjectsHandler _handler;
 
     public GetProjectsHandlerTests(ITestOutputHelper output) : base(output)
     {
-        _handler = new(_projectServiceMock.Object, Logger<GetProjectsHandler>());
+        _currentUserMock.SetupGet(user => user.UserId).Returns(_userId);
+        _handler = new(_projectServiceMock.Object, _currentUserMock.Object, Logger<GetProjectsHandler>());
     }
 
     [Fact]
@@ -38,6 +42,9 @@ public class GetProjectsHandlerTests : UnitTestBase
         result.StatusCode.Should().Be(StatusCodes.Status200OK);
         var body = result.Body as IEnumerable<ProjectDto>;
         body!.Single().Should().BeEquivalentTo(project);
+        _projectServiceMock.Verify(service => service.GetForUserAsync(
+            _userId,
+            CancellationToken.None), Times.Once);
     }
 
     [Fact]

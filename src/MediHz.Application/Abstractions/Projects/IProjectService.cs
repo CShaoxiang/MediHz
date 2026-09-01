@@ -7,7 +7,7 @@ public interface IProjectService
     /// <summary>
     /// Return a project with ownership and summary details.
     /// </summary>
-    Task<ProjectDto?> GetByIdAsync(Guid projectId, CancellationToken cancellationToken = default);
+    Task<ProjectDto?> GetByIdAsync(Guid projectId, Guid userId, CancellationToken cancellationToken = default);
 
     /// <summary>
     /// Return all projects visible to the current user.

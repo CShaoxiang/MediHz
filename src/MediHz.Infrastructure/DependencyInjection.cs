@@ -1,4 +1,5 @@
 using MediHz.Application.Abstractions.AudioFiles;
+using MediHz.Application.Abstractions.Auth;
 using MediHz.Application.Abstractions.Storage;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
@@ -6,7 +7,10 @@ using Microsoft.Extensions.DependencyInjection;
 using MediHz.Infrastructure.Persistence;
 using MediHz.Infrastructure.Services;
 using MediHz.Application.Abstractions.Projects;
+using MediHz.Application.Abstractions.Users;
 using MediHz.Infrastructure.Persistence.Services.Projects;
+using MediHz.Infrastructure.Services.Users;
+
 
 namespace MediHz.Infrastructure;
 
@@ -19,12 +23,22 @@ public static class DependencyInjection
 
         services.AddDbContext<MediHzDbContext>(options =>
             options.UseNpgsql(connectionString));
+        //Bind GoogleOAuth and Jwt settings
+        services.Configure<GoogleAuthOptions>(configuration.GetSection(GoogleAuthOptions.SectionName));
+        services.Configure<JwtOptions>(configuration.GetSection(JwtOptions.SectionName));
         
+        services.AddScoped<IUserService, UserService>();
         services.AddScoped<IAudioFileUploadService,  AudioFileUploadService>();
         services.AddScoped<IStorageService, LocalStorageService>();
         services.AddScoped<IProjectService, ProjectService>();
         services.AddScoped<IAudioFileService, AudioFileService>();
 
+        services.AddHttpContextAccessor();
+        services.AddScoped<ICurrentUser, HttpCurrentUser>();
+        services.AddScoped<IGoogleTokenVerifier, GoogleTokenVerifier>();
+        services.AddScoped<IAuthService, AuthService>();
+        services.AddScoped<ITokenService, TokenService>();
+        
         return services;
     }
 }

@@ -1,10 +1,12 @@
 using MediHz.Application.DTOs.AudioFiles;
 using MediHz.Application.DTOs.Projects;
 using MediHz.Application.Handlers.Projects;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
 namespace MediHz.Api.Controllers;
 
+[Authorize]
 [Route("api/[controller]")]
 [ApiController]
 public class ProjectsController(IGetProjectsHandler getProjectsHandler, ICreateProjectHandler createProjectHandler, IGetProjectAudioFilesHandler getProjectAudioFilesHandler) : ControllerBase

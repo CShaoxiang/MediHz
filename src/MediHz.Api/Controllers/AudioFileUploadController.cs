@@ -1,11 +1,13 @@
 using MediHz.Application.DTOs.AudioFiles;
 using MediHz.Application.Handlers.Audio;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 
 namespace MediHz.Api.Controllers;
 
 [Route("api/[controller]")]
 [ApiController]
+[Authorize]
 public class AudioFileUploadController(IAudioFileUploadHandler audioFileUploadHandler) : ControllerBase
 {
     [HttpPost("{projectId:guid}/batch")]

@@ -14,11 +14,17 @@ public class ProjectService(MediHzDbContext dbContext) : IProjectService
 
     public async Task<ProjectDto> CreateAsync(Guid ownerId, CreateProjectRequest request, CancellationToken cancellationToken = default)
     {
+        var ownerExists = await dbContext.Users.AnyAsync(
+            user => user.Id == ownerId,
+            cancellationToken);
+        
+        if (!ownerExists)
+            throw new UnauthorizedAccessException("The authenticated user does not exist.");
+        
         var project = new Project(request.Name, ownerId);
         await dbContext.AddAsync(project, cancellationToken);
         await dbContext.SaveChangesAsync(cancellationToken);
-        
-        // TODO: User logic
+
         return new ProjectDto(project.Id, project.Name, project.OwnerId, "Owner", project.CreatedAtUtc);
     }
 
@@ -27,22 +33,22 @@ public class ProjectService(MediHzDbContext dbContext) : IProjectService
         throw new NotImplementedException();
     }
 
-    public async Task<ProjectDto?> GetByIdAsync(Guid projectId, CancellationToken cancellationToken = default)
+    public async Task<ProjectDto?> GetByIdAsync(Guid projectId, Guid userId, CancellationToken cancellationToken = default)
     {
-        var project = await dbContext.Projects.FirstOrDefaultAsync(p => p.Id == projectId, cancellationToken);
-        if (project is null)
-        {
-            return null;
-        }
-        
-        // TODO: User logic
-        return new ProjectDto(project.Id, project.Name, project.OwnerId, "Owner", project.CreatedAtUtc);
+        return await dbContext.Projects
+            .Where(project => project.Id == projectId &&
+                              (project.OwnerId == userId ||
+                               project.Members.Any(m => m.UserId == userId)))
+            .Select(project => new ProjectDto(project.Id, project.Name, project.OwnerId, "Owner", project.CreatedAtUtc))
+            .SingleOrDefaultAsync(cancellationToken);
     }
 
     public async Task<IReadOnlyList<ProjectDto>> GetForUserAsync(Guid userId, CancellationToken cancellationToken = default)
     {
-        // TODO: User logic
         return await dbContext.Projects
+            .Where(p => 
+                p.OwnerId == userId || 
+                p.Members.Any(m => m.UserId == userId))
             .Select(p => new ProjectDto(p.Id, p.Name, p.OwnerId, "Owner", p.CreatedAtUtc))
             .ToListAsync(cancellationToken);
     }

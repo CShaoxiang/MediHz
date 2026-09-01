@@ -23,7 +23,14 @@ public class UserConfiguration : IEntityTypeConfiguration<User>
         builder.Property(user => user.CreatedAtUtc)
             .IsRequired();
 
+        builder.Property(user => user.ProviderToken)
+            .HasMaxLength(255)
+            .IsRequired();
+
         builder.HasIndex(user => user.Email)
+            .IsUnique();
+
+        builder.HasIndex(user => user.ProviderToken)
             .IsUnique();
     }
 }
