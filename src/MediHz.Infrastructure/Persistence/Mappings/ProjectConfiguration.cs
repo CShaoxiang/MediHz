@@ -12,19 +12,17 @@ public class ProjectConfiguration : IEntityTypeConfiguration<Project>
 
         builder.HasKey(project => project.Id);
 
-        builder.Property(project => project.Name)
-            .HasMaxLength(200)
-            .IsRequired();
+        builder.Property(project => project.Name).HasMaxLength(200).IsRequired();
 
-        builder.Property(project => project.CreatedAtUtc)
-            .IsRequired();
+        builder.Property(project => project.CreatedAtUtc).IsRequired();
 
         builder.HasIndex(project => project.OwnerId);
-        
+
         // Relationships
-        
+
         // Restrict : Prevent owner from being deleted if own project
-        builder.HasOne(project => project.Owner)
+        builder
+            .HasOne(project => project.Owner)
             .WithMany(user => user.OwnedProjects)
             .HasForeignKey(project => project.OwnerId)
             .OnDelete(DeleteBehavior.Restrict);

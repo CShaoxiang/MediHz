@@ -1,6 +1,6 @@
-﻿using MediHz.Application.Abstractions.Storage;
+﻿using System.IO;
+using MediHz.Application.Abstractions.Storage;
 using Microsoft.Extensions.Configuration;
-using System.IO;
 
 namespace MediHz.Infrastructure.Services;
 
@@ -10,17 +10,24 @@ public class LocalStorageService : IStorageService
 
     public LocalStorageService()
     {
-        _basePath = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), "MediHz", "Storage");;
-        
+        _basePath = Path.Combine(
+            Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData),
+            "MediHz",
+            "Storage"
+        );
+        ;
+
         if (!Directory.Exists(_basePath))
         {
             Directory.CreateDirectory(_basePath);
         }
-        
     }
 
-    public async Task<string> SaveFileAsync(Stream content, string relativePath,
-        CancellationToken cancellationToken = default)
+    public async Task<string> SaveFileAsync(
+        Stream content,
+        string relativePath,
+        CancellationToken cancellationToken = default
+    )
     {
         var fullPath = Path.Combine(_basePath, relativePath);
         // Ensure target directory exists
@@ -29,16 +36,26 @@ public class LocalStorageService : IStorageService
         {
             Directory.CreateDirectory(targetDirectory!);
         }
-        
+
         //Copy file over
-        await using var fileStream = new FileStream(fullPath, FileMode.Create, FileAccess.Write, FileShare.None, bufferSize: 81920, useAsync: true);
+        await using var fileStream = new FileStream(
+            fullPath,
+            FileMode.Create,
+            FileAccess.Write,
+            FileShare.None,
+            bufferSize: 81920,
+            useAsync: true
+        );
         await content.CopyToAsync(fileStream, cancellationToken);
-        
+
         //Use storage path as storageKey
-        return relativePath.Replace("\\", "/"); 
+        return relativePath.Replace("\\", "/");
     }
-    
-    public Task<Stream?> GetFileAsync(string relativePath, CancellationToken cancellationToken = default)
+
+    public Task<Stream?> GetFileAsync(
+        string relativePath,
+        CancellationToken cancellationToken = default
+    )
     {
         var fullPath = Path.Combine(_basePath, relativePath);
         if (!File.Exists(fullPath))
@@ -46,10 +63,17 @@ public class LocalStorageService : IStorageService
             return Task.FromResult<Stream?>(null);
         }
         // Open the file with FileShare.Read so it doesn't get locked exclusively
-        var stream = new FileStream(fullPath, FileMode.Open, FileAccess.Read, FileShare.Read, bufferSize: 4096, useAsync: true);
+        var stream = new FileStream(
+            fullPath,
+            FileMode.Open,
+            FileAccess.Read,
+            FileShare.Read,
+            bufferSize: 4096,
+            useAsync: true
+        );
         return Task.FromResult<Stream?>(stream);
     }
-    
+
     public Task DeleteFileAsync(string relativePath, CancellationToken cancellationToken = default)
     {
         var fullPath = Path.Combine(_basePath, relativePath);

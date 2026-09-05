@@ -16,23 +16,42 @@ namespace MediHz.Infrastructure.Migrations
                 columns: table => new
                 {
                     UserId = table.Column<Guid>(type: "uuid", nullable: false),
-                    Email = table.Column<string>(type: "character varying(320)", maxLength: 320, nullable: false),
-                    DisplayName = table.Column<string>(type: "character varying(150)", maxLength: 150, nullable: false),
-                    CreatedAt = table.Column<DateTimeOffset>(type: "timestamp with time zone", nullable: false)
+                    Email = table.Column<string>(
+                        type: "character varying(320)",
+                        maxLength: 320,
+                        nullable: false
+                    ),
+                    DisplayName = table.Column<string>(
+                        type: "character varying(150)",
+                        maxLength: 150,
+                        nullable: false
+                    ),
+                    CreatedAt = table.Column<DateTimeOffset>(
+                        type: "timestamp with time zone",
+                        nullable: false
+                    ),
                 },
                 constraints: table =>
                 {
                     table.PrimaryKey("PK_Users", x => x.UserId);
-                });
+                }
+            );
 
             migrationBuilder.CreateTable(
                 name: "Projects",
                 columns: table => new
                 {
                     Id = table.Column<Guid>(type: "uuid", nullable: false),
-                    Name = table.Column<string>(type: "character varying(200)", maxLength: 200, nullable: false),
+                    Name = table.Column<string>(
+                        type: "character varying(200)",
+                        maxLength: 200,
+                        nullable: false
+                    ),
                     OwnerId = table.Column<Guid>(type: "uuid", nullable: false),
-                    CreatedAt = table.Column<DateTimeOffset>(type: "timestamp with time zone", nullable: false)
+                    CreatedAt = table.Column<DateTimeOffset>(
+                        type: "timestamp with time zone",
+                        nullable: false
+                    ),
                 },
                 constraints: table =>
                 {
@@ -42,19 +61,30 @@ namespace MediHz.Infrastructure.Migrations
                         column: x => x.OwnerId,
                         principalTable: "Users",
                         principalColumn: "UserId",
-                        onDelete: ReferentialAction.Restrict);
-                });
+                        onDelete: ReferentialAction.Restrict
+                    );
+                }
+            );
 
             migrationBuilder.CreateTable(
                 name: "AudioFiles",
                 columns: table => new
                 {
                     Id = table.Column<Guid>(type: "uuid", nullable: false),
-                    FileName = table.Column<string>(type: "character varying(255)", maxLength: 255, nullable: false),
+                    FileName = table.Column<string>(
+                        type: "character varying(255)",
+                        maxLength: 255,
+                        nullable: false
+                    ),
                     Format = table.Column<int>(type: "integer", nullable: false),
                     ProjectId = table.Column<Guid>(type: "uuid", nullable: false),
                     UploaderId = table.Column<Guid>(type: "uuid", nullable: false),
-                    Duration = table.Column<decimal>(type: "numeric(18,4)", precision: 18, scale: 4, nullable: false)
+                    Duration = table.Column<decimal>(
+                        type: "numeric(18,4)",
+                        precision: 18,
+                        scale: 4,
+                        nullable: false
+                    ),
                 },
                 constraints: table =>
                 {
@@ -65,14 +95,17 @@ namespace MediHz.Infrastructure.Migrations
                         column: x => x.ProjectId,
                         principalTable: "Projects",
                         principalColumn: "Id",
-                        onDelete: ReferentialAction.Cascade);
+                        onDelete: ReferentialAction.Cascade
+                    );
                     table.ForeignKey(
                         name: "FK_AudioFiles_Users_UploaderId",
                         column: x => x.UploaderId,
                         principalTable: "Users",
                         principalColumn: "UserId",
-                        onDelete: ReferentialAction.Restrict);
-                });
+                        onDelete: ReferentialAction.Restrict
+                    );
+                }
+            );
 
             migrationBuilder.CreateTable(
                 name: "ProjectMembers",
@@ -81,7 +114,10 @@ namespace MediHz.Infrastructure.Migrations
                     ProjectId = table.Column<Guid>(type: "uuid", nullable: false),
                     UserId = table.Column<Guid>(type: "uuid", nullable: false),
                     Role = table.Column<int>(type: "integer", nullable: false),
-                    JoinedAt = table.Column<DateTimeOffset>(type: "timestamp with time zone", nullable: false)
+                    JoinedAt = table.Column<DateTimeOffset>(
+                        type: "timestamp with time zone",
+                        nullable: false
+                    ),
                 },
                 constraints: table =>
                 {
@@ -91,14 +127,17 @@ namespace MediHz.Infrastructure.Migrations
                         column: x => x.ProjectId,
                         principalTable: "Projects",
                         principalColumn: "Id",
-                        onDelete: ReferentialAction.Cascade);
+                        onDelete: ReferentialAction.Cascade
+                    );
                     table.ForeignKey(
                         name: "FK_ProjectMembers_Users_UserId",
                         column: x => x.UserId,
                         principalTable: "Users",
                         principalColumn: "UserId",
-                        onDelete: ReferentialAction.Cascade);
-                });
+                        onDelete: ReferentialAction.Cascade
+                    );
+                }
+            );
 
             migrationBuilder.CreateTable(
                 name: "Annotations",
@@ -107,84 +146,113 @@ namespace MediHz.Infrastructure.Migrations
                     Id = table.Column<Guid>(type: "uuid", nullable: false),
                     AudioFileId = table.Column<Guid>(type: "uuid", nullable: false),
                     UserId = table.Column<Guid>(type: "uuid", nullable: false),
-                    StartTimeSeconds = table.Column<decimal>(type: "numeric(18,4)", precision: 18, scale: 4, nullable: false),
-                    EndTimeSeconds = table.Column<decimal>(type: "numeric(18,4)", precision: 18, scale: 4, nullable: false),
-                    DurationSeconds = table.Column<decimal>(type: "numeric(18,4)", precision: 18, scale: 4, nullable: false),
-                    CreatedAt = table.Column<DateTimeOffset>(type: "timestamp with time zone", nullable: false),
-                    UpdatedAt = table.Column<DateTimeOffset>(type: "timestamp with time zone", nullable: false)
+                    StartTimeSeconds = table.Column<decimal>(
+                        type: "numeric(18,4)",
+                        precision: 18,
+                        scale: 4,
+                        nullable: false
+                    ),
+                    EndTimeSeconds = table.Column<decimal>(
+                        type: "numeric(18,4)",
+                        precision: 18,
+                        scale: 4,
+                        nullable: false
+                    ),
+                    DurationSeconds = table.Column<decimal>(
+                        type: "numeric(18,4)",
+                        precision: 18,
+                        scale: 4,
+                        nullable: false
+                    ),
+                    CreatedAt = table.Column<DateTimeOffset>(
+                        type: "timestamp with time zone",
+                        nullable: false
+                    ),
+                    UpdatedAt = table.Column<DateTimeOffset>(
+                        type: "timestamp with time zone",
+                        nullable: false
+                    ),
                 },
                 constraints: table =>
                 {
                     table.PrimaryKey("PK_Annotations", x => x.Id);
-                    table.CheckConstraint("CK_Annotations_TimeRange", "\"StartTimeSeconds\" >= 0 AND \"EndTimeSeconds\" > \"StartTimeSeconds\" AND \"DurationSeconds\" >= 0.1");
+                    table.CheckConstraint(
+                        "CK_Annotations_TimeRange",
+                        "\"StartTimeSeconds\" >= 0 AND \"EndTimeSeconds\" > \"StartTimeSeconds\" AND \"DurationSeconds\" >= 0.1"
+                    );
                     table.ForeignKey(
                         name: "FK_Annotations_AudioFiles_AudioFileId",
                         column: x => x.AudioFileId,
                         principalTable: "AudioFiles",
                         principalColumn: "Id",
-                        onDelete: ReferentialAction.Cascade);
+                        onDelete: ReferentialAction.Cascade
+                    );
                     table.ForeignKey(
                         name: "FK_Annotations_Users_UserId",
                         column: x => x.UserId,
                         principalTable: "Users",
                         principalColumn: "UserId",
-                        onDelete: ReferentialAction.Restrict);
-                });
+                        onDelete: ReferentialAction.Restrict
+                    );
+                }
+            );
 
             migrationBuilder.CreateIndex(
                 name: "IX_Annotations_AudioFileId",
                 table: "Annotations",
-                column: "AudioFileId");
+                column: "AudioFileId"
+            );
 
             migrationBuilder.CreateIndex(
                 name: "IX_Annotations_UserId",
                 table: "Annotations",
-                column: "UserId");
+                column: "UserId"
+            );
 
             migrationBuilder.CreateIndex(
                 name: "IX_AudioFiles_ProjectId",
                 table: "AudioFiles",
-                column: "ProjectId");
+                column: "ProjectId"
+            );
 
             migrationBuilder.CreateIndex(
                 name: "IX_AudioFiles_UploaderId",
                 table: "AudioFiles",
-                column: "UploaderId");
+                column: "UploaderId"
+            );
 
             migrationBuilder.CreateIndex(
                 name: "IX_ProjectMembers_UserId",
                 table: "ProjectMembers",
-                column: "UserId");
+                column: "UserId"
+            );
 
             migrationBuilder.CreateIndex(
                 name: "IX_Projects_OwnerId",
                 table: "Projects",
-                column: "OwnerId");
+                column: "OwnerId"
+            );
 
             migrationBuilder.CreateIndex(
                 name: "IX_Users_Email",
                 table: "Users",
                 column: "Email",
-                unique: true);
+                unique: true
+            );
         }
 
         /// <inheritdoc />
         protected override void Down(MigrationBuilder migrationBuilder)
         {
-            migrationBuilder.DropTable(
-                name: "Annotations");
+            migrationBuilder.DropTable(name: "Annotations");
 
-            migrationBuilder.DropTable(
-                name: "ProjectMembers");
+            migrationBuilder.DropTable(name: "ProjectMembers");
 
-            migrationBuilder.DropTable(
-                name: "AudioFiles");
+            migrationBuilder.DropTable(name: "AudioFiles");
 
-            migrationBuilder.DropTable(
-                name: "Projects");
+            migrationBuilder.DropTable(name: "Projects");
 
-            migrationBuilder.DropTable(
-                name: "Users");
+            migrationBuilder.DropTable(name: "Users");
         }
     }
 }

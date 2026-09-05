@@ -17,17 +17,22 @@ public class AudioFileUploadHandlerTests : UnitTestBase
     private readonly Mock<IAudioFileUploadService> _audioFileUploadServiceMock = new();
     private readonly Mock<ICurrentUser> _currentUserMock = new();
     private readonly Guid _userId = Guid.NewGuid();
-    private AudioFileUploadHandler _handler => new(
-        _projectServiceMock.Object,
-        _audioFileUploadServiceMock.Object,
-        _currentUserMock.Object);
+    private AudioFileUploadHandler _handler =>
+        new(
+            _projectServiceMock.Object,
+            _audioFileUploadServiceMock.Object,
+            _currentUserMock.Object
+        );
 
-    public AudioFileUploadHandlerTests(ITestOutputHelper output) : base(output)
+    public AudioFileUploadHandlerTests(ITestOutputHelper output)
+        : base(output)
     {
         _currentUserMock.SetupGet(user => user.UserId).Returns(_userId);
         _projectServiceMock
             .Setup(s => s.GetByIdAsync(It.IsAny<Guid>(), _userId, It.IsAny<CancellationToken>()))
-            .ReturnsAsync(new ProjectDto(Guid.NewGuid(), "Test Project", Guid.NewGuid(), "", DateTime.Now));
+            .ReturnsAsync(
+                new ProjectDto(Guid.NewGuid(), "Test Project", Guid.NewGuid(), "", DateTime.Now)
+            );
     }
 
     [Fact]
@@ -72,13 +77,28 @@ public class AudioFileUploadHandlerTests : UnitTestBase
         var files = new List<IFormFile> { mockFile.Object };
         var request = new AudioFileUploadRequest(Guid.NewGuid(), files);
 
-        var batchResult = new BatchAudioFileUploadResultDto(Guid.NewGuid(),
-        [
-            new AudioFileUploadResultDto(Guid.NewGuid(), "test.mp3", "audio/mp3", 1000, Status.Success, null)
-        ]);
+        var batchResult = new BatchAudioFileUploadResultDto(
+            Guid.NewGuid(),
+            [
+                new AudioFileUploadResultDto(
+                    Guid.NewGuid(),
+                    "test.mp3",
+                    "audio/mp3",
+                    1000,
+                    Status.Success,
+                    null
+                ),
+            ]
+        );
 
         _audioFileUploadServiceMock
-            .Setup(s => s.UploadBatchAsync(It.IsAny<Guid>(), It.IsAny<List<IFormFile>>(), It.IsAny<CancellationToken>()))
+            .Setup(s =>
+                s.UploadBatchAsync(
+                    It.IsAny<Guid>(),
+                    It.IsAny<List<IFormFile>>(),
+                    It.IsAny<CancellationToken>()
+                )
+            )
             .ReturnsAsync(batchResult);
 
         // Act
@@ -93,17 +113,43 @@ public class AudioFileUploadHandlerTests : UnitTestBase
     public async Task Handle_ShouldReturnMultiStatus_WhenSomeFilesFail()
     {
         // Arrange
-        var files = new List<IFormFile> { new Mock<IFormFile>().Object, new Mock<IFormFile>().Object };
+        var files = new List<IFormFile>
+        {
+            new Mock<IFormFile>().Object,
+            new Mock<IFormFile>().Object,
+        };
         var request = new AudioFileUploadRequest(Guid.NewGuid(), files);
 
-        var batchResult = new BatchAudioFileUploadResultDto(Guid.NewGuid(),
-        [
-            new AudioFileUploadResultDto(Guid.NewGuid(), "test1.mp3", "audio/mp3", 1000, Status.Success, null),
-            new AudioFileUploadResultDto(Guid.NewGuid(), "test2.mp3", "audio/mp3", 0, Status.Failure, "error")
-        ]);
+        var batchResult = new BatchAudioFileUploadResultDto(
+            Guid.NewGuid(),
+            [
+                new AudioFileUploadResultDto(
+                    Guid.NewGuid(),
+                    "test1.mp3",
+                    "audio/mp3",
+                    1000,
+                    Status.Success,
+                    null
+                ),
+                new AudioFileUploadResultDto(
+                    Guid.NewGuid(),
+                    "test2.mp3",
+                    "audio/mp3",
+                    0,
+                    Status.Failure,
+                    "error"
+                ),
+            ]
+        );
 
         _audioFileUploadServiceMock
-            .Setup(s => s.UploadBatchAsync(It.IsAny<Guid>(), It.IsAny<List<IFormFile>>(), It.IsAny<CancellationToken>()))
+            .Setup(s =>
+                s.UploadBatchAsync(
+                    It.IsAny<Guid>(),
+                    It.IsAny<List<IFormFile>>(),
+                    It.IsAny<CancellationToken>()
+                )
+            )
             .ReturnsAsync(batchResult);
 
         // Act
@@ -121,13 +167,28 @@ public class AudioFileUploadHandlerTests : UnitTestBase
         var files = new List<IFormFile> { new Mock<IFormFile>().Object };
         var request = new AudioFileUploadRequest(Guid.NewGuid(), files);
 
-        var batchResult = new BatchAudioFileUploadResultDto(Guid.NewGuid(),
-        [
-            new AudioFileUploadResultDto(Guid.NewGuid(), "test.mp3", "audio/mp3", 0, Status.Failure, "error")
-        ]);
+        var batchResult = new BatchAudioFileUploadResultDto(
+            Guid.NewGuid(),
+            [
+                new AudioFileUploadResultDto(
+                    Guid.NewGuid(),
+                    "test.mp3",
+                    "audio/mp3",
+                    0,
+                    Status.Failure,
+                    "error"
+                ),
+            ]
+        );
 
         _audioFileUploadServiceMock
-            .Setup(s => s.UploadBatchAsync(It.IsAny<Guid>(), It.IsAny<List<IFormFile>>(), It.IsAny<CancellationToken>()))
+            .Setup(s =>
+                s.UploadBatchAsync(
+                    It.IsAny<Guid>(),
+                    It.IsAny<List<IFormFile>>(),
+                    It.IsAny<CancellationToken>()
+                )
+            )
             .ReturnsAsync(batchResult);
 
         // Act

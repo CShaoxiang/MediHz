@@ -3,10 +3,7 @@ interface CardProps {
   onClick: () => void
 }
 
-export default function Card({
-  title,
-  onClick,
-}: CardProps) {
+export default function Card({ title, onClick }: CardProps) {
   return (
     <button
       type="button"
@@ -15,5 +12,5 @@ export default function Card({
     >
       <h5 className="text-lg font-semibold text-gray-800">{title}</h5>
     </button>
-  );
+  )
 }

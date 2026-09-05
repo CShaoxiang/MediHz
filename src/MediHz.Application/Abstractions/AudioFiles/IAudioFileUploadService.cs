@@ -9,5 +9,5 @@ public interface IAudioFileUploadService
         Guid projectId,
         IReadOnlyList<IFormFile> files,
         CancellationToken cancellationToken
-        );
+    );
 }

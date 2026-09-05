@@ -17,7 +17,8 @@ namespace MediHz.Infrastructure.Migrations
                 type: "uuid",
                 nullable: true,
                 oldClrType: typeof(Guid),
-                oldType: "uuid");
+                oldType: "uuid"
+            );
 
             migrationBuilder.AlterColumn<Guid>(
                 name: "ProjectId",
@@ -25,22 +26,22 @@ namespace MediHz.Infrastructure.Migrations
                 type: "uuid",
                 nullable: true,
                 oldClrType: typeof(Guid),
-                oldType: "uuid");
+                oldType: "uuid"
+            );
 
             migrationBuilder.AddColumn<long>(
                 name: "SizeBytes",
                 table: "AudioFiles",
                 type: "bigint",
                 nullable: false,
-                defaultValue: 0L);
+                defaultValue: 0L
+            );
         }
 
         /// <inheritdoc />
         protected override void Down(MigrationBuilder migrationBuilder)
         {
-            migrationBuilder.DropColumn(
-                name: "SizeBytes",
-                table: "AudioFiles");
+            migrationBuilder.DropColumn(name: "SizeBytes", table: "AudioFiles");
 
             migrationBuilder.AlterColumn<Guid>(
                 name: "UploaderId",
@@ -50,7 +51,8 @@ namespace MediHz.Infrastructure.Migrations
                 defaultValue: new Guid("00000000-0000-0000-0000-000000000000"),
                 oldClrType: typeof(Guid),
                 oldType: "uuid",
-                oldNullable: true);
+                oldNullable: true
+            );
 
             migrationBuilder.AlterColumn<Guid>(
                 name: "ProjectId",
@@ -60,7 +62,8 @@ namespace MediHz.Infrastructure.Migrations
                 defaultValue: new Guid("00000000-0000-0000-0000-000000000000"),
                 oldClrType: typeof(Guid),
                 oldType: "uuid",
-                oldNullable: true);
+                oldNullable: true
+            );
         }
     }
 }

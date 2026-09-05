@@ -11,48 +11,47 @@ namespace MediHz.Infrastructure.Migrations
         /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)
         {
-            migrationBuilder.DropForeignKey(
-                name: "FK_Projects_Users_UserId",
-                table: "Projects");
+            migrationBuilder.DropForeignKey(name: "FK_Projects_Users_UserId", table: "Projects");
 
-            migrationBuilder.DropIndex(
-                name: "IX_Projects_UserId",
-                table: "Projects");
+            migrationBuilder.DropIndex(name: "IX_Projects_UserId", table: "Projects");
 
-            migrationBuilder.DropColumn(
-                name: "UserId",
-                table: "Projects");
+            migrationBuilder.DropColumn(name: "UserId", table: "Projects");
 
             migrationBuilder.AddColumn<string>(
                 name: "GoogleSubject",
                 table: "Users",
                 type: "text",
                 nullable: false,
-                defaultValue: "");
+                defaultValue: ""
+            );
 
             migrationBuilder.AddColumn<Guid>(
                 name: "ProjectId1",
                 table: "ProjectMembers",
                 type: "uuid",
                 nullable: false,
-                defaultValue: new Guid("00000000-0000-0000-0000-000000000000"));
+                defaultValue: new Guid("00000000-0000-0000-0000-000000000000")
+            );
 
             migrationBuilder.AddColumn<Guid>(
                 name: "UserId1",
                 table: "ProjectMembers",
                 type: "uuid",
                 nullable: false,
-                defaultValue: new Guid("00000000-0000-0000-0000-000000000000"));
+                defaultValue: new Guid("00000000-0000-0000-0000-000000000000")
+            );
 
             migrationBuilder.CreateIndex(
                 name: "IX_ProjectMembers_ProjectId1",
                 table: "ProjectMembers",
-                column: "ProjectId1");
+                column: "ProjectId1"
+            );
 
             migrationBuilder.CreateIndex(
                 name: "IX_ProjectMembers_UserId1",
                 table: "ProjectMembers",
-                column: "UserId1");
+                column: "UserId1"
+            );
 
             migrationBuilder.AddForeignKey(
                 name: "FK_ProjectMembers_Projects_ProjectId",
@@ -60,7 +59,8 @@ namespace MediHz.Infrastructure.Migrations
                 column: "ProjectId",
                 principalTable: "Projects",
                 principalColumn: "Id",
-                onDelete: ReferentialAction.Cascade);
+                onDelete: ReferentialAction.Cascade
+            );
 
             migrationBuilder.AddForeignKey(
                 name: "FK_ProjectMembers_Projects_ProjectId1",
@@ -68,7 +68,8 @@ namespace MediHz.Infrastructure.Migrations
                 column: "ProjectId1",
                 principalTable: "Projects",
                 principalColumn: "Id",
-                onDelete: ReferentialAction.Cascade);
+                onDelete: ReferentialAction.Cascade
+            );
 
             migrationBuilder.AddForeignKey(
                 name: "FK_ProjectMembers_Users_UserId1",
@@ -76,7 +77,8 @@ namespace MediHz.Infrastructure.Migrations
                 column: "UserId1",
                 principalTable: "Users",
                 principalColumn: "Id",
-                onDelete: ReferentialAction.Cascade);
+                onDelete: ReferentialAction.Cascade
+            );
 
             migrationBuilder.AddForeignKey(
                 name: "FK_Projects_Users_OwnerId",
@@ -84,7 +86,8 @@ namespace MediHz.Infrastructure.Migrations
                 column: "OwnerId",
                 principalTable: "Users",
                 principalColumn: "Id",
-                onDelete: ReferentialAction.Restrict);
+                onDelete: ReferentialAction.Restrict
+            );
         }
 
         /// <inheritdoc />
@@ -92,57 +95,54 @@ namespace MediHz.Infrastructure.Migrations
         {
             migrationBuilder.DropForeignKey(
                 name: "FK_ProjectMembers_Projects_ProjectId",
-                table: "ProjectMembers");
+                table: "ProjectMembers"
+            );
 
             migrationBuilder.DropForeignKey(
                 name: "FK_ProjectMembers_Projects_ProjectId1",
-                table: "ProjectMembers");
+                table: "ProjectMembers"
+            );
 
             migrationBuilder.DropForeignKey(
                 name: "FK_ProjectMembers_Users_UserId1",
-                table: "ProjectMembers");
+                table: "ProjectMembers"
+            );
 
-            migrationBuilder.DropForeignKey(
-                name: "FK_Projects_Users_OwnerId",
-                table: "Projects");
+            migrationBuilder.DropForeignKey(name: "FK_Projects_Users_OwnerId", table: "Projects");
 
             migrationBuilder.DropIndex(
                 name: "IX_ProjectMembers_ProjectId1",
-                table: "ProjectMembers");
+                table: "ProjectMembers"
+            );
 
-            migrationBuilder.DropIndex(
-                name: "IX_ProjectMembers_UserId1",
-                table: "ProjectMembers");
+            migrationBuilder.DropIndex(name: "IX_ProjectMembers_UserId1", table: "ProjectMembers");
 
-            migrationBuilder.DropColumn(
-                name: "GoogleSubject",
-                table: "Users");
+            migrationBuilder.DropColumn(name: "GoogleSubject", table: "Users");
 
-            migrationBuilder.DropColumn(
-                name: "ProjectId1",
-                table: "ProjectMembers");
+            migrationBuilder.DropColumn(name: "ProjectId1", table: "ProjectMembers");
 
-            migrationBuilder.DropColumn(
-                name: "UserId1",
-                table: "ProjectMembers");
+            migrationBuilder.DropColumn(name: "UserId1", table: "ProjectMembers");
 
             migrationBuilder.AddColumn<Guid>(
                 name: "UserId",
                 table: "Projects",
                 type: "uuid",
-                nullable: true);
+                nullable: true
+            );
 
             migrationBuilder.CreateIndex(
                 name: "IX_Projects_UserId",
                 table: "Projects",
-                column: "UserId");
+                column: "UserId"
+            );
 
             migrationBuilder.AddForeignKey(
                 name: "FK_Projects_Users_UserId",
                 table: "Projects",
                 column: "UserId",
                 principalTable: "Users",
-                principalColumn: "Id");
+                principalColumn: "Id"
+            );
         }
     }
 }

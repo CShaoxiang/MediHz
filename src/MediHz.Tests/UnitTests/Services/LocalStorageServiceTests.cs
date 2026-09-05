@@ -1,6 +1,6 @@
+using System.Text;
 using FluentAssertions;
 using MediHz.Infrastructure.Services;
-using System.Text;
 using Xunit.Abstractions;
 
 namespace MediHz.Tests.UnitTests.Services;
@@ -8,7 +8,11 @@ namespace MediHz.Tests.UnitTests.Services;
 public class LocalStorageServiceTests(ITestOutputHelper output) : UnitTestBase(output)
 {
     private readonly LocalStorageService _service = new();
-    private readonly string _testBasePath = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData), "MediHz", "Storage");
+    private readonly string _testBasePath = Path.Combine(
+        Environment.GetFolderPath(Environment.SpecialFolder.ApplicationData),
+        "MediHz",
+        "Storage"
+    );
     private readonly string _testRunId = Guid.NewGuid().ToString();
 
     public override async Task DisposeAsync()
@@ -41,7 +45,7 @@ public class LocalStorageServiceTests(ITestOutputHelper output) : UnitTestBase(o
         var savedContent = await File.ReadAllTextAsync(fullPath);
         savedContent.Should().Be(content);
     }
-    
+
     [Fact]
     public async Task GetFileAsync_ShouldReturnNull_WhenFileDoesNotExist()
     {
@@ -54,7 +58,7 @@ public class LocalStorageServiceTests(ITestOutputHelper output) : UnitTestBase(o
         // Assert
         stream.Should().BeNull();
     }
-    
+
     [Fact]
     public async Task GetFileAsync_ShouldReturnStream_WhenFileExists()
     {
@@ -74,7 +78,7 @@ public class LocalStorageServiceTests(ITestOutputHelper output) : UnitTestBase(o
         var result = await reader.ReadToEndAsync();
         result.Should().Be(content);
     }
-    
+
     [Fact]
     public async Task DeleteFileAsync_ShouldRemoveFileFromDisk()
     {
@@ -83,7 +87,7 @@ public class LocalStorageServiceTests(ITestOutputHelper output) : UnitTestBase(o
         var fullPath = Path.Combine(_testBasePath, relativePath);
         Directory.CreateDirectory(Path.GetDirectoryName(fullPath)!);
         await File.WriteAllTextAsync(fullPath, "Delete me");
-        
+
         File.Exists(fullPath).Should().BeTrue();
 
         // Act

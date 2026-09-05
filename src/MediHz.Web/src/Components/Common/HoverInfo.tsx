@@ -1,10 +1,9 @@
-import type { ReactNode } from "react"
+import type { ReactNode } from 'react'
 
 interface HoverInfoProp {
-    children: ReactNode
+  children: ReactNode
 }
 
-
-export default function HoverInfo({children}: HoverInfoProp) {
+export default function HoverInfo({ children }: HoverInfoProp) {
   return <div className="info-box-child">{children}</div>
 }

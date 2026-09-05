@@ -9,7 +9,11 @@ namespace MediHz.Api.Controllers;
 [Authorize]
 [Route("api/[controller]")]
 [ApiController]
-public class ProjectsController(IGetProjectsHandler getProjectsHandler, ICreateProjectHandler createProjectHandler, IGetProjectAudioFilesHandler getProjectAudioFilesHandler) : ControllerBase
+public class ProjectsController(
+    IGetProjectsHandler getProjectsHandler,
+    ICreateProjectHandler createProjectHandler,
+    IGetProjectAudioFilesHandler getProjectAudioFilesHandler
+) : ControllerBase
 {
     [HttpGet("all")]
     [ProducesResponseType(typeof(IEnumerable<ProjectDto>), StatusCodes.Status200OK)]
@@ -22,7 +26,10 @@ public class ProjectsController(IGetProjectsHandler getProjectsHandler, ICreateP
     [HttpPost("create")]
     [Consumes("multipart/form-data")]
     [ProducesResponseType(typeof(ProjectDto), StatusCodes.Status200OK)]
-    public async Task<IActionResult> CreateProject([FromForm] CreateProjectRequest request, CancellationToken cancellationToken)
+    public async Task<IActionResult> CreateProject(
+        [FromForm] CreateProjectRequest request,
+        CancellationToken cancellationToken
+    )
     {
         var response = await createProjectHandler.Handle(request, cancellationToken);
         return StatusCode(response.StatusCode, response.Body);
@@ -30,9 +37,12 @@ public class ProjectsController(IGetProjectsHandler getProjectsHandler, ICreateP
 
     [HttpGet("{projectId}/files")]
     [ProducesResponseType(typeof(IEnumerable<AudioFileDto>), StatusCodes.Status200OK)]
-    public async Task<IActionResult> GetProjectAudioFiles(Guid projectId, CancellationToken cancellationToken)
+    public async Task<IActionResult> GetProjectAudioFiles(
+        Guid projectId,
+        CancellationToken cancellationToken
+    )
     {
-        var response = await getProjectAudioFilesHandler.Handle(new (projectId), cancellationToken);
+        var response = await getProjectAudioFilesHandler.Handle(new(projectId), cancellationToken);
         return StatusCode(response.StatusCode, response.Body);
     }
 }

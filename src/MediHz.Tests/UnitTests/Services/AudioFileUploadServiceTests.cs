@@ -1,3 +1,4 @@
+using System.Text;
 using FluentAssertions;
 using MediHz.Application.Abstractions.Storage;
 using MediHz.Application.DTOs.AudioFiles;
@@ -7,7 +8,6 @@ using MediHz.Infrastructure.Services;
 using Microsoft.AspNetCore.Http;
 using Microsoft.EntityFrameworkCore;
 using Moq;
-using System.Text;
 using Xunit.Abstractions;
 
 namespace MediHz.Tests.UnitTests.Services;
@@ -16,13 +16,16 @@ public class AudioFileUploadServiceTests : UnitTestBase
 {
     private readonly Project _project;
     private readonly Mock<IStorageService> _storageServiceMock = new();
-    private readonly MediHzDbContext _dbContext = new(new DbContextOptionsBuilder<MediHzDbContext>()
-        .UseInMemoryDatabase(databaseName: Guid.NewGuid().ToString())
-        .Options);
+    private readonly MediHzDbContext _dbContext = new(
+        new DbContextOptionsBuilder<MediHzDbContext>()
+            .UseInMemoryDatabase(databaseName: Guid.NewGuid().ToString())
+            .Options
+    );
 
     private AudioFileUploadService _service;
 
-    public AudioFileUploadServiceTests(ITestOutputHelper output) : base(output)
+    public AudioFileUploadServiceTests(ITestOutputHelper output)
+        : base(output)
     {
         // TODO: Needs valid owner when user functionality is aligned
         _project = new Project("Sample Project Name", Guid.NewGuid());
@@ -88,7 +91,13 @@ public class AudioFileUploadServiceTests : UnitTestBase
         fileMock.Setup(f => f.OpenReadStream()).Returns(wavStream);
 
         _storageServiceMock
-            .Setup(s => s.SaveFileAsync(It.IsAny<Stream>(), It.IsAny<string>(), It.IsAny<CancellationToken>()))
+            .Setup(s =>
+                s.SaveFileAsync(
+                    It.IsAny<Stream>(),
+                    It.IsAny<string>(),
+                    It.IsAny<CancellationToken>()
+                )
+            )
             .ReturnsAsync("exampleProjectId/newfile.wav");
 
         // Act

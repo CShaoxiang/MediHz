@@ -1,7 +1,7 @@
 import { GoogleLogin } from '@react-oauth/google'
 import { Navigate, useNavigate } from 'react-router-dom'
 import { useState } from 'react'
-import { useAuth } from '../Auth/AuthProvider'
+import { useAuth } from '../Auth/AuthContext'
 
 export default function LoginPage() {
   const { user, login } = useAuth()

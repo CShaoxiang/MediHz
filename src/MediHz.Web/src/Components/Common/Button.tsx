@@ -2,7 +2,7 @@ import type { ReactNode } from 'react'
 
 export interface ButtonProps {
   label?: string
-  onClick?: (args: any) => void
+  onClick?: () => void
   children?: ReactNode
 }
 

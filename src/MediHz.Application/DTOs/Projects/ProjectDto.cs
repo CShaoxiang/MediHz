@@ -5,4 +5,5 @@ public sealed record ProjectDto(
     string Name,
     Guid OwnerId,
     string OwnerDisplayName,
-    DateTimeOffset CreatedAt);
+    DateTimeOffset CreatedAt
+);

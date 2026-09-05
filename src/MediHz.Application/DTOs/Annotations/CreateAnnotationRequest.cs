@@ -4,4 +4,5 @@ public sealed record CreateAnnotationRequest(
     Guid AudioFileId,
     string? LabelName,
     decimal StartTimeSeconds,
-    decimal EndTimeSeconds);
+    decimal EndTimeSeconds
+);

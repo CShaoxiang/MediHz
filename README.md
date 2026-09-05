@@ -14,7 +14,8 @@ MediHz is a light-weight audio annotation tool for use by medical professionals 
 - `MediHz.Application` — service interfaces and DTOs. Depends on `Domain`.
 - `MediHz.Infrastructure` — service implementations (i.e. persistence, storage, external services).
 - `MediHz.Api` — HTTP controllers, SignalR hubs, and app startup (`Program.cs`).
-- `MediHz.Web` — React Frontend
+- `MediHz.Web` — React Frontend.
+- `MediHz.Tests` — .NET unit tests.
 
 ## Quickstart
 
@@ -23,14 +24,19 @@ MediHz is a light-weight audio annotation tool for use by medical professionals 
 Prerequisites:
 - .NET 10 SDK.
 ```bash
-git clone <repo-url>
 cd MediHz
 dotnet restore
 dotnet run --project src/MediHz.Api -lp development
 ```
 Runs the project in development mode on port 5001. API reference available at <http://localhost:5001/scalar/v1>.
 
-### Database Setup:
+```bash
+dotnet tool restore
+```
+Installs necessary dotnet tools for development. These currently include:
+- [CSharpier](https://csharpier.com/) for opinionated formatting.
+
+### Database
 
 Start PostgreSQL:
 ```bash
@@ -40,15 +46,16 @@ Apply the latest EF Core migration:
 ```bash
 dotnet ef database update --project src/MediHz.Infrastructure --startup-project src/MediHz.Api
 ```
-To update the latest table and apply the migration :
+To update entities and create a migration:
 ```bash
 dotnet ef migrations add <Placerholder-migration-name> --project src/MediHz.Infrastructure --startup-project src/MediHz.Api
-
 dotnet ef database update --project src/MediHz.Infrastructure --startup-project src/MediHz.Api
 ```
 
 ### Frontend
 
+Prerequisites:
+- Node 24.
 ```bash
 git clone <repo-url>
 cd MediHz/src/MediHz.web
@@ -76,6 +83,8 @@ Branches should align with [Commit Names](#commits); `<type>/<short-description>
 
 Commits should be atomic, this means each commit should do just one thing. Commit messages concisely describe the work done using the [Conventional Commits](https://www.conventionalcommits.org/en/v1.0.0/#summary) specification.
 
+There is a pre-commit hooks to automate the required formatting and linting processes in `.githooks/pre-commit`. It can be enabled to automatically run on commit and save with `git config core.hooksPath .githooks`.
+
 ### Review
 
 Each Merge Request (MR) must be reviewed by one contributor that did not contribute code to the MR. Reviews are expected to be raise valid concerns around functionality, code quality, maintainability, and clarify concepts in code.
@@ -86,7 +95,10 @@ The MR title should align with [Commit Names](#commits).
 
 #### CI/CD
 
-TODO.
+All MRs must pass the following checks before they can be merged:
+1. Testing - all dotnet tests in `MediHz.Tests` should pass.
+1. Backend formatting - CSharpier must be ran on backend files.
+1. Frontend formatting, linting, and typechecking - Prettier, eslint, and tsc checks must pass on the frontend.
 
 ### Deployment
 TODO.

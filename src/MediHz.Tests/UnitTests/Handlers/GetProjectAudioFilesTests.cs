@@ -15,7 +15,8 @@ public class GetProjectAudioFilesHandlerTests : UnitTestBase
 
     private GetProjectAudioFilesHandler _handler;
 
-    public GetProjectAudioFilesHandlerTests(ITestOutputHelper output) : base(output)
+    public GetProjectAudioFilesHandlerTests(ITestOutputHelper output)
+        : base(output)
     {
         _handler = new(_audioFileService.Object, Logger<GetProjectAudioFilesHandler>());
     }

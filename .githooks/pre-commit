@@ -1,0 +1,25 @@
+#!/bin/sh
+# Enable with: git config core.hooksPath .githooks
+set -e
+
+cd "$(git rev-parse --show-toplevel)"
+
+STAGED=$(git diff --cached --name-only --diff-filter=ACMR)
+[ -z "$STAGED" ] && exit 0
+
+# Frontend
+FRONTEND_DIR="src/MediHz.Web"
+FE=$(printf '%s\n' "$STAGED" | grep -E "^${FRONTEND_DIR}/.*\.(ts|tsx|js|jsx|json|css|md)$" || true)
+if [ -n "$FE" ]; then
+  REL=$(printf '%s\n' "$FE" | sed "s#^${FRONTEND_DIR}/##")
+  ( cd "$FRONTEND_DIR" && printf '%s\n' "$REL" | xargs npx eslint --fix )
+  ( cd "$FRONTEND_DIR" && printf '%s\n' "$REL" | xargs npx prettier --write )
+  printf '%s\n' "$FE" | xargs git add
+fi
+
+# Backend
+CS=$(printf '%s\n' "$STAGED" | grep -E "\.cs$" || true)
+if [ -n "$CS" ]; then
+  printf '%s\n' "$CS" | xargs dotnet csharpier format
+  printf '%s\n' "$CS" | xargs git add
+fi

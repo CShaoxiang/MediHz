@@ -1,30 +1,30 @@
 interface AnnotationRegion {
-  id: number;
-  label: string;
-  startPercent: number;
-  widthPercent: number;
+  id: number
+  label: string
+  startPercent: number
+  widthPercent: number
 }
 
 const mockAnnotations: AnnotationRegion[] = [
   {
     id: 1,
-    label: "Annotation 1",
+    label: 'Annotation 1',
     startPercent: 18,
     widthPercent: 18,
   },
   {
     id: 2,
-    label: "Annotation 2",
+    label: 'Annotation 2',
     startPercent: 34,
     widthPercent: 20,
   },
   {
     id: 3,
-    label: "Annotation 3",
+    label: 'Annotation 3',
     startPercent: 68,
     widthPercent: 18,
   },
-];
+]
 
 export default function WaveformView() {
   return (
@@ -32,9 +32,7 @@ export default function WaveformView() {
       <header className="flex items-center justify-between">
         <div>
           <h2 className="text-xl font-semibold">Audio 1</h2>
-          <p className="text-sm text-gray-500">
-            Client-side waveform design preview
-          </p>
+          <p className="text-sm text-gray-500">Client-side waveform design preview</p>
         </div>
       </header>
 
@@ -55,9 +53,7 @@ export default function WaveformView() {
               width: `${annotation.widthPercent}%`,
             }}
           >
-            <span className="text-xs font-medium text-gray-800">
-              {annotation.label}
-            </span>
+            <span className="text-xs font-medium text-gray-800">{annotation.label}</span>
           </div>
         ))}
       </div>
@@ -77,21 +73,15 @@ export default function WaveformView() {
         <div className="flex items-center gap-2">
           <span className="text-sm text-gray-600">Zoom</span>
 
-          <button
-            type="button"
-            className="rounded-lg border px-3 py-1"
-          >
+          <button type="button" className="rounded-lg border px-3 py-1">
             −
           </button>
 
-          <button
-            type="button"
-            className="rounded-lg border px-3 py-1"
-          >
+          <button type="button" className="rounded-lg border px-3 py-1">
             +
           </button>
         </div>
       </footer>
     </section>
-  );
+  )
 }

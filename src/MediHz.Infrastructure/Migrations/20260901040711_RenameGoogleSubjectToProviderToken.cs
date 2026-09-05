@@ -13,12 +13,14 @@ namespace MediHz.Infrastructure.Migrations
             migrationBuilder.RenameColumn(
                 name: "GoogleSubject",
                 table: "Users",
-                newName: "ProviderToken");
+                newName: "ProviderToken"
+            );
 
             migrationBuilder.RenameIndex(
                 name: "IX_Users_GoogleSubject",
                 table: "Users",
-                newName: "IX_Users_ProviderToken");
+                newName: "IX_Users_ProviderToken"
+            );
         }
 
         /// <inheritdoc />
@@ -27,12 +29,14 @@ namespace MediHz.Infrastructure.Migrations
             migrationBuilder.RenameColumn(
                 name: "ProviderToken",
                 table: "Users",
-                newName: "GoogleSubject");
+                newName: "GoogleSubject"
+            );
 
             migrationBuilder.RenameIndex(
                 name: "IX_Users_ProviderToken",
                 table: "Users",
-                newName: "IX_Users_GoogleSubject");
+                newName: "IX_Users_GoogleSubject"
+            );
         }
     }
 }

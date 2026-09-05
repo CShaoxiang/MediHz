@@ -1,7 +1,7 @@
 import type { ReactNode } from 'react'
 import { Link } from 'react-router-dom'
 import Button from './Button'
-import { useAuth } from '../../Auth/AuthProvider'
+import { useAuth } from '../../Auth/AuthContext'
 
 interface NavBarProp {
   children?: ReactNode
@@ -44,7 +44,7 @@ export default function NavBar({ children }: NavBarProp) {
 export interface NavBarItemProp {
   icon?: string
   label: string
-  onClick?: (arg0: string) => void
+  onClick?: () => void
 }
 
 export function NavBarItems(prop: NavBarItemProp) {

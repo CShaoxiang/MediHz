@@ -4,8 +4,9 @@ namespace MediHz.Application.Abstractions.Auth;
 
 public interface IAuthService
 {
-    // Complete login use case 
+    // Complete login use case
     Task<AuthResponse> GoogleLoginAsync(
         GoogleLoginRequest request,
-        CancellationToken cancellationToken = default);
+        CancellationToken cancellationToken = default
+    );
 }
