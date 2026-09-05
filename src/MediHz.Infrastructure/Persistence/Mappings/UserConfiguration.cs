@@ -12,25 +12,16 @@ public class UserConfiguration : IEntityTypeConfiguration<User>
 
         builder.HasKey(user => user.Id);
 
-        builder.Property(user => user.Email)
-            .HasMaxLength(320)
-            .IsRequired();
+        builder.Property(user => user.Email).HasMaxLength(320).IsRequired();
 
-        builder.Property(user => user.DisplayName)
-            .HasMaxLength(150)
-            .IsRequired();
+        builder.Property(user => user.DisplayName).HasMaxLength(150).IsRequired();
 
-        builder.Property(user => user.CreatedAtUtc)
-            .IsRequired();
+        builder.Property(user => user.CreatedAtUtc).IsRequired();
 
-        builder.Property(user => user.ProviderToken)
-            .HasMaxLength(255)
-            .IsRequired();
+        builder.Property(user => user.ProviderToken).HasMaxLength(255).IsRequired();
 
-        builder.HasIndex(user => user.Email)
-            .IsUnique();
+        builder.HasIndex(user => user.Email).IsUnique();
 
-        builder.HasIndex(user => user.ProviderToken)
-            .IsUnique();
+        builder.HasIndex(user => user.ProviderToken).IsUnique();
     }
 }

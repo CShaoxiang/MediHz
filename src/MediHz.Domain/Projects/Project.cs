@@ -2,7 +2,6 @@
 using MediHz.Domain.Core;
 using MediHz.Domain.Users;
 
-
 namespace MediHz.Domain.Projects;
 
 public class Project(string Name, Guid ownerId) : EntityBase
@@ -18,5 +17,5 @@ public enum ProjectMemberRole
 {
     Owner = 0,
     Annotator = 1,
-    Viewer = 2
+    Viewer = 2,
 }

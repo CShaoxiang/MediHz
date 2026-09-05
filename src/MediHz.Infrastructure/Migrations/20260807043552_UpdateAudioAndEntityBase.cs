@@ -14,53 +14,61 @@ namespace MediHz.Infrastructure.Migrations
             migrationBuilder.RenameColumn(
                 name: "CreatedAt",
                 table: "Users",
-                newName: "CreatedAtUtc");
+                newName: "CreatedAtUtc"
+            );
 
-            migrationBuilder.RenameColumn(
-                name: "UserId",
-                table: "Users",
-                newName: "Id");
+            migrationBuilder.RenameColumn(name: "UserId", table: "Users", newName: "Id");
 
             migrationBuilder.RenameColumn(
                 name: "CreatedAt",
                 table: "Projects",
-                newName: "CreatedAtUtc");
+                newName: "CreatedAtUtc"
+            );
 
             migrationBuilder.RenameColumn(
                 name: "UpdatedAt",
                 table: "Annotations",
-                newName: "UpdatedAtUtc");
+                newName: "UpdatedAtUtc"
+            );
 
             migrationBuilder.RenameColumn(
                 name: "CreatedAt",
                 table: "Annotations",
-                newName: "CreatedAtUtc");
+                newName: "CreatedAtUtc"
+            );
 
             migrationBuilder.AddColumn<DateTimeOffset>(
                 name: "UpdatedAtUtc",
                 table: "Users",
                 type: "timestamp with time zone",
-                nullable: true);
+                nullable: true
+            );
 
             migrationBuilder.AddColumn<DateTimeOffset>(
                 name: "UpdatedAtUtc",
                 table: "Projects",
                 type: "timestamp with time zone",
-                nullable: true);
+                nullable: true
+            );
 
             migrationBuilder.AddColumn<int>(
                 name: "Channels",
                 table: "AudioFiles",
                 type: "integer",
                 nullable: false,
-                defaultValue: 0);
+                defaultValue: 0
+            );
 
             migrationBuilder.AddColumn<DateTimeOffset>(
                 name: "CreatedAtUtc",
                 table: "AudioFiles",
                 type: "timestamp with time zone",
                 nullable: false,
-                defaultValue: new DateTimeOffset(new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified), new TimeSpan(0, 0, 0, 0, 0)));
+                defaultValue: new DateTimeOffset(
+                    new DateTime(1, 1, 1, 0, 0, 0, 0, DateTimeKind.Unspecified),
+                    new TimeSpan(0, 0, 0, 0, 0)
+                )
+            );
 
             migrationBuilder.AddColumn<decimal>(
                 name: "SampleRate",
@@ -69,23 +77,27 @@ namespace MediHz.Infrastructure.Migrations
                 precision: 8,
                 scale: 2,
                 nullable: false,
-                defaultValue: 0m);
+                defaultValue: 0m
+            );
 
             migrationBuilder.AddColumn<DateTimeOffset>(
                 name: "UpdatedAtUtc",
                 table: "AudioFiles",
                 type: "timestamp with time zone",
-                nullable: true);
+                nullable: true
+            );
 
             migrationBuilder.AddCheckConstraint(
                 name: "CK_AudioFiles_Channels_Positive",
                 table: "AudioFiles",
-                sql: "\"Channels\" > 0");
+                sql: "\"Channels\" > 0"
+            );
 
             migrationBuilder.AddCheckConstraint(
                 name: "CK_AudioFiles_SamplingRate_Positive",
                 table: "AudioFiles",
-                sql: "\"SampleRate\" > 0");
+                sql: "\"SampleRate\" > 0"
+            );
         }
 
         /// <inheritdoc />
@@ -93,60 +105,51 @@ namespace MediHz.Infrastructure.Migrations
         {
             migrationBuilder.DropCheckConstraint(
                 name: "CK_AudioFiles_Channels_Positive",
-                table: "AudioFiles");
+                table: "AudioFiles"
+            );
 
             migrationBuilder.DropCheckConstraint(
                 name: "CK_AudioFiles_SamplingRate_Positive",
-                table: "AudioFiles");
+                table: "AudioFiles"
+            );
 
-            migrationBuilder.DropColumn(
-                name: "UpdatedAtUtc",
-                table: "Users");
+            migrationBuilder.DropColumn(name: "UpdatedAtUtc", table: "Users");
 
-            migrationBuilder.DropColumn(
-                name: "UpdatedAtUtc",
-                table: "Projects");
+            migrationBuilder.DropColumn(name: "UpdatedAtUtc", table: "Projects");
 
-            migrationBuilder.DropColumn(
-                name: "Channels",
-                table: "AudioFiles");
+            migrationBuilder.DropColumn(name: "Channels", table: "AudioFiles");
 
-            migrationBuilder.DropColumn(
-                name: "CreatedAtUtc",
-                table: "AudioFiles");
+            migrationBuilder.DropColumn(name: "CreatedAtUtc", table: "AudioFiles");
 
-            migrationBuilder.DropColumn(
-                name: "SampleRate",
-                table: "AudioFiles");
+            migrationBuilder.DropColumn(name: "SampleRate", table: "AudioFiles");
 
-            migrationBuilder.DropColumn(
-                name: "UpdatedAtUtc",
-                table: "AudioFiles");
+            migrationBuilder.DropColumn(name: "UpdatedAtUtc", table: "AudioFiles");
 
             migrationBuilder.RenameColumn(
                 name: "CreatedAtUtc",
                 table: "Users",
-                newName: "CreatedAt");
+                newName: "CreatedAt"
+            );
 
-            migrationBuilder.RenameColumn(
-                name: "Id",
-                table: "Users",
-                newName: "UserId");
+            migrationBuilder.RenameColumn(name: "Id", table: "Users", newName: "UserId");
 
             migrationBuilder.RenameColumn(
                 name: "CreatedAtUtc",
                 table: "Projects",
-                newName: "CreatedAt");
+                newName: "CreatedAt"
+            );
 
             migrationBuilder.RenameColumn(
                 name: "UpdatedAtUtc",
                 table: "Annotations",
-                newName: "UpdatedAt");
+                newName: "UpdatedAt"
+            );
 
             migrationBuilder.RenameColumn(
                 name: "CreatedAtUtc",
                 table: "Annotations",
-                newName: "CreatedAt");
+                newName: "CreatedAt"
+            );
         }
     }
 }

@@ -21,21 +21,21 @@ namespace MediHz.Infrastructure.Migrations
                 maxLength: 255,
                 nullable: false,
                 oldClrType: typeof(string),
-                oldType: "text");
+                oldType: "text"
+            );
 
             migrationBuilder.CreateIndex(
                 name: "IX_Users_GoogleSubject",
                 table: "Users",
                 column: "GoogleSubject",
-                unique: true);
+                unique: true
+            );
         }
 
         /// <inheritdoc />
         protected override void Down(MigrationBuilder migrationBuilder)
         {
-            migrationBuilder.DropIndex(
-                name: "IX_Users_GoogleSubject",
-                table: "Users");
+            migrationBuilder.DropIndex(name: "IX_Users_GoogleSubject", table: "Users");
 
             migrationBuilder.AlterColumn<string>(
                 name: "GoogleSubject",
@@ -44,7 +44,8 @@ namespace MediHz.Infrastructure.Migrations
                 nullable: false,
                 oldClrType: typeof(string),
                 oldType: "character varying(255)",
-                oldMaxLength: 255);
+                oldMaxLength: 255
+            );
         }
     }
 }

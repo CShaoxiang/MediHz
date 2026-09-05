@@ -2,5 +2,5 @@
 
 public class AudioQueryExtensions
 {
-    // TODO : Implement reusable filter logic for Audios 
+    // TODO : Implement reusable filter logic for Audios
 }

@@ -13,45 +13,41 @@ namespace MediHz.Infrastructure.Migrations
         {
             migrationBuilder.DropForeignKey(
                 name: "FK_ProjectMembers_Projects_ProjectId",
-                table: "ProjectMembers");
+                table: "ProjectMembers"
+            );
 
-            migrationBuilder.DropForeignKey(
-                name: "FK_Projects_Users_OwnerId",
-                table: "Projects");
+            migrationBuilder.DropForeignKey(name: "FK_Projects_Users_OwnerId", table: "Projects");
 
             migrationBuilder.AddColumn<Guid>(
                 name: "UserId",
                 table: "Projects",
                 type: "uuid",
-                nullable: true);
+                nullable: true
+            );
 
             migrationBuilder.CreateIndex(
                 name: "IX_Projects_UserId",
                 table: "Projects",
-                column: "UserId");
+                column: "UserId"
+            );
 
             migrationBuilder.AddForeignKey(
                 name: "FK_Projects_Users_UserId",
                 table: "Projects",
                 column: "UserId",
                 principalTable: "Users",
-                principalColumn: "Id");
+                principalColumn: "Id"
+            );
         }
 
         /// <inheritdoc />
         protected override void Down(MigrationBuilder migrationBuilder)
         {
-            migrationBuilder.DropForeignKey(
-                name: "FK_Projects_Users_UserId",
-                table: "Projects");
+            migrationBuilder.DropForeignKey(name: "FK_Projects_Users_UserId", table: "Projects");
 
-            migrationBuilder.DropIndex(
-                name: "IX_Projects_UserId",
-                table: "Projects");
+            migrationBuilder.DropIndex(name: "IX_Projects_UserId", table: "Projects");
 
-            migrationBuilder.DropColumn(
-                name: "UserId",
-                table: "Projects");
+            migrationBuilder.DropColumn(name: "UserId", table: "Projects");
 
             migrationBuilder.AddForeignKey(
                 name: "FK_ProjectMembers_Projects_ProjectId",
@@ -59,7 +55,8 @@ namespace MediHz.Infrastructure.Migrations
                 column: "ProjectId",
                 principalTable: "Projects",
                 principalColumn: "Id",
-                onDelete: ReferentialAction.Cascade);
+                onDelete: ReferentialAction.Cascade
+            );
 
             migrationBuilder.AddForeignKey(
                 name: "FK_Projects_Users_OwnerId",
@@ -67,7 +64,8 @@ namespace MediHz.Infrastructure.Migrations
                 column: "OwnerId",
                 principalTable: "Users",
                 principalColumn: "Id",
-                onDelete: ReferentialAction.Restrict);
+                onDelete: ReferentialAction.Restrict
+            );
         }
     }
 }

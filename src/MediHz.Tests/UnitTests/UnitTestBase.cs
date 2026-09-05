@@ -13,6 +13,7 @@ public abstract class UnitTestBase : IAsyncLifetime
     }
 
     protected ILogger<T> Logger<T>() => _loggerFactory.CreateLogger<T>();
+
     protected readonly Fixture Fixture = new();
 
     public virtual Task InitializeAsync() => Task.CompletedTask;

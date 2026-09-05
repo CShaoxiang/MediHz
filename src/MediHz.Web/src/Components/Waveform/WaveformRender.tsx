@@ -33,7 +33,7 @@ export default function WaveformRender({ audio }: WaveformProp) {
   const [startTime, setStartTime] = useState<number | null>(null)
   const [endTime, setEndTime] = useState<number | null>(null)
 
-  const audioDuration = useRef<number>(null)
+  const [audioDuration, setAudioDuration] = useState<number>(0)
   const [zoom, setZoom] = useState(20)
 
   // Zoom Controls
@@ -76,7 +76,7 @@ export default function WaveformRender({ audio }: WaveformProp) {
     regionInstance.current = regions
 
     wavesurfer.on('ready', (duration) => {
-      audioDuration.current = duration
+      setAudioDuration(duration)
     })
 
     wavesurfer.on('timeupdate', (time) => {
@@ -114,7 +114,7 @@ export default function WaveformRender({ audio }: WaveformProp) {
       wavesurfer.destroy()
       waveSurferInstance.current = null
     }
-  }, [])
+  }, [audio])
 
   //Manages region selection
   useEffect(() => {
@@ -153,12 +153,6 @@ export default function WaveformRender({ audio }: WaveformProp) {
     waveSurferInstance.current?.setVolume(newVolume / 100)
   }
 
-  const movePlaybar = (event: ChangeEvent<HTMLInputElement>) => {
-    const newTime = Number(event.target.value)
-    waveSurferInstance.current?.setTime(newTime)
-    setPlaybar(newTime)
-  }
-
   const handleHighlight = () => {
     setHighlight(!highlight)
   }
@@ -183,10 +177,14 @@ export default function WaveformRender({ audio }: WaveformProp) {
       />
 
       <div className="-ml-1 -mr-1 info-box-parent">
-        <Playbar audioDuration={audioDuration} state={playbar} onChange={setPlaybar} />
+        <Playbar
+          audioDuration={audioDuration}
+          state={playbar}
+          onChange={(e) => setPlaybar(Number(e.target.value))}
+        />
 
         <HoverInfo>
-          {formatTime(playbar)} / {formatTime(audioDuration.current || 0)}
+          {formatTime(playbar)} / {formatTime(audioDuration)}
         </HoverInfo>
       </div>
 

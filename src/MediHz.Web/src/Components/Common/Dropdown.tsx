@@ -30,7 +30,7 @@ export default function Dropdown({ label = '', buttons = [] }: DropdownProp) {
               key={button.label}
               type="button"
               className="button bg-purple-700 px-4 py-2 text-sm font-medium text-white transition hover:bg-purple-600"
-              onClick={() => button.onClick?.(button.label)}
+              onClick={() => button.onClick?.()}
             >
               {button.label}
             </button>

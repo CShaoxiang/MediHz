@@ -8,9 +8,16 @@ public interface IUserService
 
     Task<UserDto?> GetByEmailAsync(string email, CancellationToken cancellationToken = default);
 
-    Task<UserDto> CreateAsync(CreateUserRequest request, CancellationToken cancellationToken = default);
+    Task<UserDto> CreateAsync(
+        CreateUserRequest request,
+        CancellationToken cancellationToken = default
+    );
 
-    Task<UserDto?> UpdateAsync(Guid userId, UpdateUserRequest request, CancellationToken cancellationToken = default);
+    Task<UserDto?> UpdateAsync(
+        Guid userId,
+        UpdateUserRequest request,
+        CancellationToken cancellationToken = default
+    );
 
     Task<bool> DeleteAsync(Guid userId, CancellationToken cancellationToken = default);
 
@@ -19,5 +26,6 @@ public interface IUserService
         string email,
         string displayName,
         string providerName,
-        CancellationToken cancellationToken = default);
+        CancellationToken cancellationToken = default
+    );
 }

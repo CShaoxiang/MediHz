@@ -1,19 +1,11 @@
-import type { Dispatch, RefObject, SetStateAction } from "react"
-import Slider from "../Common/Slider"
+import Slider from '../Common/Slider'
 
-interface PlaybarProp{
-    audioDuration: RefObject<number|null>,
-    state: number,
-    onChange:  Dispatch<SetStateAction<number>>
+interface PlaybarProp {
+  audioDuration: number
+  state: number
+  onChange: (event: React.ChangeEvent<HTMLInputElement>) => void
 }
 
-export default function Playbar({audioDuration, state, onChange}:PlaybarProp) {
-  return (
-    <Slider
-      min={0}
-      max={audioDuration.current ? audioDuration.current : 0}
-      state={state}
-      onChange={onChange}
-    />
-  )
+export default function Playbar({ audioDuration, state, onChange }: PlaybarProp) {
+  return <Slider min={0} max={audioDuration ?? 0} state={state} onChange={onChange} />
 }

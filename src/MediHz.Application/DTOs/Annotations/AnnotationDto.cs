@@ -10,4 +10,5 @@ public sealed record AnnotationDto(
     decimal EndTimeSeconds,
     decimal DurationSeconds,
     DateTimeOffset CreatedAt,
-    DateTimeOffset UpdatedAt);
+    DateTimeOffset UpdatedAt
+);

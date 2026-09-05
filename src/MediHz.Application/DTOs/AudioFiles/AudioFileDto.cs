@@ -10,4 +10,5 @@ public sealed record AudioFileDto(
     string UploaderDisplayName,
     string FileName,
     AudioFileFormat Format,
-    decimal Duration);
+    decimal Duration
+);

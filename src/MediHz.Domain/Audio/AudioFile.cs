@@ -17,8 +17,9 @@ public class AudioFile : EntityBase
     public int Channels { get; set; }
     public long SizeBytes { get; set; }
 }
+
 public enum AudioFileFormat
 {
     Mp3 = 0,
-    Wav = 1
+    Wav = 1,
 }

@@ -1,5 +1,4 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
-
   <PropertyGroup>
     <TargetFramework>net10.0</TargetFramework>
     <ImplicitUsings>enable</ImplicitUsings>
@@ -29,5 +28,4 @@
     <ProjectReference Include="..\MediHz.Infrastructure\MediHz.Infrastructure.csproj" />
     <ProjectReference Include="..\MediHz.Domain\MediHz.Domain.csproj" />
   </ItemGroup>
-
 </Project>

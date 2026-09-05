@@ -19,10 +19,15 @@ public class GetProjectsHandlerTests : UnitTestBase
 
     private GetProjectsHandler _handler;
 
-    public GetProjectsHandlerTests(ITestOutputHelper output) : base(output)
+    public GetProjectsHandlerTests(ITestOutputHelper output)
+        : base(output)
     {
         _currentUserMock.SetupGet(user => user.UserId).Returns(_userId);
-        _handler = new(_projectServiceMock.Object, _currentUserMock.Object, Logger<GetProjectsHandler>());
+        _handler = new(
+            _projectServiceMock.Object,
+            _currentUserMock.Object,
+            Logger<GetProjectsHandler>()
+        );
     }
 
     [Fact]
@@ -42,9 +47,10 @@ public class GetProjectsHandlerTests : UnitTestBase
         result.StatusCode.Should().Be(StatusCodes.Status200OK);
         var body = result.Body as IEnumerable<ProjectDto>;
         body!.Single().Should().BeEquivalentTo(project);
-        _projectServiceMock.Verify(service => service.GetForUserAsync(
-            _userId,
-            CancellationToken.None), Times.Once);
+        _projectServiceMock.Verify(
+            service => service.GetForUserAsync(_userId, CancellationToken.None),
+            Times.Once
+        );
     }
 
     [Fact]
@@ -71,7 +77,9 @@ public class GetProjectsHandlerTests : UnitTestBase
     {
         // Arrange
         var request = new EmptyRequest();
-        _projectServiceMock.Setup(x => x.GetForUserAsync(It.IsAny<Guid>(), It.IsAny<CancellationToken>())).ReturnsAsync([]);
+        _projectServiceMock
+            .Setup(x => x.GetForUserAsync(It.IsAny<Guid>(), It.IsAny<CancellationToken>()))
+            .ReturnsAsync([]);
 
         // Act
         var result = await _handler.Handle(request, CancellationToken.None);
@@ -81,4 +89,3 @@ public class GetProjectsHandlerTests : UnitTestBase
         result.Value.Should().BeEmpty();
     }
 }
-

@@ -1,10 +1,8 @@
-import type { Dispatch, SetStateAction } from 'react'
-
 interface sliderProp {
   min: number
   max: number
   state: number
-  onChange: (event: any) => void
+  onChange: (event: React.ChangeEvent<HTMLInputElement>) => void
 }
 
 export default function Slider({ min, max, state, onChange }: sliderProp) {

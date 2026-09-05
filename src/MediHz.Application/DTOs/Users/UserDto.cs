@@ -5,4 +5,5 @@ public sealed record UserDto(
     string Email,
     string DisplayName,
     string GoogleSubject,
-    DateTimeOffset CreatedAt);
+    DateTimeOffset CreatedAt
+);

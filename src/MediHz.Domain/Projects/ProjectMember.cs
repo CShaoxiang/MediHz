@@ -4,7 +4,7 @@ namespace MediHz.Domain.Projects;
 
 public class ProjectMember
 {
-    public Guid ProjectId { get; set; } 
+    public Guid ProjectId { get; set; }
     public Guid UserId { get; set; }
 
     // join many to many

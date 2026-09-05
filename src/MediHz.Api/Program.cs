@@ -1,7 +1,7 @@
 using System.Text;
 using MediHz.Api.Extensions;
-using MediHz.Infrastructure;
 using MediHz.Application;
+using MediHz.Infrastructure;
 using MediHz.Infrastructure.Services;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.IdentityModel.Tokens;
@@ -19,34 +19,36 @@ builder.Services.AddInfrastructure(builder.Configuration);
 
 builder.Services.AddCors(options =>
 {
-    options.AddPolicy("Frontend", policy =>
-    {
-        policy
-            .WithOrigins("http://localhost:5173")
-            .AllowAnyHeader()
-            .AllowAnyMethod();
-    });
-});
-// Add jwt Bearer authentication by default, define validation method
-var jwtOptions = builder.Configuration.GetSection(JwtOptions.SectionName).Get<JwtOptions>() ?? throw new InvalidOperationException("Missing jwt configuration"); 
-builder.Services
-    .AddAuthentication(JwtBearerDefaults.AuthenticationScheme )
-    .AddJwtBearer(options =>
+    options.AddPolicy(
+        "Frontend",
+        policy =>
         {
-            options.MapInboundClaims = false;
-            options.TokenValidationParameters = new TokenValidationParameters
-            {
-                ValidateIssuer = true,
-                ValidIssuer = jwtOptions.Issuer,
-                ValidateAudience = true,
-                ValidAudience = jwtOptions.Audience,
-                ValidateIssuerSigningKey = true,
-                IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(jwtOptions.Key)),
-                ValidateLifetime = true,
-                ClockSkew = TimeSpan.FromMinutes(5)
-            };
+            policy.WithOrigins("http://localhost:5173").AllowAnyHeader().AllowAnyMethod();
         }
     );
+});
+
+// Add jwt Bearer authentication by default, define validation method
+var jwtOptions =
+    builder.Configuration.GetSection(JwtOptions.SectionName).Get<JwtOptions>()
+    ?? throw new InvalidOperationException("Missing jwt configuration");
+builder
+    .Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
+    .AddJwtBearer(options =>
+    {
+        options.MapInboundClaims = false;
+        options.TokenValidationParameters = new TokenValidationParameters
+        {
+            ValidateIssuer = true,
+            ValidIssuer = jwtOptions.Issuer,
+            ValidateAudience = true,
+            ValidAudience = jwtOptions.Audience,
+            ValidateIssuerSigningKey = true,
+            IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(jwtOptions.Key)),
+            ValidateLifetime = true,
+            ClockSkew = TimeSpan.FromMinutes(5),
+        };
+    });
 
 var app = builder.Build();
 app.UseCors("Frontend");

@@ -8,4 +8,5 @@ public sealed record ProjectMemberDto(
     string Email,
     string DisplayName,
     ProjectMemberRole Role,
-    DateTimeOffset JoinedAt);
+    DateTimeOffset JoinedAt
+);
