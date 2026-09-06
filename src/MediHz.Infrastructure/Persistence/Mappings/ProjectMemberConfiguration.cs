@@ -1,5 +1,4 @@
 using MediHz.Domain.Projects;
-using MediHz.Domain.Users;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Metadata.Builders;
 
@@ -20,17 +19,16 @@ public class ProjectMemberConfiguration : IEntityTypeConfiguration<ProjectMember
         // Relationships
 
         // Cascade : Remove all members if project delete
-        // TODO: Add this back oncce Project<->User mapping is restored.
         builder
-            .HasOne<Project>()
+            .HasOne(member => member.Project)
             .WithMany(project => project.Members)
             .HasForeignKey(member => member.ProjectId)
             .OnDelete(DeleteBehavior.Cascade);
 
         // Cascade :  Delete all
         builder
-            .HasOne<User>()
-            .WithMany()
+            .HasOne(member => member.User)
+            .WithMany(user => user.Members)
             .HasForeignKey(member => member.UserId)
             .OnDelete(DeleteBehavior.Cascade);
 
