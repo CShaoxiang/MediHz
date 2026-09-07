@@ -52,5 +52,11 @@ public class AnnotationConfiguration : IEntityTypeConfiguration<Annotation>
             .WithMany()
             .HasForeignKey(annotation => annotation.UserId)
             .OnDelete(DeleteBehavior.Restrict);
+
+        builder
+            .HasOne(annotation => annotation.Label)
+            .WithMany()
+            .HasForeignKey(annotation => annotation.LabelId)
+            .OnDelete(DeleteBehavior.Cascade);
     }
 }
