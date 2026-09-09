@@ -1,5 +1,4 @@
 @import 'tailwindcss';
-@import 'bootstrap/dist/css/bootstrap.min.css';
 
 @theme {
   --color-medihzprimary: #af86ca;
@@ -168,20 +167,8 @@ body {
 }
 
 /*purple range sytling*/
-.purple-range::-webkit-slider-thumb {
-  background-color: #8200db;
-}
-
-.purple-range::-moz-range-thumb {
-  background-color: #8200db;
-}
-
-.purple-range:focus::-webkit-slider-thumb {
-  box-shadow: 0 0 0 0.15rem #8200db;
-}
-
-.purple-range:focus::-moz-range-thumb {
-  box-shadow: 0 0 0 0.15rem #8200db;
+.purple-range {
+  accent-color: #8200db;
 }
 
 .info-box-parent:hover .info-box-child {

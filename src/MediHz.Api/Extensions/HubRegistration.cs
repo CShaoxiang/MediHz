@@ -8,7 +8,7 @@ public static class HubRegistration
 
     public static IEndpointRouteBuilder MapHubs(this IEndpointRouteBuilder endpoints)
     {
-        endpoints.MapHub<SampleHub>($"{Prefix}/sample");
+        endpoints.MapHub<AudioHub>($"{Prefix}/audio");
         return endpoints;
     }
 }
