@@ -12,18 +12,19 @@ export default function NavBar({ children }: NavBarProp) {
 
   return (
     <nav className="nav">
-      <div className="container-fluid flex w-full items-center justify-between rounded-3xl bg-purple-700 text-white p-4 shadow">
+      <div className="flex w-full items-center justify-between rounded-3xl bg-purple-700 text-white p-4 shadow">
         <header>
           <a href="#" className="text-xl font-semibold text-white p-4">
             MediHz
           </a>
         </header>
 
-        <div className="flex-container position-relative z-1 inline-flex gap-2 p-0.5 items-center jusify-center">
+        {/* For buttons */}
+        <div className="flex-container relative z-10 inline-flex gap-2 p-0.5 items-center jusify-center">
           {children}
         </div>
 
-        <div className="flex items-center gap-2 border-l border-white/50 pl-4">
+        <form className="flex border-l border-white/50" role="Export">
           <Button label="Export" />
           {user ? (
             <Button label="Sign out" onClick={() => logout()} />
@@ -35,8 +36,8 @@ export default function NavBar({ children }: NavBarProp) {
               Sign in
             </Link>
           )}
+        </form>
         </div>
-      </div>
     </nav>
   )
 }

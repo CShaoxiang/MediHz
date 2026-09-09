@@ -10,7 +10,7 @@ export default function Slider({ min, max, state, onChange }: sliderProp) {
     <>
       <input
         type="range"
-        className="form-range purple-range"
+        className="purple-range w-full"
         min={min}
         max={max}
         step="0.001"

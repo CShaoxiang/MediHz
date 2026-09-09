@@ -37,7 +37,7 @@ export default function SideBar({ title = 'Sidebar', buttons = [], lists = [] }:
             </div>
           )}
           {lists.length > 0 ? (
-            <div className="list-container min-h-0 flex-1 rounded-2xl bg-white/10 p-3">
+            <div className="list-container min-h-0 flex-1 rounded-2xl bg-white/20 p-3">
               <ListGroup
                 items={lists[0]?.items || []}
                 heading={lists[0]?.heading || ''}

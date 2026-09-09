@@ -1,26 +1,37 @@
-import { useEffect, useRef, useState, type ChangeEvent } from 'react'
+import { useEffect, useRef, useState, type ChangeEvent, type Dispatch } from 'react'
 import WaveSurfer from 'wavesurfer.js'
-import RegionsPlugin from 'wavesurfer.js/dist/plugins/regions.js'
+import RegionsPlugin, { type Region } from 'wavesurfer.js/dist/plugins/regions.js'
 import Button from '../Common/Button'
-import Slider from '../Common/Slider'
-import HoverInfo from '../Common/HoverInfo'
-
-//Icons
 import { FiMusic, FiPause, FiPlay } from 'react-icons/fi'
+import Slider from '../Common/Slider'
 import Playbar from './Playbar'
+import HoverInfo from '../Common/HoverInfo'
+import type { HubConnection } from '@microsoft/signalr'
+import { sendData } from '../../Api/hub'
 
 interface WaveformProp {
   audio: string
+  setSelectedRegion: Dispatch<React.SetStateAction<Region | null>>
+  setRegionData: Dispatch<React.SetStateAction<Map<string, any>>>
+  connection?: HubConnection
 }
 
-export default function WaveformRender({ audio }: WaveformProp) {
+export default function WaveformRender({
+  audio,
+  setSelectedRegion,
+  setRegionData,
+  connection,
+}: WaveformProp) {
   // Waveform rendering
   const waveformRef = useRef<HTMLDivElement | null>(null)
   const waveSurferInstance = useRef<WaveSurfer | null>(null)
+  const selectedRegionRef = useRef<Region | null>(null)
 
   // Region Plugin Rendering
   const regionInstance = useRef<RegionsPlugin>(null)
-  const disableSelection = useRef<() => void>(null)
+  const disableSelection = useRef<(() => void) | null>(null)
+  const neutralRegionColor = 'rgba(70, 115, 51, 0.2)'
+  const selectedRegionColor = 'rgba(131, 0, 219, 0.2)'
 
   // Waveform interactions
   const [playbar, setPlaybar] = useState(0)
@@ -29,10 +40,36 @@ export default function WaveformRender({ audio }: WaveformProp) {
   const [play, setPlay] = useState(false)
   const [volSlide, setVolSlide] = useState(false)
 
-  // Getting Timestamp
-  const [startTime, setStartTime] = useState<number | null>(null)
-  const [endTime, setEndTime] = useState<number | null>(null)
+  const createRegionData = (region: Region) => {
+    setRegionData((currentRegionData) => {
+      const nextRegionData = new Map(currentRegionData)
+      nextRegionData.set(region.id, {
+        startTime: region.start,
+        endTime: region.end,
+        tags: new Set<string>(),
+        description: '',
+      })
+      return nextRegionData
+    })
+  }
+  // Update region data when a region is edited
+  const updateRegionData = (region: Region) => {
+    setRegionData((currentRegionData) => {
+      const nextRegionData = new Map(currentRegionData)
+      nextRegionData.set(region.id, {
+        ...currentRegionData.get(region.id),
+        startTime: region.start,
+        endTime: region.end,
+      })
+      return nextRegionData
+    })
+  }
 
+  const sendRegionData = () => {
+    if (selectedRegionRef.current && connection) {
+      sendData(connection, 'test audio', selectedRegionRef.current.id)
+    }
+  }
   const [audioDuration, setAudioDuration] = useState<number>(0)
   const [zoom, setZoom] = useState(20)
 
@@ -68,8 +105,6 @@ export default function WaveformRender({ audio }: WaveformProp) {
       cursorWidth: 2,
       cursorColor: '#000000',
       normalize: true,
-      minPxPerSec: 20,
-      fillParent: true,
     })
 
     const regions = wavesurfer.registerPlugin(RegionsPlugin.create())
@@ -83,27 +118,6 @@ export default function WaveformRender({ audio }: WaveformProp) {
       setPlaybar(time)
     })
 
-    //Tells region data
-    regions.on('region-clicked', (region) => {
-      setStartTime(region.start)
-      setEndTime(region.end)
-    })
-
-    //Tells region that was updated
-    regions.on('region-updated', (region) => {
-      setStartTime(region.start)
-      setEndTime(region.end)
-    })
-
-    //Set editing on newly created regions based on current editing mode
-    regions.on('region-created', (region) => {
-      region.drag = false
-      region.resize = false
-
-      setStartTime(region.start)
-      setEndTime(region.end)
-    })
-
     wavesurfer.load(audio)
     waveSurferInstance.current = wavesurfer
 
@@ -111,10 +125,56 @@ export default function WaveformRender({ audio }: WaveformProp) {
       //Memory Cleanup
       disableSelection.current?.()
       regionInstance.current = null
-      wavesurfer.destroy()
+
       waveSurferInstance.current = null
+      wavesurfer.destroy()
     }
-  }, [audio])
+  }, [])
+
+  const syncSelectedRegion = (nextRegion: Region) => {
+    const previousRegion = selectedRegionRef.current
+
+    if (previousRegion && previousRegion !== nextRegion) {
+      previousRegion.setOptions({ color: neutralRegionColor })
+    }
+
+    nextRegion.setOptions({ color: selectedRegionColor })
+
+    selectedRegionRef.current = nextRegion
+    setSelectedRegion(nextRegion)
+  }
+
+  useEffect(() => {
+    if (!regionInstance.current) return
+
+    const handleRegionClicked = (region: Region) => {
+      syncSelectedRegion(region)
+    }
+
+    const handleRegionUpdated = (region: Region) => {
+      syncSelectedRegion(region)
+      updateRegionData(region)
+      sendRegionData()
+    }
+
+    const handleRegionCreated = (region: Region) => {
+      syncSelectedRegion(region)
+      region.drag = false
+      region.resize = false
+      createRegionData(region)
+      sendRegionData()
+    }
+
+    regionInstance.current.on('region-clicked', handleRegionClicked)
+    regionInstance.current.on('region-updated', handleRegionUpdated)
+    regionInstance.current.on('region-created', handleRegionCreated)
+
+    return () => {
+      regionInstance.current?.un('region-clicked', handleRegionClicked)
+      regionInstance.current?.un('region-updated', handleRegionUpdated)
+      regionInstance.current?.un('region-created', handleRegionCreated)
+    }
+  }, [connection])
 
   //Manages region selection
   useEffect(() => {
@@ -122,7 +182,7 @@ export default function WaveformRender({ audio }: WaveformProp) {
 
     if (highlight) {
       disableSelection.current = regionInstance.current.enableDragSelection({
-        color: 'rgba(181, 50, 68, 0.2)',
+        color: 'rgba(70, 115, 51, 0.2)',
       })
       return
     }
@@ -161,6 +221,19 @@ export default function WaveformRender({ audio }: WaveformProp) {
     setEditing(!editing)
   }
 
+  const handleDelete = () => {
+    if (selectedRegionRef.current) {
+      selectedRegionRef.current.remove()
+      setSelectedRegion(null)
+
+      setRegionData((currentRegionData) => {
+        const nextRegionData = new Map(currentRegionData)
+        nextRegionData.delete(selectedRegionRef.current!.id)
+        return nextRegionData
+      })
+    }
+  }
+
   const formatTime = (time: number) => {
     const minutes = Math.floor(time / 60)
     const seconds = Math.floor(time % 60)
@@ -169,22 +242,23 @@ export default function WaveformRender({ audio }: WaveformProp) {
 
   const [volume, setVolume] = useState(100)
 
+  const changePlaybar = (time: number) => {
+    waveSurferInstance.current?.setTime(time)
+    setPlaybar(time)
+  }
   return (
     <div className="space-y-4">
-      <div
-        ref={waveformRef}
-        className="w-full bg-violet-100 rounded-3xl shadow overflow-x-auto overflow-y-hidden"
-      />
+      <div ref={waveformRef} className="w-full bg-violet-100 rounded-3xl shadow overflow-hidden" />
 
       <div className="-ml-1 -mr-1 info-box-parent">
         <Playbar
           audioDuration={audioDuration}
           state={playbar}
-          onChange={(e) => setPlaybar(Number(e.target.value))}
+          onChange={(e) => changePlaybar(e.target.value)}
         />
 
         <HoverInfo>
-          {formatTime(playbar)} / {formatTime(audioDuration)}
+          {formatTime(playbar)} / {formatTime(audioDuration || 0)}
         </HoverInfo>
       </div>
 
@@ -208,18 +282,11 @@ export default function WaveformRender({ audio }: WaveformProp) {
 
         <Button label={highlight ? 'Disable Highlight' : 'Highlight'} onClick={handleHighlight} />
         <Button label={editing ? 'Disable Editing' : 'Editing'} onClick={handleEditing} />
-
+        <Button label="Delete" onClick={handleDelete} />
         <Button label="Zoom In" onClick={zoomIn} />
         <Button label="Zoom Out" onClick={zoomOut} />
         <Button label="Reset Zoom" onClick={resetZoom} />
       </div>
-
-      {startTime !== null && endTime !== null && (
-        <div className="flex gap-4 text-sm">
-          <p>Start: {startTime.toFixed(2)}s</p>
-          <p>End: {endTime.toFixed(2)}s</p>
-        </div>
-      )}
     </div>
   )
 }
