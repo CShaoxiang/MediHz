@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useState } from 'react'
 import Button from '../Common/Button'
 import ListGroup from '../Common/ListGroup'
 import type { Region } from 'wavesurfer.js/dist/plugins/regions.js'
@@ -27,6 +27,7 @@ export default function Annotations({
   const selectedRegion = selectedregionData
   const [description, setDescription] = useState(selectedRegion?.description || '...')
   const [customTag, setCustomTag] = useState<string>('')
+  const [prevSelectedRegion, setPrevSelectedRegion] = useState(selectedRegion)
 
   const sendRegionData = () => {
     if (selectedRegion && connection) {
@@ -62,12 +63,13 @@ export default function Annotations({
     })
   }
 
-  useEffect(() => {
+  if (selectedRegion !== prevSelectedRegion) {
+    setPrevSelectedRegion(selectedRegion)
     if (selectedRegion) {
       setRegionTags(selectedRegion.tags || new Set())
       setDescription(selectedRegion.description || '')
     }
-  }, [selectedRegion])
+  }
 
   if (!selectedRegion) {
     return null

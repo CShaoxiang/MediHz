@@ -8,11 +8,10 @@ import { hubConnection } from '../Api/hub'
 import { HubConnection } from '@microsoft/signalr'
 
 export default function MainPage() {
-
   const [selectedRegion, setSelectedRegion] = useState<Region | null>(null)
   const [regionData, setRegionData] = useState<Map<string, RegionData>>(new Map())
   const [regionTags, setRegionTags] = useState<Set<string>>(new Set())
-  
+
   const [connection, setConnection] = useState<HubConnection>()
 
   const addRegionTag = (Tag: string) => {
@@ -24,26 +23,21 @@ export default function MainPage() {
   }
 
   useEffect(() => {
-    if (!connection){
-    async function init() {
-      const connection = await hubConnection()
-      setConnection(connection)
-    }
+    if (!connection) {
+      async function init() {
+        const connection = await hubConnection()
+        setConnection(connection)
+      }
 
-    init()}
-  }, [])
+      init()
+    }
+  }, [connection])
 
   return (
     <div className="flex items-start gap-4">
       <div className="flex items-start gap-4 mr-4">
         <aside className="flex flex-col gap-4">
-          <SideBar
-            title="Audio Files"
-            buttons={[
-              { label: 'Audio 1'},
-              { label: 'Audio 2'},
-            ]}
-          />
+          <SideBar title="Audio Files" buttons={[{ label: 'Audio 1' }, { label: 'Audio 2' }]} />
 
           <SideBar
             title="Annotations"

@@ -1,59 +1,67 @@
-import type { ApiResult } from '../Types/api'
+import type { ApiResult, ProblemDetails } from '../Types/api'
+import { getToken } from '../Auth/tokenStorage'
+
+type HttpMethod = 'GET' | 'POST' | 'PUT' | 'PATCH' | 'DELETE'
 
 const API_BASE = '/api'
-
-export async function apiGet<T = unknown>(path: string): Promise<ApiResult<T>> {
-  console.info('Fetching data with GET', { path })
-  const response = await fetch(`${API_BASE}/${path}`, {
-    method: 'GET',
-    headers: {
-      Accept: 'application/json',
-    },
-  })
-
-  console.info('Response received', { status: response.status, statusText: response.statusText })
-
-  const result = await response.json()
-  return response.ok ? { ok: true, value: result } : { ok: false, error: result }
+const DEFAULT_PROBLEM: ProblemDetails = {
+  title: 'An unexpected error occurred.',
+  detail: 'No details available.',
+  status: 500,
 }
 
-export async function apiPostForm<T = unknown>(
+async function request<T>(
   path: string,
-  body: Record<string, unknown>,
+  method: HttpMethod,
+  extraHeaders: HeadersInit = {},
+  body?: BodyInit,
 ): Promise<ApiResult<T>> {
-  console.info('Sending data with POST', { path, body })
-  const response = await fetch(`${API_BASE}/${path}`, {
-    method: 'POST',
-    headers: {
-      Accept: 'application/json',
-    },
-    body: toFormData(body),
-  })
+  console.info('Fetching data', { method, path })
+
+  const token = getToken()
+  const headers = {
+    Accept: 'application/json',
+    ...(token ? { Authorization: `Bearer ${token}` } : {}),
+    ...extraHeaders,
+  }
+
+  const response = await fetch(`${API_BASE}/${path}`, { method, headers, body })
 
   console.info('Response received', { status: response.status, statusText: response.statusText })
 
-  const result = await response.json()
-  return response.ok ? { ok: true, value: result } : { ok: false, error: result }
+  try {
+    const result = await response.json()
+    return response.ok ? { ok: true, value: result } : { ok: false, error: result }
+  } catch {
+    if (response.ok) return { ok: true, value: null as T }
+    return { ok: false, error: DEFAULT_PROBLEM }
+  }
 }
 
-export async function apiPostJson<T = unknown>(
+export async function apiFetch<T = unknown>(
+  path: string,
+  body?: Record<string, unknown>,
+  method: HttpMethod = 'GET',
+): Promise<ApiResult<T>> {
+  return request<T>(
+    path,
+    method,
+    { 'Content-Type': 'application/json' },
+    body ? JSON.stringify(body) : undefined,
+  )
+}
+
+export async function apiFetchForm<T = unknown>(
   path: string,
   body: Record<string, unknown>,
+  method: HttpMethod = 'POST',
 ): Promise<ApiResult<T>> {
-  console.info('Sending data with POST', { path, body })
-  const response = await fetch(`${API_BASE}/${path}`, {
-    method: 'POST',
-    headers: {
-      Accept: 'application/json',
-      'Content-Type': 'application/json',
-    },
-    body: JSON.stringify(body),
-  })
+  return request<T>(path, method, {}, toFormData(body))
+}
 
-  console.info('Response received', { status: response.status, statusText: response.statusText })
-
-  const result = await response.json()
-  return response.ok ? { ok: true, value: result } : { ok: false, error: result }
+export function showApiError(error: ProblemDetails) {
+  console.error(error)
+  alert(error.detail || error.title)
 }
 
 function toFormData(fields: Record<string, unknown>): FormData {

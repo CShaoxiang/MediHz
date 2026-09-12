@@ -1,3 +1,4 @@
+using MediHz.Application.Handlers.Annotations;
 using MediHz.Application.Handlers.Audio;
 using MediHz.Application.Handlers.Projects;
 using Microsoft.Extensions.Configuration;
@@ -19,6 +20,15 @@ public static class DependencyInjection
         services.AddScoped<ICreateProjectHandler, CreateProjectHandler>();
         services.AddScoped<IGetProjectsHandler, GetProjectsHandler>();
         services.AddScoped<IGetProjectAudioFilesHandler, GetProjectAudioFilesHandler>();
+
+        // Annotations
+        services.AddScoped<ICreateLabelGroupHandler, CreateLabelGroupHandler>();
+        services.AddScoped<IDeleteLabelGroupHandler, DeleteLabelGroupHandler>();
+        services.AddScoped<IGetAllLabelGroupsHandler, GetAllLabelGroupsHandler>();
+        services.AddScoped<ICreateLabelHandler, CreateLabelHandler>();
+        services.AddScoped<IGetLabelsByGroupHandler, GetLabelsByGroupHandler>();
+        services.AddScoped<IDeleteLabelHandler, DeleteLabelHandler>();
+        services.AddScoped<IAssignLabelToGroupHandler, AssignLabelToGroupHandler>();
 
         return services;
     }
