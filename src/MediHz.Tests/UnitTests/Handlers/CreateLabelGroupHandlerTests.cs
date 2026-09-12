@@ -31,7 +31,7 @@ public class CreateLabelGroupHandlerTests : UnitTestBase
                 )
             )
             .ReturnsAsync(_labelGroupDto);
-        _currentUserMock.SetupGet(user => user.UserId).Returns(_labelGroupDto.OwnerId);
+        _currentUserMock.SetupGet(user => user.UserId).Returns(_labelGroupDto.OwnerId!.Value);
 
         _handler = new(
             _labelGroupServiceMock.Object,
@@ -53,7 +53,8 @@ public class CreateLabelGroupHandlerTests : UnitTestBase
         result.StatusCode.Should().Be(StatusCodes.Status201Created);
         result.Value.Should().BeEquivalentTo(_labelGroupDto);
         _labelGroupServiceMock.Verify(
-            service => service.CreateAsync(_labelGroupDto.OwnerId, request, CancellationToken.None),
+            service =>
+                service.CreateAsync(_labelGroupDto.OwnerId!.Value, request, CancellationToken.None),
             Times.Once
         );
     }
