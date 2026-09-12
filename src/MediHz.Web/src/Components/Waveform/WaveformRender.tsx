@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState, type ChangeEvent, type Dispatch } from 'react'
+import { useCallback, useEffect, useRef, useState, type ChangeEvent, type Dispatch } from 'react'
 import WaveSurfer from 'wavesurfer.js'
 import RegionsPlugin, { type Region } from 'wavesurfer.js/dist/plugins/regions.js'
 import Button from '../Common/Button'
@@ -8,11 +8,15 @@ import Playbar from './Playbar'
 import HoverInfo from '../Common/HoverInfo'
 import type { HubConnection } from '@microsoft/signalr'
 import { sendData } from '../../Api/hub'
+import type { RegionData } from '../../Interfaces/RegionData'
+
+const NEUTRAL_REGION_COLOR = 'rgba(70, 115, 51, 0.2)'
+const SELECTED_REGION_COLOR = 'rgba(131, 0, 219, 0.2)'
 
 interface WaveformProp {
   audio: string
   setSelectedRegion: Dispatch<React.SetStateAction<Region | null>>
-  setRegionData: Dispatch<React.SetStateAction<Map<string, any>>>
+  setRegionData: Dispatch<React.SetStateAction<Map<string, RegionData>>>
   connection?: HubConnection
 }
 
@@ -30,8 +34,6 @@ export default function WaveformRender({
   // Region Plugin Rendering
   const regionInstance = useRef<RegionsPlugin>(null)
   const disableSelection = useRef<(() => void) | null>(null)
-  const neutralRegionColor = 'rgba(70, 115, 51, 0.2)'
-  const selectedRegionColor = 'rgba(131, 0, 219, 0.2)'
 
   // Waveform interactions
   const [playbar, setPlaybar] = useState(0)
@@ -40,36 +42,42 @@ export default function WaveformRender({
   const [play, setPlay] = useState(false)
   const [volSlide, setVolSlide] = useState(false)
 
-  const createRegionData = (region: Region) => {
-    setRegionData((currentRegionData) => {
-      const nextRegionData = new Map(currentRegionData)
-      nextRegionData.set(region.id, {
-        startTime: region.start,
-        endTime: region.end,
-        tags: new Set<string>(),
-        description: '',
+  const createRegionData = useCallback(
+    (region: Region) => {
+      setRegionData((currentRegionData) => {
+        const nextRegionData = new Map(currentRegionData)
+        nextRegionData.set(region.id, {
+          startTime: region.start,
+          endTime: region.end,
+          tags: new Set<string>(),
+          description: '',
+        })
+        return nextRegionData
       })
-      return nextRegionData
-    })
-  }
+    },
+    [setRegionData],
+  )
   // Update region data when a region is edited
-  const updateRegionData = (region: Region) => {
-    setRegionData((currentRegionData) => {
-      const nextRegionData = new Map(currentRegionData)
-      nextRegionData.set(region.id, {
-        ...currentRegionData.get(region.id),
-        startTime: region.start,
-        endTime: region.end,
+  const updateRegionData = useCallback(
+    (region: Region) => {
+      setRegionData((currentRegionData) => {
+        const nextRegionData = new Map(currentRegionData)
+        nextRegionData.set(region.id, {
+          ...currentRegionData.get(region.id),
+          startTime: region.start,
+          endTime: region.end,
+        })
+        return nextRegionData
       })
-      return nextRegionData
-    })
-  }
+    },
+    [setRegionData],
+  )
 
-  const sendRegionData = () => {
+  const sendRegionData = useCallback(() => {
     if (selectedRegionRef.current && connection) {
       sendData(connection, 'test audio', selectedRegionRef.current.id)
     }
-  }
+  }, [connection])
   const [audioDuration, setAudioDuration] = useState<number>(0)
   const [zoom, setZoom] = useState(20)
 
@@ -129,20 +137,23 @@ export default function WaveformRender({
       waveSurferInstance.current = null
       wavesurfer.destroy()
     }
-  }, [])
+  }, [audio])
 
-  const syncSelectedRegion = (nextRegion: Region) => {
-    const previousRegion = selectedRegionRef.current
+  const syncSelectedRegion = useCallback(
+    (nextRegion: Region) => {
+      const previousRegion = selectedRegionRef.current
 
-    if (previousRegion && previousRegion !== nextRegion) {
-      previousRegion.setOptions({ color: neutralRegionColor })
-    }
+      if (previousRegion && previousRegion !== nextRegion) {
+        previousRegion.setOptions({ color: NEUTRAL_REGION_COLOR })
+      }
 
-    nextRegion.setOptions({ color: selectedRegionColor })
+      nextRegion.setOptions({ color: SELECTED_REGION_COLOR })
 
-    selectedRegionRef.current = nextRegion
-    setSelectedRegion(nextRegion)
-  }
+      selectedRegionRef.current = nextRegion
+      setSelectedRegion(nextRegion)
+    },
+    [setSelectedRegion],
+  )
 
   useEffect(() => {
     if (!regionInstance.current) return
@@ -174,7 +185,7 @@ export default function WaveformRender({
       regionInstance.current?.un('region-updated', handleRegionUpdated)
       regionInstance.current?.un('region-created', handleRegionCreated)
     }
-  }, [connection])
+  }, [connection, syncSelectedRegion, updateRegionData, sendRegionData, createRegionData])
 
   //Manages region selection
   useEffect(() => {
@@ -182,7 +193,7 @@ export default function WaveformRender({
 
     if (highlight) {
       disableSelection.current = regionInstance.current.enableDragSelection({
-        color: 'rgba(70, 115, 51, 0.2)',
+        color: NEUTRAL_REGION_COLOR,
       })
       return
     }
@@ -254,7 +265,7 @@ export default function WaveformRender({
         <Playbar
           audioDuration={audioDuration}
           state={playbar}
-          onChange={(e) => changePlaybar(e.target.value)}
+          onChange={(e) => changePlaybar(Number(e.target.value))}
         />
 
         <HoverInfo>

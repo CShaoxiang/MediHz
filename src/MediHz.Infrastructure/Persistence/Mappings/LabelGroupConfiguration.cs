@@ -19,7 +19,6 @@ public class LabelGroupConfiguration : IEntityTypeConfiguration<LabelGroup>
             .HasMany(labelGroup => labelGroup.Labels)
             .WithOne(label => label.LabelGroup)
             .HasForeignKey(label => label.LabelGroupId)
-            .IsRequired()
             .OnDelete(DeleteBehavior.SetNull);
 
         builder

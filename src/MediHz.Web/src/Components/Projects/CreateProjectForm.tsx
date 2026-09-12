@@ -1,5 +1,6 @@
 import { useState } from 'react'
 import Button from '../Common/Button'
+import TextInput from '../Common/TextInput'
 import type { Project } from '../../Types/projects'
 import { createProject } from '../../Api/projects'
 import type { OmitId } from '../../Types/helpers'
@@ -33,8 +34,8 @@ export default function CreateProjectForm({ onSubmit }: IProps) {
 
   return (
     <div className="flex flex-col gap-2">
-      <h2>Create a New Project</h2>
-      <input
+      <h2>New Project</h2>
+      <TextInput
         type="text"
         placeholder="Name"
         value={project.name}

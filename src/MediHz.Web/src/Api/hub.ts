@@ -1,6 +1,6 @@
 import * as SignalR from '@microsoft/signalr'
 
-const HUB_BASE = '/hubs' 
+const HUB_BASE = '/hubs'
 
 export async function hubConnection() {
   const connection = new SignalR.HubConnectionBuilder()

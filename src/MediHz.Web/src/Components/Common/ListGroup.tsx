@@ -1,5 +1,5 @@
-import type { ReactNode } from "react"
-import HoverInfo from "./HoverInfo"
+import type { ReactNode } from 'react'
+import HoverInfo from './HoverInfo'
 
 interface Props {
   items?: string[]

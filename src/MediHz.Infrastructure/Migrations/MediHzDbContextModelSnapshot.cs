@@ -78,7 +78,7 @@ namespace MediHz.Infrastructure.Migrations
                     b.Property<DateTimeOffset>("CreatedAtUtc")
                         .HasColumnType("timestamp with time zone");
 
-                    b.Property<Guid>("LabelGroupId")
+                    b.Property<Guid?>("LabelGroupId")
                         .HasColumnType("uuid");
 
                     b.Property<string>("Name")
@@ -302,8 +302,7 @@ namespace MediHz.Infrastructure.Migrations
                     b.HasOne("MediHz.Domain.Annotations.LabelGroup", "LabelGroup")
                         .WithMany("Labels")
                         .HasForeignKey("LabelGroupId")
-                        .OnDelete(DeleteBehavior.SetNull)
-                        .IsRequired();
+                        .OnDelete(DeleteBehavior.SetNull);
 
                     b.HasOne("MediHz.Domain.Users.User", "Owner")
                         .WithMany()

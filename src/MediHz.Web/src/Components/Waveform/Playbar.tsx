@@ -1,9 +1,9 @@
 import Slider from '../Common/Slider'
 
-interface PlaybarProp{
-    audioDuration: number,
-    state: number,
-    onChange:  (event: any) => void,
+interface PlaybarProp {
+  audioDuration: number
+  state: number
+  onChange: (event: React.ChangeEvent<HTMLInputElement>) => void
 }
 
 export default function Playbar({ audioDuration, state, onChange }: PlaybarProp) {

@@ -1,6 +1,6 @@
 import type { AuthResponse } from '../Types/auth'
-import { apiPostJson } from './helpers'
+import { apiFetch } from './helpers'
 
 export async function loginWithGoogle(idToken: string) {
-  return await apiPostJson<AuthResponse>('auth/google', { idToken })
+  return await apiFetch<AuthResponse>('auth/google', { idToken }, 'POST')
 }

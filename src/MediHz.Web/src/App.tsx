@@ -6,6 +6,7 @@ import LoginPage from './Pages/login'
 import MainPage from './Pages/main'
 import ProjectOverviewPage from './Pages/ProjectOverview'
 import Projects from './Pages/ProjectsListing'
+import LabelsPage from './Pages/LabelsPage'
 
 function App() {
   const navigate = useNavigate()
@@ -16,6 +17,7 @@ function App() {
         <NavBar>
           <Button label="Home" onClick={() => navigate('/')} />
           <Button label="Projects" onClick={() => navigate('/projects')} />
+          <Button label="Labels" onClick={() => navigate('/labels')} />
         </NavBar>
       </header>
 
@@ -35,6 +37,14 @@ function App() {
           element={
             <ProtectedRoute>
               <ProjectOverviewPage />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/labels"
+          element={
+            <ProtectedRoute>
+              <LabelsPage />
             </ProtectedRoute>
           }
         />

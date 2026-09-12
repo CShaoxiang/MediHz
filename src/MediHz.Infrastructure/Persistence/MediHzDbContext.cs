@@ -12,11 +12,16 @@ public class MediHzDbContext : DbContext
         : base(options) { }
 
     public DbSet<User> Users => Set<User>();
+
     public DbSet<Project> Projects => Set<Project>();
     public DbSet<ProjectMember> ProjectMembers => Set<ProjectMember>();
+
     public DbSet<AudioFile> AudioFiles => Set<AudioFile>();
 
     public DbSet<Annotation> Annotations => Set<Annotation>();
+
+    public DbSet<LabelGroup> LabelGroups => Set<LabelGroup>();
+    public DbSet<Label> Labels => Set<Label>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {

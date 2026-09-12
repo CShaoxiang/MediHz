@@ -1,9 +1,11 @@
+using MediHz.Application.Abstractions.Annotations;
 using MediHz.Application.Abstractions.AudioFiles;
 using MediHz.Application.Abstractions.Auth;
 using MediHz.Application.Abstractions.Projects;
 using MediHz.Application.Abstractions.Storage;
 using MediHz.Application.Abstractions.Users;
 using MediHz.Infrastructure.Persistence;
+using MediHz.Infrastructure.Persistence.Services.Annotations;
 using MediHz.Infrastructure.Persistence.Services.Projects;
 using MediHz.Infrastructure.Services;
 using MediHz.Infrastructure.Services.Users;
@@ -36,6 +38,8 @@ public static class DependencyInjection
         services.AddScoped<IStorageService, LocalStorageService>();
         services.AddScoped<IProjectService, ProjectService>();
         services.AddScoped<IAudioFileService, AudioFileService>();
+        services.AddScoped<ILabelGroupService, LabelGroupService>();
+        services.AddScoped<ILabelService, LabelService>();
 
         services.AddHttpContextAccessor();
         services.AddScoped<ICurrentUser, HttpCurrentUser>();

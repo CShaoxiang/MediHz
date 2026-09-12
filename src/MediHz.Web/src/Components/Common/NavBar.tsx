@@ -37,7 +37,7 @@ export default function NavBar({ children }: NavBarProp) {
             </Link>
           )}
         </form>
-        </div>
+      </div>
     </nav>
   )
 }

@@ -6,8 +6,7 @@ using Microsoft.AspNetCore.Mvc;
 
 [ApiController]
 [Route("api/[controller]")]
-public class AuthController(IAuthService authService, ILogger<AuthController> logger)
-    : ControllerBase
+public class AuthController(IAuthService authService) : ControllerBase
 {
     [HttpPost("google")]
     [AllowAnonymous]
