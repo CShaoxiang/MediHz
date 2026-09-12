@@ -1,7 +1,7 @@
 export type LabelGroup = {
   id: string
   name: string
-  ownerId: string
+  ownerId: string | null
   createdAtUtc: string
 }
 

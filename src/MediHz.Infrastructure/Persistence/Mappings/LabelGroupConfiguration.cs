@@ -25,7 +25,23 @@ public class LabelGroupConfiguration : IEntityTypeConfiguration<LabelGroup>
             .HasOne(labelGroup => labelGroup.Owner)
             .WithMany()
             .HasForeignKey(labelGroup => labelGroup.OwnerId)
-            .IsRequired()
             .OnDelete(DeleteBehavior.Restrict);
+
+        builder.HasData(
+            new LabelGroup
+            {
+                Id = PrePackagedLabels.CirCorGroupId,
+                Name = "CirCor",
+                OwnerId = null,
+                CreatedAtUtc = PrePackagedLabels.SeededAtUtc,
+            },
+            new LabelGroup
+            {
+                Id = PrePackagedLabels.HfLungGroupId,
+                Name = "HF Lung V1",
+                OwnerId = null,
+                CreatedAtUtc = PrePackagedLabels.SeededAtUtc,
+            }
+        );
     }
 }

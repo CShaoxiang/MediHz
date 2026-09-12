@@ -7,8 +7,8 @@ public class LabelGroup : EntityBase
 {
     public ICollection<Label> Labels { get; set; } = [];
 
-    public Guid OwnerId { get; set; } = Guid.Empty;
-    public User Owner { get; set; } = null!;
+    public Guid? OwnerId { get; set; }
+    public User? Owner { get; set; }
 
     public string Name { get; set; } = string.Empty;
 }
