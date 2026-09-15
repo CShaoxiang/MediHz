@@ -1,6 +1,7 @@
 using MediHz.Application.Abstractions.Annotations;
 using MediHz.Application.Abstractions.AudioFiles;
 using MediHz.Application.Abstractions.Auth;
+using MediHz.Application.Abstractions.Exports;
 using MediHz.Application.Abstractions.Projects;
 using MediHz.Application.Abstractions.Storage;
 using MediHz.Application.Abstractions.Users;
@@ -40,12 +41,15 @@ public static class DependencyInjection
         services.AddScoped<IAudioFileService, AudioFileService>();
         services.AddScoped<ILabelGroupService, LabelGroupService>();
         services.AddScoped<ILabelService, LabelService>();
+        services.AddScoped<IAnnotationService, AnnotationService>();
 
         services.AddHttpContextAccessor();
         services.AddScoped<ICurrentUser, HttpCurrentUser>();
         services.AddScoped<IGoogleTokenVerifier, GoogleTokenVerifier>();
         services.AddScoped<IAuthService, AuthService>();
         services.AddScoped<ITokenService, TokenService>();
+
+        services.AddScoped<IExportService, ExportService>();
 
         return services;
     }

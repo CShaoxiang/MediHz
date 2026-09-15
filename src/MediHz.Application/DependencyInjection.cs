@@ -1,5 +1,6 @@
 using MediHz.Application.Handlers.Annotations;
 using MediHz.Application.Handlers.Audio;
+using MediHz.Application.Handlers.Exports;
 using MediHz.Application.Handlers.Projects;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
@@ -29,6 +30,10 @@ public static class DependencyInjection
         services.AddScoped<IGetLabelsByGroupHandler, GetLabelsByGroupHandler>();
         services.AddScoped<IDeleteLabelHandler, DeleteLabelHandler>();
         services.AddScoped<IAssignLabelToGroupHandler, AssignLabelToGroupHandler>();
+
+        // Exports
+        services.AddScoped<IExportProjectHandler, ExportProjectHandler>();
+        services.AddScoped<IExportFileHandler, ExportFileHandler>();
 
         return services;
     }

@@ -88,7 +88,17 @@ public class ProjectService(MediHzDbContext dbContext) : IProjectService
         CancellationToken cancellationToken = default
     )
     {
-        throw new NotImplementedException();
+        return await dbContext
+            .ProjectMembers.Where(m => m.ProjectId == projectId)
+            .Select(m => new ProjectMemberDto(
+                m.ProjectId,
+                m.UserId,
+                m.User.Email,
+                m.User.DisplayName,
+                m.Role,
+                m.JoinedAt
+            ))
+            .ToListAsync(cancellationToken);
     }
 
     public async Task<bool> RemoveMemberAsync(
