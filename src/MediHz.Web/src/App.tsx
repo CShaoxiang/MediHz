@@ -1,4 +1,4 @@
-import { Route, Routes, useNavigate } from 'react-router-dom'
+import { Route, Routes, useLocation, useNavigate } from 'react-router-dom'
 import ProtectedRoute from './Auth/ProtectedRoute'
 import Button from './Components/Common/Button'
 import NavBar from './Components/Common/NavBar'
@@ -11,15 +11,20 @@ import LabelsPage from './Pages/LabelsPage'
 function App() {
   const navigate = useNavigate()
 
+  const location = useLocation()
+  const isLoginPage = location.pathname === '/login'
+
   return (
     <main className="App p-3">
-      <header className="pb-3">
-        <NavBar>
-          <Button label="Home" onClick={() => navigate('/')} />
-          <Button label="Projects" onClick={() => navigate('/projects')} />
-          <Button label="Labels" onClick={() => navigate('/labels')} />
-        </NavBar>
-      </header>
+      {!isLoginPage && (
+        <header className="pb-3">
+          <NavBar>
+            <Button label="Home" onClick={() => navigate('/')} />
+            <Button label="Projects" onClick={() => navigate('/projects')} />
+            <Button label="Labels" onClick={() => navigate('/labels')} />
+          </NavBar>
+        </header>
+      )}
 
       <Routes>
         <Route path="/login" element={<LoginPage />} />
