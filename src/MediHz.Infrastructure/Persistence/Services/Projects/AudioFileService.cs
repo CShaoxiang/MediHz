@@ -29,7 +29,21 @@ public class AudioFileService(MediHzDbContext dbContext) : IAudioFileService
         CancellationToken cancellationToken = default
     )
     {
-        throw new NotImplementedException();
+        return await dbContext
+            .AudioFiles.Where(a => a.Id == audioFileId)
+            .Select(a => new AudioFileDto(
+                a.Id,
+                a.ProjectId,
+                a.Project.Name,
+                Guid.NewGuid(),
+                "UploaderDisplayName",
+                a.FileName,
+                a.Format,
+                a.Duration,
+                a.SampleRate,
+                a.Channels
+            ))
+            .SingleOrDefaultAsync(cancellationToken);
     }
 
     public async Task<IReadOnlyList<AudioFileDto>> GetForProjectAsync(
@@ -48,7 +62,9 @@ public class AudioFileService(MediHzDbContext dbContext) : IAudioFileService
                 "UploaderDisplayName",
                 a.FileName,
                 a.Format,
-                a.Duration
+                a.Duration,
+                a.SampleRate,
+                a.Channels
             ))
             .ToListAsync(cancellationToken);
     }

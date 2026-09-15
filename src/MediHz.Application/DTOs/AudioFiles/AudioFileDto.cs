@@ -10,5 +10,7 @@ public sealed record AudioFileDto(
     string UploaderDisplayName,
     string FileName,
     AudioFileFormat Format,
-    decimal Duration
+    decimal Duration,
+    decimal SampleRate,
+    int Channels
 );

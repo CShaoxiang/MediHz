@@ -1,7 +1,10 @@
 import type { ReactNode } from 'react'
-import { Link } from 'react-router-dom'
+import { Link, useMatch } from 'react-router-dom'
 import Button from './Button'
+import Dropdown from './Dropdown'
 import { useAuth } from '../../Auth/AuthContext'
+import { exportProject } from '../../Api/exports'
+import { downloadJsonFile } from '../../Utilities/download'
 
 interface NavBarProp {
   children?: ReactNode
@@ -9,6 +12,45 @@ interface NavBarProp {
 
 export default function NavBar({ children }: NavBarProp) {
   const { user, logout } = useAuth()
+  const projectMatch = useMatch('/projects/:projectId')
+  const projectId = projectMatch?.params.projectId
+
+  const handleExportProject = async () => {
+    if (!projectId) {
+      alert('Please open a project to export it.')
+      return
+    }
+
+    try {
+      const result = await exportProject(projectId)
+      if (result.ok) {
+        const filename = `${result.value.project_name || 'project'}_export.json`
+        downloadJsonFile(result.value, filename)
+      } else {
+        console.error('Failed to export project:', result.error)
+        alert(result.error?.detail || 'Failed to export project.')
+      }
+    } catch (error) {
+      console.error('Error exporting project:', error)
+      alert('An unexpected error occurred while exporting the project.')
+    }
+  }
+
+  const handleExportFile = () => {
+    // TODO: Implement file export once current file context/selection is available
+    console.warn('Export file is not yet implemented')
+  }
+
+  const exportButtons = [
+    {
+      label: 'Export Project',
+      onClick: handleExportProject,
+    },
+    {
+      label: 'Export File',
+      onClick: handleExportFile,
+    },
+  ]
 
   return (
     <nav className="nav">
@@ -24,8 +66,12 @@ export default function NavBar({ children }: NavBarProp) {
           {children}
         </div>
 
-        <form className="flex border-l border-white/50" role="Export">
-          <Button label="Export" />
+        <form
+          className="flex items-center gap-2 border-l border-white/50 pl-4"
+          role="Export"
+          onSubmit={(e) => e.preventDefault()}
+        >
+          <Dropdown label="Export" buttons={exportButtons} />
           {user ? (
             <Button label="Sign out" onClick={() => logout()} />
           ) : (
