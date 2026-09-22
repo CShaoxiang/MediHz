@@ -100,6 +100,44 @@ All MRs must pass the following checks before they can be merged:
 1. Backend formatting - CSharpier must be ran on backend files.
 1. Frontend formatting, linting, and typechecking - Prettier, eslint, and tsc checks must pass on the frontend.
 
+
 ### Deployment
-TODO.
+The deployment is a single Docker image containing the React SPA and .NET API. Terraform manages Azure Container Registry, PostgreSQL Flexible Server, App Service Plan, and Linux Web App; `deploy.sh` applies infrastructure, migrates the database, builds and pushes the image, and restarts the web app.
+
+Copy `terraform.tfvars.example` to the ignored `terraform.tfvars` file and define the Azure subscription, resource names, capacity, database credentials, and Web App settings for the target environment. This keeps `main.tf` reusable across machines and Azure subscriptions. Never commit `.terraform/`, `terraform.tfstate*`, a real `terraform.tfvars`, Azure credentials, or production secrets.
+
+#### Prerequisites
+
+- Azure CLI authenticated to the deployment subscription: `az login`.
+- Terraform, Docker, .NET 10 SDK, and the EF Core tool installed.
+- Docker Desktop running.
+- Access to the shared Terraform state backend and the Azure resource group.
+
+#### Deploy an update
+
+1. Copy and configure the local deployment values:
+
+   ```bash
+   cp terraform.tfvars.example terraform.tfvars
+   ```
+2. Initialise Terraform against the team-managed remote backend. The platform owner must provide the backend configuration; do not create or share production state through Git.
+   ```bash
+   terraform init
+   terraform plan
+   ```
+
+   When running `terraform plan` manually, Terraform prompts for the current
+   `developer_public_ip`. `deploy.sh` detects and passes that value automatically.
+3. Review the plan, then run the deployment from a Bash-compatible shell:
+
+   ```bash
+   ./deploy.sh
+   ```
+4. Verify the deployed app and health endpoint, and review Azure App Service logs:
+
+   ```bash
+   az webapp show --name "$(terraform output -raw web_app_name)" --resource-group "$(terraform output -raw resource_group_name)" --query defaultHostName -o tsv
+   az webapp log tail --name "$(terraform output -raw web_app_name)" --resource-group "$(terraform output -raw resource_group_name)"
+   ```
+
 

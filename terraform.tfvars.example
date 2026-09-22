@@ -1,0 +1,25 @@
+# Copy this file to terraform.tfvars and replace every placeholder.
+# deploy.sh supplies the current public IP to Terraform when it runs.
+subscription_id         = null
+location                = "<azure-region>"
+resource_group_name     = "<resource-group-name>"
+acr_name                = "<globally-unique-acr-name>"
+acr_sku                 = "Basic"
+postgres_server_name    = "<globally-unique-postgres-server-name>"
+postgres_admin_login    = "<postgres-admin-login>"
+postgres_admin_password = "<postgres-admin-password>"
+postgres_database_name  = "medihz"
+postgres_sku            = "B_Standard_B1ms"
+postgres_storage_mb     = 32768
+app_service_plan_name   = "<app-service-plan-name>"
+app_service_sku         = "B1"
+web_app_name            = "<globally-unique-web-app-name>"
+container_image_name    = "medihz-app:latest"
+
+web_app_settings = {
+  "Authentication__Google__ClientId" = "<google-oauth-client-id>"
+  "Authentication__Jwt__Issuer"      = "<jwt-issuer>"
+  "Authentication__Jwt__Audience"    = "<jwt-audience>"
+  "Authentication__Jwt__Key"         = "<jwt-signing-key>"
+  "Authentication__Jwt__Expiration"  = "60"
+}
