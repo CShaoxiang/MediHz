@@ -507,6 +507,13 @@ web_modules/
 .env.production.local
 .env.local
 
+# Terraform local state and secret variable files
+.terraform/
+*.tfstate
+*.tfstate.*
+*.tfvars
+!*.tfvars.example
+
 # parcel-bundler cache (https://parceljs.org/)
 .cache
 .parcel-cache
@@ -694,5 +701,11 @@ sketch
 # Additional files built by Visual Studio
 .idea/
 src/.gitignore
+
+# Local Terraform state and developer-specific values
+.terraform/
+terraform.tfstate
+terraform.tfstate.*
+terraform.tfvars
 
 

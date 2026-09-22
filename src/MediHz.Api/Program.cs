@@ -60,6 +60,8 @@ if (app.Environment.IsDevelopment())
 }
 
 app.UseHttpsRedirection();
+app.UseDefaultFiles();
+app.UseStaticFiles();
 app.UseAuthentication();
 app.UseAuthorization();
 
@@ -67,5 +69,6 @@ app.UseAuthorization();
 app.MapControllers();
 app.MapHubs();
 app.MapHealthChecks("/health");
+app.MapFallbackToFile("index.html");
 
 app.Run();
