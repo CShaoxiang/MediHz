@@ -9,7 +9,7 @@
   "scripts": {
     "wbs": "mmdc -i wbs.mmd -o wbs.svg",
     "arch": "mmdc -i architecture.mmd -o architecture.svg",
-    "gantt": "tj3 gantt.tjp"
+    "gantt": "python gantt.py"
   },
   "devDependencies": {
     "@mermaid-js/mermaid-cli": "^11.15.0"
