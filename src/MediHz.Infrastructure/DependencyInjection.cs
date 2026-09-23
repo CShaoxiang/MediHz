@@ -36,13 +36,13 @@ public static class DependencyInjection
 
         services.AddScoped<IUserService, UserService>();
         services.AddScoped<IAudioFileUploadService, AudioFileUploadService>();
+        services.AddScoped<IAudioFileFetchService, AudioFileFetchService>();
         services.AddScoped<IStorageService, LocalStorageService>();
         services.AddScoped<IProjectService, ProjectService>();
         services.AddScoped<IAudioFileService, AudioFileService>();
         services.AddScoped<ILabelGroupService, LabelGroupService>();
         services.AddScoped<ILabelService, LabelService>();
         services.AddScoped<IAnnotationService, AnnotationService>();
-
         services.AddHttpContextAccessor();
         services.AddScoped<ICurrentUser, HttpCurrentUser>();
         services.AddScoped<IGoogleTokenVerifier, GoogleTokenVerifier>();

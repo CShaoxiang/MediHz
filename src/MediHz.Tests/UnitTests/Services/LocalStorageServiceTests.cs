@@ -80,6 +80,38 @@ public class LocalStorageServiceTests(ITestOutputHelper output) : UnitTestBase(o
     }
 
     [Fact]
+    public async Task GetAudioFileAsync_ShouldReturnSameAudio_WhenFileExists()
+    {
+        // Arrange
+        var relativePath = $"{_testRunId}/audio-file.wav";
+        byte[] audioContent =
+        [
+            0x52, 0x49, 0x46, 0x46, // RIFF
+            0x24, 0x00, 0x00, 0x00,
+            0x57, 0x41, 0x56, 0x45, // WAVE
+            0x66, 0x6D, 0x74, 0x20, // fmt
+            0x10, 0x00, 0x00, 0x00,
+            0x01, 0x00, 0x01, 0x00,
+            0x44, 0xAC, 0x00, 0x00,
+            0x88, 0x58, 0x01, 0x00,
+            0x02, 0x00, 0x10, 0x00,
+            0x64, 0x61, 0x74, 0x61, // data
+            0x00, 0x00, 0x00, 0x00
+        ];
+        await using var audioStream = new MemoryStream(audioContent);
+
+        // Act
+        await _service.SaveFileAsync(audioStream, relativePath);
+        await using var retrievedStream = await _service.GetFileAsync(relativePath);
+
+        // Assert
+        retrievedStream.Should().NotBeNull();
+        using var memoryStream = new MemoryStream();
+        await retrievedStream!.CopyToAsync(memoryStream);
+        memoryStream.ToArray().Should().Equal(audioContent);
+    }
+
+    [Fact]
     public async Task DeleteFileAsync_ShouldRemoveFileFromDisk()
     {
         // Arrange

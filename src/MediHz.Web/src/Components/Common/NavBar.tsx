@@ -62,7 +62,7 @@ export default function NavBar({ children }: NavBarProp) {
         </header>
 
         {/* For buttons */}
-        <div className="flex-container relative z-10 inline-flex gap-2 p-0.5 items-center jusify-center">
+        <div className="flex-container relative inline-flex gap-2 p-0.5 items-center jusify-center">
           {children}
         </div>
 
@@ -91,14 +91,14 @@ export default function NavBar({ children }: NavBarProp) {
 export interface NavBarItemProp {
   icon?: string
   label: string
-  onClick?: () => void
+  onClick?: (e: any) => void
 }
 
 export function NavBarItems(prop: NavBarItemProp) {
   return (
     <li>
       {prop.icon && prop.icon}
-      <Button label={prop.label} onClick={prop.onClick} />
+      <Button label={prop.label} onClick={(e) => prop.onClick} />
     </li>
   )
 }

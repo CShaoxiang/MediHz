@@ -12,7 +12,8 @@ namespace MediHz.Api.Controllers;
 public class ProjectsController(
     IGetProjectsHandler getProjectsHandler,
     ICreateProjectHandler createProjectHandler,
-    IGetProjectAudioFilesHandler getProjectAudioFilesHandler
+    IGetProjectAudioFilesHandler getProjectAudioFilesHandler,
+    IGetProjectSingleAudioHandler getProjectSingleAudio
 ) : ControllerBase
 {
     [HttpGet("all")]
@@ -43,6 +44,19 @@ public class ProjectsController(
     )
     {
         var response = await getProjectAudioFilesHandler.Handle(new(projectId), cancellationToken);
+        return StatusCode(response.StatusCode, response.Body);
+    }
+
+    [HttpGet("{projectId}/{audioId}")]
+    [ProducesResponseType(typeof(IEnumerable<AudioFileDto>), StatusCodes.Status200OK)]
+    public async Task<IActionResult> GetSingleProjectAudio(
+        Guid projectId,
+        Guid audioId,
+        CancellationToken cancellationToken
+    )
+    {
+        var request = new GetProjectSingleAudioRequest(projectId, audioId);
+        var response = await getProjectSingleAudio.Handle(request,cancellationToken);
         return StatusCode(response.StatusCode, response.Body);
     }
 }

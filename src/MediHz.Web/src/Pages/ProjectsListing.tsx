@@ -6,6 +6,7 @@ import { fetchProjects } from '../Api/projects'
 import type { Project } from '../Types/projects'
 import { useNavigate } from 'react-router-dom'
 import Grid from '../Components/Common/Grid'
+import { LuBookAudio, LuBookPlus } from 'react-icons/lu'
 
 export default function ProjectsListingPage() {
   const [isOpen, setIsOpen] = useState(false)
@@ -27,15 +28,16 @@ export default function ProjectsListingPage() {
   }
 
   const handleClickProject = (projectId: string) => {
+
     navigate(`/projects/${projectId}`)
   }
 
   return (
     <>
       <Grid>
-        <Card title={'Create Project'} onClick={() => setIsOpen(true)} />
+        <Card title={'Create Project'} onClick={() => setIsOpen(true)}><LuBookPlus className='icon-small-white'/></Card>
         {projects.map((project, i) => (
-          <Card key={i} title={project.name} onClick={() => handleClickProject(project.id)} />
+          <Card key={i} title={project.name} onClick={() => handleClickProject(project.id)}> <LuBookAudio className='icon-small'/> </Card>
         ))}
       </Grid>
       <Modal modalHeader={''} state={isOpen} setState={setIsOpen}>

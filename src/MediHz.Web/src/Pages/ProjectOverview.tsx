@@ -3,8 +3,9 @@ import AudioUploader from '../Components/AudioUploader'
 import type { AudioFile } from '../Types/audio'
 import { useEffect, useState } from 'react'
 import { fetchProjectAudioFiles } from '../Api/projects'
-import { useParams } from 'react-router-dom'
+import { useNavigate, useParams } from 'react-router-dom'
 import Grid from '../Components/Common/Grid'
+import { LuAudioLines } from 'react-icons/lu'
 
 type PageParams = {
   projectId: string
@@ -13,6 +14,9 @@ type PageParams = {
 export default function ProjectOverviewPage() {
   const [audioFiles, setAudioFiles] = useState<AudioFile[]>([])
   const { projectId } = useParams<PageParams>()
+  const navigate = useNavigate()
+
+  const audioActions = [{ label: 'Delete', onClick: () => console.log("delete") }, { label: 'Rename', onClick: () => {}}]
 
   useEffect(() => {
     if (projectId) {
@@ -37,7 +41,16 @@ export default function ProjectOverviewPage() {
       <Grid>
         {projectId && <AudioUploader projectId={projectId} onUploadFiles={onUploadFiles} />}
         {audioFiles.map((audioFile, i) => (
-          <Card key={i} title={audioFile.fileName} onClick={() => {}} />
+          <Card
+            key={i}
+            title={audioFile.fileName}
+            onClick={() => {
+              navigate(`${audioFile.id}`)
+            }}
+            actions={audioActions}
+          >
+            <LuAudioLines className="icon-small" />
+          </Card>
         ))}
       </Grid>
     </div>

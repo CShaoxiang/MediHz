@@ -1,7 +1,7 @@
 import type { AudioFile } from '../Types/audio'
 import type { OmitId } from '../Types/helpers'
 import type { Project } from '../Types/projects'
-import { apiFetch, apiFetchForm } from './helpers'
+import { apiFetch, apiFetchForm, apiGetFile } from './helpers'
 
 const PROJECTS_API_BASE = 'Projects'
 
@@ -18,4 +18,9 @@ export async function fetchProjectAudioFiles(projectId: string) {
 export async function createProject(project: OmitId<Project>) {
   console.info('Creating new project:', project)
   return await apiFetchForm<Project>(`${PROJECTS_API_BASE}/create`, project)
+}
+
+export async function fetchSingleAudio(projectId: string, audioId: string) {
+  console.info('Fetching single audio file', audioId)
+  return await apiFetch<string>(`${PROJECTS_API_BASE}/${projectId}/${audioId}`)  
 }

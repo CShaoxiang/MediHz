@@ -18,3 +18,8 @@ export type BatchAudioFileUploadResult = {
   batchId: string
   items: AudioFileUploadResult[]
 }
+
+export type AudioFileUrlResult = {
+  audioId: string
+  audioPath: URL
+}

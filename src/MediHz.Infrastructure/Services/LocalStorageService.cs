@@ -63,7 +63,7 @@ public class LocalStorageService : IStorageService
             return Task.FromResult<Stream?>(null);
         }
         // Open the file with FileShare.Read so it doesn't get locked exclusively
-        var stream = new FileStream(
+        var fileStream = new FileStream(
             fullPath,
             FileMode.Open,
             FileAccess.Read,
@@ -71,6 +71,8 @@ public class LocalStorageService : IStorageService
             bufferSize: 4096,
             useAsync: true
         );
+        // Wrap with NoTimeoutStream to prevent "timeouts are not supported on this stream" error
+        Stream stream = new NoTimeoutStream(fileStream);
         return Task.FromResult<Stream?>(stream);
     }
 

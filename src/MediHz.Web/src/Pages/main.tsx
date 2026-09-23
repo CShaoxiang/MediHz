@@ -37,7 +37,7 @@ export default function MainPage() {
     <div className="flex items-start gap-4">
       <div className="flex items-start gap-4 mr-4">
         <aside className="flex flex-col gap-4">
-          <SideBar title="Audio Files" buttons={[{ label: 'Audio 1' }, { label: 'Audio 2' }]} />
+          <SideBar title="Audio Files" buttons={[{ label: 'Audio 1', onClick: ((e) => {} ) }, { label: 'Audio 2', onClick: ((e) => {}) }]} />
 
           <SideBar
             title="Annotations"
@@ -54,6 +54,7 @@ export default function MainPage() {
       <div className="w-full">
         <WaveformRender
           audio="src\TestAudio\Test.mp3"
+          audioId="Test Audio"
           setSelectedRegion={setSelectedRegion}
           setRegionData={setRegionData}
           connection={connection}
