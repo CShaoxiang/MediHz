@@ -1,7 +1,7 @@
 import { createContext, useContext } from 'react'
 import type { User } from '../Types/auth'
 
-type AuthContextValue = {
+export type AuthContextValue = {
   user: User | null
   login: (idToken: string) => Promise<void>
   logout: () => void

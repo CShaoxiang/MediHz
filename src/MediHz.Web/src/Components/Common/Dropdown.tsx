@@ -1,13 +1,14 @@
-import { useEffect, useRef, useState } from 'react'
+import { useEffect, useRef, useState, type ReactNode } from 'react'
 import { MdOutlineKeyboardArrowDown, MdOutlineKeyboardArrowUp } from 'react-icons/md'
 import Button, { type ButtonProps } from './Button'
 
 interface DropdownProp {
-  label: string
+  label?: string
+  children?: ReactNode
   buttons?: ButtonProps[]
 }
 
-export default function Dropdown({ label = '', buttons = [] }: DropdownProp) {
+export default function Dropdown({ label = '', children, buttons = [] }: DropdownProp) {
   const [isOpen, setIsOpen] = useState(false)
   const dropdownRef = useRef<HTMLDivElement>(null)
 
@@ -53,8 +54,8 @@ export default function Dropdown({ label = '', buttons = [] }: DropdownProp) {
               key={button.label}
               type="button"
               className="button bg-purple-700 px-4 py-2 text-sm font-medium text-white transition hover:bg-purple-600"
-              onClick={() => {
-                button.onClick?.()
+              onClick={(e) => {
+                button.onClick(e)
                 setIsOpen(false)
               }}
             >

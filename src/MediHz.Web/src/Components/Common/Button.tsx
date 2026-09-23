@@ -2,7 +2,7 @@ import type { ReactNode } from 'react'
 
 export interface ButtonProps {
   label?: string
-  onClick?: () => void
+  onClick: (e: any) => void
   children?: ReactNode
   border?: boolean
 }

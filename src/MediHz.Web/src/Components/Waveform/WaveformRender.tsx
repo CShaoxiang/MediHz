@@ -15,6 +15,7 @@ const SELECTED_REGION_COLOR = 'rgba(131, 0, 219, 0.2)'
 
 interface WaveformProp {
   audio: string
+  audioId: string
   setSelectedRegion: Dispatch<React.SetStateAction<Region | null>>
   setRegionData: Dispatch<React.SetStateAction<Map<string, RegionData>>>
   connection?: HubConnection
@@ -22,6 +23,7 @@ interface WaveformProp {
 
 export default function WaveformRender({
   audio,
+  audioId,
   setSelectedRegion,
   setRegionData,
   connection,
@@ -75,7 +77,7 @@ export default function WaveformRender({
 
   const sendRegionData = useCallback(() => {
     if (selectedRegionRef.current && connection) {
-      sendData(connection, 'test audio', selectedRegionRef.current.id)
+      sendData(connection, audioId , selectedRegionRef.current.id)
     }
   }, [connection])
   const [audioDuration, setAudioDuration] = useState<number>(0)
@@ -124,9 +126,11 @@ export default function WaveformRender({
 
     wavesurfer.on('timeupdate', (time) => {
       setPlaybar(time)
-    })
+    })  
+
 
     wavesurfer.load(audio)
+    
     waveSurferInstance.current = wavesurfer
 
     return () => {
@@ -175,7 +179,6 @@ export default function WaveformRender({
       createRegionData(region)
       sendRegionData()
     }
-
     regionInstance.current.on('region-clicked', handleRegionClicked)
     regionInstance.current.on('region-updated', handleRegionUpdated)
     regionInstance.current.on('region-created', handleRegionCreated)
@@ -185,7 +188,7 @@ export default function WaveformRender({
       regionInstance.current?.un('region-updated', handleRegionUpdated)
       regionInstance.current?.un('region-created', handleRegionCreated)
     }
-  }, [connection, syncSelectedRegion, updateRegionData, sendRegionData, createRegionData])
+  }, [connection,audio])
 
   //Manages region selection
   useEffect(() => {

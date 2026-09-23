@@ -7,6 +7,7 @@ import MainPage from './Pages/main'
 import ProjectOverviewPage from './Pages/ProjectOverview'
 import Projects from './Pages/ProjectsListing'
 import LabelsPage from './Pages/LabelsPage'
+import AnnotationPage from './Pages/annotationPage'
 
 function App() {
   const navigate = useNavigate()
@@ -27,8 +28,8 @@ function App() {
       )}
 
       <Routes>
-        <Route path="/login" element={<LoginPage />} />
         <Route path="/" element={<MainPage />} />
+        <Route path="/login" element={<LoginPage />} />
         <Route
           path="/projects"
           element={
@@ -43,6 +44,13 @@ function App() {
             <ProtectedRoute>
               <ProjectOverviewPage />
             </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/projects/:projectId/:audioId"
+          element={<ProtectedRoute>
+            <AnnotationPage/>
+          </ProtectedRoute>
           }
         />
         <Route

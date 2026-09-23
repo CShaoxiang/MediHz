@@ -64,6 +64,29 @@ export function showApiError(error: ProblemDetails) {
   alert(error.detail || error.title)
 }
 
+export async function apiGetFile(path: string): Promise<ApiResult<string>> {
+  console.info('Fetching file with GET', { path })
+  const response = await fetch(`${API_BASE}/${path}`, {
+    method: 'GET',
+    headers: {
+      Accept: '*/*',
+      'Authorization': `Bearer ${getToken()}`
+    },
+  })
+
+  console.info('Response received', { status: response.status, statusText: response.statusText })
+
+  if (!response.ok) {
+    const error = await response.json()
+    return { ok: false, error: error }
+  }
+
+  const blob = await response.blob()
+  const url = URL.createObjectURL(blob)
+
+  return { ok: true, value: url }
+}
+
 function toFormData(fields: Record<string, unknown>): FormData {
   const form = new FormData()
   for (const [key, value] of Object.entries(fields)) {
