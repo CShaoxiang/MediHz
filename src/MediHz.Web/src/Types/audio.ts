@@ -23,3 +23,16 @@ export type AudioFileUrlResult = {
   audioId: string
   audioPath: URL
 }
+
+export type AnnotationDto = {
+  id: string
+  audioFileId: string
+  authorId: string
+  authorDisplayName: string
+  labelNames: string[]
+  startTimeSeconds: number
+  endTimeSeconds: number
+  durationSeconds: number
+  createdAt: string
+  updatedAt: string
+}

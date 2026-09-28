@@ -54,9 +54,8 @@ public class AnnotationConfiguration : IEntityTypeConfiguration<Annotation>
             .OnDelete(DeleteBehavior.Restrict);
 
         builder
-            .HasOne(annotation => annotation.Label)
-            .WithMany()
-            .HasForeignKey(annotation => annotation.LabelId)
-            .OnDelete(DeleteBehavior.Cascade);
+            .HasMany(annotation => annotation.Labels)
+            .WithMany(label => label.Annotations)
+            .UsingEntity(j => j.ToTable("AnnotationLabels"));
     }
 }

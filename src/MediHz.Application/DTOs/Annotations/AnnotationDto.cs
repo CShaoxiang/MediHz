@@ -5,7 +5,7 @@ public sealed record AnnotationDto(
     Guid AudioFileId,
     Guid AuthorId,
     string AuthorDisplayName,
-    string? LabelName,
+    IReadOnlyList<string> LabelNames,
     decimal StartTimeSeconds,
     decimal EndTimeSeconds,
     decimal DurationSeconds,

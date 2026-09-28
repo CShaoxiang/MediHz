@@ -2,7 +2,7 @@ namespace MediHz.Application.DTOs.Annotations;
 
 public sealed record CreateAnnotationRequest(
     Guid AudioFileId,
-    string? LabelName,
+    IReadOnlyList<string> LabelNames,
     decimal StartTimeSeconds,
     decimal EndTimeSeconds
 );

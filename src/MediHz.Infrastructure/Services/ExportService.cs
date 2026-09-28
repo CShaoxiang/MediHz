@@ -80,7 +80,7 @@ public class ExportService(
     {
         return new AnnotationExportDto(
             dto.Id,
-            dto.LabelName ?? "placeholder label",
+            dto.LabelNames.Any() ? string.Join(", ", dto.LabelNames) : "placeholder label",
             dto.StartTimeSeconds,
             dto.EndTimeSeconds,
             dto.AuthorId

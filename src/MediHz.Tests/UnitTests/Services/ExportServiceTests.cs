@@ -285,7 +285,7 @@ public class ExportServiceTests : UnitTestBase
         var annotation = Fixture.Create<AnnotationDto>() with
         {
             AudioFileId = fileId,
-            LabelName = "Heart Murmur",
+            LabelNames = new List<string> { "Test Label" },
         };
 
         _audioFileServiceMock
@@ -313,7 +313,7 @@ public class ExportServiceTests : UnitTestBase
 
         var exportedAnnotation = result.Annotations[0];
         exportedAnnotation.AnnotationId.Should().Be(annotation.Id);
-        exportedAnnotation.Label.Should().Be("Heart Murmur");
+        exportedAnnotation.Label.Should().Be("Test Label");
         exportedAnnotation.StartTime.Should().Be(annotation.StartTimeSeconds);
         exportedAnnotation.EndTime.Should().Be(annotation.EndTimeSeconds);
         exportedAnnotation.AnnotatorId.Should().Be(annotation.AuthorId);
@@ -412,7 +412,7 @@ public class ExportServiceTests : UnitTestBase
         var annotation = Fixture.Create<AnnotationDto>() with
         {
             AudioFileId = fileId,
-            LabelName = null,
+            LabelNames = new List<string>(),
         };
 
         _audioFileServiceMock
