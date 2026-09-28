@@ -1,7 +1,7 @@
 namespace MediHz.Application.DTOs.Annotations;
 
 public sealed record UpdateAnnotationRequest(
-    string? LabelName,
+    IReadOnlyList<string> LabelNames,
     decimal StartTimeSeconds,
     decimal EndTimeSeconds
 );

@@ -25,6 +25,10 @@ public static class DependencyInjection
         services.AddScoped<IGetProjectSingleAudioHandler, GetProjectSingleAudioHandler>();
 
         // Annotations
+        services.AddScoped<IGetAnnotationsByFileHandler, GetAnnotationsByFileHandler>();
+        services.AddScoped<ISaveAnnotationHandler, SaveAnnotationHandler>();
+        services.AddScoped<IUpdateAnnotationHandler, UpdateAnnotationHandler>();
+        services.AddScoped<IDeleteAnnotationHandler, DeleteAnnotationHandler>();
         services.AddScoped<ICreateLabelGroupHandler, CreateLabelGroupHandler>();
         services.AddScoped<IDeleteLabelGroupHandler, DeleteLabelGroupHandler>();
         services.AddScoped<IGetAllLabelGroupsHandler, GetAllLabelGroupsHandler>();

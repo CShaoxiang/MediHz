@@ -5,9 +5,10 @@ import { useEffect, useState } from 'react'
 import type { Region } from 'wavesurfer.js/dist/plugins/regions.js'
 import type { RegionData } from '../Interfaces/RegionData'
 import type { HubConnection } from '@microsoft/signalr'
-import { getAudioFileUrl } from '../Api/audio'
+import { getAudioFileUrl, getAnnotations } from '../Api/audio'
 import { fetchSingleAudio } from '../Api/projects'
-import { hubConnection } from '../Api/hub'
+import { hubConnection, joinAudioGroup, leaveAudioGroup } from '../Api/hub'
+import type { AnnotationDto } from '../Types/audio'
 
 type PageParams = {
   projectId: string
@@ -20,10 +21,11 @@ export default function AnnotationPage() {
   const [selectedRegion, setSelectedRegion] = useState<Region | null>(null)
   const [regionData, setRegionData] = useState<Map<string, RegionData>>(new Map())
   const [regionTags, setRegionTags] = useState<Set<string>>(new Set())
+  const [savedAnnotations, setSavedAnnotations] = useState<AnnotationDto[]>([])
 
   const [connection, setConnection] = useState<HubConnection>()
 
-  const [audio, setAudio] = useState<string>('src\TestAudio\Test.mp3')
+  const [audio, setAudio] = useState<string>('src/TestAudio/Test.mp3')
   const [audioName, setAudioName] = useState<string>()
 
   useEffect(() => {
@@ -35,7 +37,7 @@ export default function AnnotationPage() {
 
       init()
     }
-  }, [])
+  }, [connection])
 
   useEffect(() => {
     const fetchAudio = async () => {
@@ -55,7 +57,30 @@ export default function AnnotationPage() {
     }
 
     fetchAudio()
-  }, [])
+  }, [projectId, audioId])
+
+  useEffect(() => {
+    const fetchAnnotations = async () => {
+      if (audioId) {
+        const res = await getAnnotations(audioId)
+        if (res.ok) {
+          setSavedAnnotations(res.value)
+        }
+      }
+    }
+
+    fetchAnnotations()
+  }, [audioId])
+
+  useEffect(() => {
+    if (connection && audioId) {
+      joinAudioGroup(connection, audioId)
+
+      return () => {
+        leaveAudioGroup(connection, audioId)
+      }
+    }
+  }, [connection, audioId])
 
   return (
     <div className="w-full">
@@ -66,10 +91,12 @@ export default function AnnotationPage() {
         setSelectedRegion={setSelectedRegion}
         setRegionData={setRegionData}
         connection={connection}
+        savedAnnotations={savedAnnotations}
       />
       {selectedRegion && (
         <div className="m-2 flex min-h-0 max-h-[calc(100svh-12rem)] overflow-hidden">
           <Annotations
+            audioId={audioId!}
             region={selectedRegion}
             selectedregionData={regionData.get(selectedRegion.id)}
             setRegionData={setRegionData}

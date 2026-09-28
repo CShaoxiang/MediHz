@@ -1,4 +1,4 @@
-﻿using MediHz.Domain.Audio;
+using MediHz.Domain.Audio;
 using MediHz.Domain.Core;
 using MediHz.Domain.Users;
 
@@ -9,8 +9,7 @@ public class Annotation : EntityBase
     public Guid AudioFileId { get; set; }
     public AudioFile AudioFile { get; set; } = null!;
 
-    public Guid LabelId { get; set; }
-    public Label Label { get; set; } = null!;
+    public ICollection<Label> Labels { get; set; } = new List<Label>();
 
     public Guid UserId { get; set; }
     public User User { get; set; } = null!;

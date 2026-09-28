@@ -22,6 +22,21 @@ namespace MediHz.Infrastructure.Migrations
 
             NpgsqlModelBuilderExtensions.UseIdentityByDefaultColumns(modelBuilder);
 
+            modelBuilder.Entity("AnnotationLabel", b =>
+                {
+                    b.Property<Guid>("AnnotationsId")
+                        .HasColumnType("uuid");
+
+                    b.Property<Guid>("LabelsId")
+                        .HasColumnType("uuid");
+
+                    b.HasKey("AnnotationsId", "LabelsId");
+
+                    b.HasIndex("LabelsId");
+
+                    b.ToTable("AnnotationLabels", (string)null);
+                });
+
             modelBuilder.Entity("MediHz.Domain.Annotations.Annotation", b =>
                 {
                     b.Property<Guid>("Id")
@@ -42,9 +57,6 @@ namespace MediHz.Infrastructure.Migrations
                         .HasPrecision(18, 4)
                         .HasColumnType("numeric(18,4)");
 
-                    b.Property<Guid>("LabelId")
-                        .HasColumnType("uuid");
-
                     b.Property<decimal>("StartTimeSeconds")
                         .HasPrecision(18, 4)
                         .HasColumnType("numeric(18,4)");
@@ -58,8 +70,6 @@ namespace MediHz.Infrastructure.Migrations
                     b.HasKey("Id");
 
                     b.HasIndex("AudioFileId");
-
-                    b.HasIndex("LabelId");
 
                     b.HasIndex("UserId");
 
@@ -377,17 +387,26 @@ namespace MediHz.Infrastructure.Migrations
                     b.ToTable("Users", (string)null);
                 });
 
+            modelBuilder.Entity("AnnotationLabel", b =>
+                {
+                    b.HasOne("MediHz.Domain.Annotations.Annotation", null)
+                        .WithMany()
+                        .HasForeignKey("AnnotationsId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("MediHz.Domain.Annotations.Label", null)
+                        .WithMany()
+                        .HasForeignKey("LabelsId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+                });
+
             modelBuilder.Entity("MediHz.Domain.Annotations.Annotation", b =>
                 {
                     b.HasOne("MediHz.Domain.Audio.AudioFile", "AudioFile")
                         .WithMany()
                         .HasForeignKey("AudioFileId")
-                        .OnDelete(DeleteBehavior.Cascade)
-                        .IsRequired();
-
-                    b.HasOne("MediHz.Domain.Annotations.Label", "Label")
-                        .WithMany()
-                        .HasForeignKey("LabelId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
@@ -398,8 +417,6 @@ namespace MediHz.Infrastructure.Migrations
                         .IsRequired();
 
                     b.Navigation("AudioFile");
-
-                    b.Navigation("Label");
 
                     b.Navigation("User");
                 });

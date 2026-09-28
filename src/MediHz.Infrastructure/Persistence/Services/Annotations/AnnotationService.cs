@@ -12,7 +12,62 @@ public class AnnotationService(MediHzDbContext dbContext) : IAnnotationService
         CancellationToken cancellationToken = default
     )
     {
-        throw new NotImplementedException();
+        var userExists = await dbContext.Users.AnyAsync(u => u.Id == authorId, cancellationToken);
+
+        if (!userExists)
+            throw new UnauthorizedAccessException("The authenticated user does not exist.");
+
+        var audioFileExists = await dbContext.AudioFiles.AnyAsync(
+            a => a.Id == request.AudioFileId,
+            cancellationToken
+        );
+
+        if (!audioFileExists)
+            throw new KeyNotFoundException("The specified audio file does not exist.");
+
+        if (request.LabelNames == null || !request.LabelNames.Any())
+            throw new ArgumentException("At least one LabelName must be provided.");
+
+        var duration = request.EndTimeSeconds - request.StartTimeSeconds;
+        if (request.StartTimeSeconds < 0 || duration < 0.1m)
+            throw new ArgumentException("Invalid time range for annotation.");
+
+        var labels = new List<Domain.Annotations.Label>();
+        foreach (var labelName in request.LabelNames)
+        {
+            if (string.IsNullOrWhiteSpace(labelName))
+                continue;
+
+            var label = await dbContext.Labels.FirstOrDefaultAsync(
+                l => l.Name == labelName,
+                cancellationToken
+            );
+
+            if (label == null)
+            {
+                label = new Domain.Annotations.Label { Name = labelName, OwnerId = authorId };
+                await dbContext.Labels.AddAsync(label, cancellationToken);
+            }
+            labels.Add(label);
+        }
+
+        var annotation = new Domain.Annotations.Annotation
+        {
+            AudioFileId = request.AudioFileId,
+            UserId = authorId,
+            Labels = labels,
+            StartTimeSeconds = request.StartTimeSeconds,
+            EndTimeSeconds = request.EndTimeSeconds,
+            DurationSeconds = duration,
+            CreatedAtUtc = DateTime.UtcNow,
+            UpdatedAtUtc = DateTime.UtcNow,
+        };
+
+        await dbContext.Annotations.AddAsync(annotation, cancellationToken);
+        await dbContext.SaveChangesAsync(cancellationToken);
+
+        var dto = await GetByIdAsync(annotation.Id, cancellationToken);
+        return dto ?? throw new InvalidOperationException("Failed to retrieve created annotation.");
     }
 
     public async Task<bool> DeleteAsync(
@@ -20,7 +75,18 @@ public class AnnotationService(MediHzDbContext dbContext) : IAnnotationService
         CancellationToken cancellationToken = default
     )
     {
-        throw new NotImplementedException();
+        var annotation = await dbContext.Annotations.FirstOrDefaultAsync(
+            a => a.Id == annotationId,
+            cancellationToken
+        );
+
+        if (annotation == null)
+            return false;
+
+        dbContext.Annotations.Remove(annotation);
+        await dbContext.SaveChangesAsync(cancellationToken);
+
+        return true;
     }
 
     public async Task<AnnotationDto?> GetByIdAsync(
@@ -35,7 +101,7 @@ public class AnnotationService(MediHzDbContext dbContext) : IAnnotationService
                 a.AudioFileId,
                 a.UserId,
                 a.User.DisplayName,
-                a.Label.Name,
+                a.Labels.Select(l => l.Name).ToList(),
                 a.StartTimeSeconds,
                 a.EndTimeSeconds,
                 a.DurationSeconds,
@@ -57,7 +123,7 @@ public class AnnotationService(MediHzDbContext dbContext) : IAnnotationService
                 a.AudioFileId,
                 a.UserId,
                 a.User.DisplayName,
-                a.Label.Name,
+                a.Labels.Select(l => l.Name).ToList(),
                 a.StartTimeSeconds,
                 a.EndTimeSeconds,
                 a.DurationSeconds,
@@ -73,6 +139,51 @@ public class AnnotationService(MediHzDbContext dbContext) : IAnnotationService
         CancellationToken cancellationToken = default
     )
     {
-        throw new NotImplementedException();
+        var annotation = await dbContext
+            .Annotations.Include(a => a.Labels)
+            .FirstOrDefaultAsync(a => a.Id == annotationId, cancellationToken);
+
+        if (annotation == null)
+            return null;
+
+        if (request.LabelNames == null || !request.LabelNames.Any())
+            throw new ArgumentException("At least one LabelName must be provided.");
+
+        var duration = request.EndTimeSeconds - request.StartTimeSeconds;
+        if (request.StartTimeSeconds < 0 || duration < 0.1m)
+            throw new ArgumentException("Invalid time range for annotation.");
+
+        annotation.StartTimeSeconds = request.StartTimeSeconds;
+        annotation.EndTimeSeconds = request.EndTimeSeconds;
+        annotation.DurationSeconds = duration;
+        annotation.UpdatedAtUtc = DateTime.UtcNow;
+
+        annotation.Labels.Clear();
+        foreach (var labelName in request.LabelNames)
+        {
+            if (string.IsNullOrWhiteSpace(labelName))
+                continue;
+
+            var label = await dbContext.Labels.FirstOrDefaultAsync(
+                l => l.Name == labelName,
+                cancellationToken
+            );
+
+            if (label == null)
+            {
+                label = new Domain.Annotations.Label
+                {
+                    Name = labelName,
+                    OwnerId = annotation.UserId,
+                };
+                await dbContext.Labels.AddAsync(label, cancellationToken);
+            }
+
+            annotation.Labels.Add(label);
+        }
+
+        await dbContext.SaveChangesAsync(cancellationToken);
+
+        return await GetByIdAsync(annotation.Id, cancellationToken);
     }
 }

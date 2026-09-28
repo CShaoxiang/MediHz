@@ -5,9 +5,10 @@ import type { Region } from 'wavesurfer.js/dist/plugins/regions.js'
 import type { RegionData } from '../../Interfaces/RegionData'
 import { FiX } from 'react-icons/fi'
 import type { HubConnection } from '@microsoft/signalr'
-import { sendData } from '../../Api/hub'
+import { saveAnnotation, updateAnnotation } from '../../Api/hub'
 
 interface AnnotationProp {
+  audioId: string
   region: Region
   selectedregionData: RegionData | undefined
   setRegionData: React.Dispatch<React.SetStateAction<Map<string, RegionData>>>
@@ -17,6 +18,7 @@ interface AnnotationProp {
 }
 
 export default function Annotations({
+  audioId,
   region,
   selectedregionData,
   setRegionData,
@@ -29,24 +31,42 @@ export default function Annotations({
   const [customTag, setCustomTag] = useState<string>('')
   const [prevSelectedRegion, setPrevSelectedRegion] = useState(selectedRegion)
 
-  const sendRegionData = () => {
+  const sendRegionData = async (updatedData: RegionData) => {
     if (selectedRegion && connection) {
-      sendData(connection, 'test audio', region.id)
+      if (updatedData.dbGuid) {
+        await updateAnnotation(connection, updatedData.dbGuid, audioId, updatedData)
+      } else {
+        const dbGuid = (await saveAnnotation(connection, audioId, region.id, updatedData)) as
+          string | undefined
+
+        if (dbGuid) {
+          setRegionData((currentRegionData) => {
+            const nextRegionData = new Map(currentRegionData)
+            const current = nextRegionData.get(region.id)
+            if (current) {
+              nextRegionData.set(region.id, { ...current, dbGuid })
+            }
+            return nextRegionData
+          })
+        }
+      }
     }
   }
 
   const handleSave = () => {
+    const nextRegionData = {
+      ...selectedRegion,
+      description: description,
+      tags: regionTags,
+    }
+
     setRegionData((currentRegionData) => {
-      const nextRegionData = new Map(currentRegionData)
-      nextRegionData.set(region.id, {
-        ...selectedRegion,
-        description: description,
-        tags: regionTags,
-      })
-      return nextRegionData
+      const updatedMap = new Map(currentRegionData)
+      updatedMap.set(region.id, nextRegionData)
+      return updatedMap
     })
 
-    sendRegionData()
+    sendRegionData(nextRegionData)
   }
 
   const delRegionTag = (tag: string) => {

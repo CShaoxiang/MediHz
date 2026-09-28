@@ -7,8 +7,9 @@ import Slider from '../Common/Slider'
 import Playbar from './Playbar'
 import HoverInfo from '../Common/HoverInfo'
 import type { HubConnection } from '@microsoft/signalr'
-import { sendData } from '../../Api/hub'
+import { sendData, deleteAnnotation } from '../../Api/hub'
 import type { RegionData } from '../../Interfaces/RegionData'
+import type { AnnotationDto } from '../../Types/audio'
 
 const NEUTRAL_REGION_COLOR = 'rgba(70, 115, 51, 0.2)'
 const SELECTED_REGION_COLOR = 'rgba(131, 0, 219, 0.2)'
@@ -19,6 +20,7 @@ interface WaveformProp {
   setSelectedRegion: Dispatch<React.SetStateAction<Region | null>>
   setRegionData: Dispatch<React.SetStateAction<Map<string, RegionData>>>
   connection?: HubConnection
+  savedAnnotations?: AnnotationDto[]
 }
 
 export default function WaveformRender({
@@ -27,6 +29,7 @@ export default function WaveformRender({
   setSelectedRegion,
   setRegionData,
   connection,
+  savedAnnotations = [],
 }: WaveformProp) {
   // Waveform rendering
   const waveformRef = useRef<HTMLDivElement | null>(null)
@@ -47,6 +50,9 @@ export default function WaveformRender({
   const createRegionData = useCallback(
     (region: Region) => {
       setRegionData((currentRegionData) => {
+        if (currentRegionData.has(region.id)) {
+          return currentRegionData
+        }
         const nextRegionData = new Map(currentRegionData)
         nextRegionData.set(region.id, {
           startTime: region.start,
@@ -77,7 +83,7 @@ export default function WaveformRender({
 
   const sendRegionData = useCallback(() => {
     if (selectedRegionRef.current && connection) {
-      sendData(connection, audioId , selectedRegionRef.current.id)
+      sendData(connection, audioId, selectedRegionRef.current.id)
     }
   }, [connection])
   const [audioDuration, setAudioDuration] = useState<number>(0)
@@ -126,11 +132,14 @@ export default function WaveformRender({
 
     wavesurfer.on('timeupdate', (time) => {
       setPlaybar(time)
-    })  
+    })
 
+    wavesurfer.load(audio).catch((e) => {
+      if (e.name !== 'AbortError') {
+        console.error('Error loading wavesurfer:', e)
+      }
+    })
 
-    wavesurfer.load(audio)
-    
     waveSurferInstance.current = wavesurfer
 
     return () => {
@@ -188,7 +197,153 @@ export default function WaveformRender({
       regionInstance.current?.un('region-updated', handleRegionUpdated)
       regionInstance.current?.un('region-created', handleRegionCreated)
     }
-  }, [connection,audio])
+  }, [connection, audio])
+
+  // Load saved annotations
+  useEffect(() => {
+    if (regionInstance.current && savedAnnotations.length > 0 && audioDuration > 0) {
+      setRegionData((currentRegionData) => {
+        const nextRegionData = new Map(currentRegionData)
+
+        savedAnnotations.forEach((annotation) => {
+          if (!regionInstance.current!.getRegions().some((r) => r.id === annotation.id)) {
+            regionInstance.current!.addRegion({
+              id: annotation.id,
+              start: annotation.startTimeSeconds,
+              end: annotation.endTimeSeconds,
+              color: NEUTRAL_REGION_COLOR,
+              drag: editing,
+              resize: editing,
+            })
+
+            nextRegionData.set(annotation.id, {
+              dbGuid: annotation.id,
+              startTime: annotation.startTimeSeconds,
+              endTime: annotation.endTimeSeconds,
+              tags: new Set(annotation.labelNames),
+              description: '',
+            })
+          }
+        })
+
+        return nextRegionData
+      })
+    }
+  }, [savedAnnotations, audioDuration])
+
+  // Handle incoming remote deletion
+  useEffect(() => {
+    if (!connection || !regionInstance.current) return
+
+    const handleAnnotationDelete = (annotationId: string) => {
+      // Find the region locally. Often dbGuid is the region id if loaded from DB,
+      // but if created locally, they might differ. We will check regionData state.
+      setRegionData((currentRegionData) => {
+        const nextRegionData = new Map(currentRegionData)
+        let regionIdToRemove: string | null = null
+
+        // Find which local region corresponds to this dbGuid
+        for (const [rId, data] of nextRegionData.entries()) {
+          if (data.dbGuid === annotationId || rId === annotationId) {
+            regionIdToRemove = rId
+            break
+          }
+        }
+
+        if (regionIdToRemove) {
+          // Remove from wavesurfer
+          const regionToRemove = regionInstance.current
+            ?.getRegions()
+            .find((r) => r.id === regionIdToRemove)
+          if (regionToRemove) {
+            regionToRemove.remove()
+          }
+          // Remove from state
+          nextRegionData.delete(regionIdToRemove)
+        }
+
+        return nextRegionData
+      })
+    }
+
+    connection.on('ReceiveAnnotationDelete', handleAnnotationDelete)
+
+    return () => {
+      connection.off('ReceiveAnnotationDelete', handleAnnotationDelete)
+    }
+  }, [connection, setRegionData])
+
+  // Handle incoming remote updates (create/update)
+  useEffect(() => {
+    if (!connection || !regionInstance.current) return
+
+    const handleAnnotationUpdate = (annotation: AnnotationDto) => {
+      setRegionData((currentRegionData) => {
+        const nextRegionData = new Map(currentRegionData)
+        let existingRegionId: string | null = null
+
+        // Find if this annotation already exists locally
+        for (const [rId, data] of nextRegionData.entries()) {
+          if (data.dbGuid === annotation.id || rId === annotation.id) {
+            existingRegionId = rId
+            break
+          }
+        }
+
+        if (existingRegionId) {
+          // Update Case
+          const regionToUpdate = regionInstance.current
+            ?.getRegions()
+            .find((r) => r.id === existingRegionId)
+          if (regionToUpdate) {
+            if (
+              regionToUpdate.start !== annotation.startTimeSeconds ||
+              regionToUpdate.end !== annotation.endTimeSeconds
+            ) {
+              regionToUpdate.setOptions({
+                start: annotation.startTimeSeconds,
+                end: annotation.endTimeSeconds,
+              })
+            }
+          }
+
+          nextRegionData.set(existingRegionId, {
+            ...nextRegionData.get(existingRegionId),
+            dbGuid: annotation.id,
+            startTime: annotation.startTimeSeconds,
+            endTime: annotation.endTimeSeconds,
+            tags: new Set(annotation.labelNames),
+          })
+        } else {
+          // Create Case
+          regionInstance.current?.addRegion({
+            id: annotation.id,
+            start: annotation.startTimeSeconds,
+            end: annotation.endTimeSeconds,
+            color: NEUTRAL_REGION_COLOR,
+            drag: editing,
+            resize: editing,
+          })
+
+          nextRegionData.set(annotation.id, {
+            dbGuid: annotation.id,
+            startTime: annotation.startTimeSeconds,
+            endTime: annotation.endTimeSeconds,
+            tags: new Set(annotation.labelNames),
+            description: '',
+          })
+        }
+
+        return nextRegionData
+      })
+    }
+
+    connection.on('ReceiveAnnotationUpdate', handleAnnotationUpdate)
+
+    return () => {
+      connection.off('ReceiveAnnotationUpdate', handleAnnotationUpdate)
+    }
+  }, [connection, editing, setRegionData])
 
   //Manages region selection
   useEffect(() => {
@@ -237,14 +392,23 @@ export default function WaveformRender({
 
   const handleDelete = () => {
     if (selectedRegionRef.current) {
+      const regionId = selectedRegionRef.current.id
       selectedRegionRef.current.remove()
       setSelectedRegion(null)
 
       setRegionData((currentRegionData) => {
         const nextRegionData = new Map(currentRegionData)
-        nextRegionData.delete(selectedRegionRef.current!.id)
+        const regionInfo = nextRegionData.get(regionId)
+
+        if (regionInfo?.dbGuid && connection) {
+          deleteAnnotation(connection, regionInfo.dbGuid, audioId)
+        }
+
+        nextRegionData.delete(regionId)
         return nextRegionData
       })
+
+      selectedRegionRef.current = null
     }
   }
 

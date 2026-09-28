@@ -12,4 +12,6 @@ public class Label : EntityBase
     public User? Owner { get; set; } = null;
 
     public string Name { get; set; } = string.Empty;
+
+    public ICollection<Annotation> Annotations { get; set; } = new List<Annotation>();
 }
