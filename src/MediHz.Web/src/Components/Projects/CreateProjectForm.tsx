@@ -35,7 +35,12 @@ export default function CreateProjectForm({ onSubmit }: IProps) {
   return (
     <div className="flex flex-col gap-2">
       <h2>New Project</h2>
+      <label htmlFor="project-name" className="text-sm font-medium text-gray-700">
+        Project name
+      </label>
+
       <TextInput
+        id="project-name"
         type="text"
         placeholder="Name"
         value={project.name}

@@ -30,6 +30,7 @@ export default function LabelItem({ label, allGroups, onDelete, onMove }: IProps
       <span className="font-medium break-words">{label.name}</span>
       <div className="flex items-center justify-between gap-2">
         <Select
+          aria-label={`Move ${label.name} to label group`}
           value={label.labelGroupId ?? ''}
           onChange={(e) => handleMove(e.target.value || null)}
           className="min-w-0 flex-1"

@@ -7,5 +7,13 @@ interface PlaybarProp {
 }
 
 export default function Playbar({ audioDuration, state, onChange }: PlaybarProp) {
-  return <Slider min={0} max={audioDuration ?? 0} state={state} onChange={onChange} />
+  return (
+    <Slider
+      min={0}
+      max={audioDuration ?? 0}
+      state={state}
+      onChange={onChange}
+      ariaLabel="Audio playback position"
+    />
+  )
 }
