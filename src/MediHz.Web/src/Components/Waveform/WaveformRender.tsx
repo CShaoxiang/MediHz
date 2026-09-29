@@ -85,7 +85,7 @@ export default function WaveformRender({
     if (selectedRegionRef.current && connection) {
       sendData(connection, audioId, selectedRegionRef.current.id)
     }
-  }, [connection])
+  }, [connection, audioId])
   const [audioDuration, setAudioDuration] = useState<number>(0)
   const [zoom, setZoom] = useState(20)
 
@@ -133,6 +133,7 @@ export default function WaveformRender({
     wavesurfer.on('timeupdate', (time) => {
       setPlaybar(time)
     })
+<<<<<<< HEAD
 
     wavesurfer.load(audio).catch((e) => {
       if (e.name !== 'AbortError') {
@@ -140,6 +141,11 @@ export default function WaveformRender({
       }
     })
 
+=======
+
+    wavesurfer.load(audio)
+
+>>>>>>> a61bff4 (improved accessibility across controls and forms)
     waveSurferInstance.current = wavesurfer
 
     return () => {
@@ -198,6 +204,7 @@ export default function WaveformRender({
       regionInstance.current?.un('region-created', handleRegionCreated)
     }
   }, [connection, audio])
+<<<<<<< HEAD
 
   // Load saved annotations
   useEffect(() => {
@@ -344,6 +351,8 @@ export default function WaveformRender({
       connection.off('ReceiveAnnotationUpdate', handleAnnotationUpdate)
     }
   }, [connection, editing, setRegionData])
+=======
+>>>>>>> a61bff4 (improved accessibility across controls and forms)
 
   //Manages region selection
   useEffect(() => {
@@ -441,20 +450,24 @@ export default function WaveformRender({
       </div>
 
       <div className="flex gap-2 items-center">
-        <Button onClick={playPause}>
+        <Button ariaLabel={play ? 'Pause audio' : 'Play audio'} onClick={playPause}>
           {play ? (
-            <FiPause className="icon-small size-7" />
+            <FiPause className="icon-small size-7" aria-hidden="true" />
           ) : (
-            <FiPlay className="icon-small size-7" />
+            <FiPlay className="icon-small size-7" aria-hidden="true" />
           )}
         </Button>
-        <Button onClick={() => setVolSlide(!volSlide)}>
-          <FiMusic className="icon-small size-7" />
+
+        <Button
+          ariaLabel={volSlide ? 'Hide volume control' : 'Show volume control'}
+          onClick={() => setVolSlide(!volSlide)}
+        >
+          <FiMusic className="icon-small size-7" aria-hidden="true" />
         </Button>
 
         {volSlide && (
           <div className="max-w-20 mt-2">
-            <Slider min={0} max={100} state={volume} onChange={changeVolume} />
+            <Slider min={0} max={100} state={volume} onChange={changeVolume} ariaLabel="Volume" />
           </div>
         )}
 

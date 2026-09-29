@@ -31,7 +31,12 @@ export default function CreateLabelGroupForm({ onSubmit }: IProps) {
   return (
     <div className="flex flex-col gap-2">
       <h2>Create a New Label Group</h2>
+      <label htmlFor="label-group-name" className="text-sm font-medium text-gray-700">
+        Group name
+      </label>
+
       <TextInput
+        id="label-group-name"
         type="text"
         placeholder="Group name"
         value={name}

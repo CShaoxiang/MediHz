@@ -34,7 +34,12 @@ export default function CreateLabelForm({ groupId, labelGroups, onSubmit }: IPro
 
   return (
     <div className="flex w-full flex-col gap-2">
+      <label htmlFor="label-name" className="text-sm font-medium text-gray-700">
+        Label name
+      </label>
+
       <TextInput
+        id="label-name"
         type="text"
         placeholder="Label name"
         value={name}
@@ -43,7 +48,13 @@ export default function CreateLabelForm({ groupId, labelGroups, onSubmit }: IPro
           if (e.key === 'Enter') handleSubmit()
         }}
       />
+
+      <label htmlFor="label-group" className="text-sm font-medium text-gray-700">
+        Label group
+      </label>
+
       <Select
+        id="label-group"
         value={targetGroupId ?? ''}
         onChange={(e) => setTargetGroupId(e.target.value || null)}
       >
@@ -54,6 +65,7 @@ export default function CreateLabelForm({ groupId, labelGroups, onSubmit }: IPro
           </option>
         ))}
       </Select>
+
       <Button label="Add" onClick={handleSubmit} />
     </div>
   )
