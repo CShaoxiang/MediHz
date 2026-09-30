@@ -48,9 +48,10 @@ function App() {
         />
         <Route
           path="/projects/:projectId/:audioId"
-          element={<ProtectedRoute>
-            <AnnotationPage/>
-          </ProtectedRoute>
+          element={
+            <ProtectedRoute>
+              <AnnotationPage />
+            </ProtectedRoute>
           }
         />
         <Route

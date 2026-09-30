@@ -133,7 +133,6 @@ export default function WaveformRender({
     wavesurfer.on('timeupdate', (time) => {
       setPlaybar(time)
     })
-<<<<<<< HEAD
 
     wavesurfer.load(audio).catch((e) => {
       if (e.name !== 'AbortError') {
@@ -141,11 +140,6 @@ export default function WaveformRender({
       }
     })
 
-=======
-
-    wavesurfer.load(audio)
-
->>>>>>> a61bff4 (improved accessibility across controls and forms)
     waveSurferInstance.current = wavesurfer
 
     return () => {
@@ -203,8 +197,7 @@ export default function WaveformRender({
       regionInstance.current?.un('region-updated', handleRegionUpdated)
       regionInstance.current?.un('region-created', handleRegionCreated)
     }
-  }, [connection, audio])
-<<<<<<< HEAD
+  }, [audio, syncSelectedRegion, updateRegionData, createRegionData, sendRegionData])
 
   // Load saved annotations
   useEffect(() => {
@@ -236,7 +229,7 @@ export default function WaveformRender({
         return nextRegionData
       })
     }
-  }, [savedAnnotations, audioDuration])
+  }, [savedAnnotations, audioDuration, editing, setRegionData])
 
   // Handle incoming remote deletion
   useEffect(() => {
@@ -351,8 +344,6 @@ export default function WaveformRender({
       connection.off('ReceiveAnnotationUpdate', handleAnnotationUpdate)
     }
   }, [connection, editing, setRegionData])
-=======
->>>>>>> a61bff4 (improved accessibility across controls and forms)
 
   //Manages region selection
   useEffect(() => {

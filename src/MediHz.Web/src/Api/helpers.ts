@@ -70,7 +70,7 @@ export async function apiGetFile(path: string): Promise<ApiResult<string>> {
     method: 'GET',
     headers: {
       Accept: '*/*',
-      'Authorization': `Bearer ${getToken()}`
+      Authorization: `Bearer ${getToken()}`,
     },
   })
 

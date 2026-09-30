@@ -91,14 +91,14 @@ export default function NavBar({ children }: NavBarProp) {
 export interface NavBarItemProp {
   icon?: string
   label: string
-  onClick?: (e: any) => void
+  onClick?: () => void
 }
 
 export function NavBarItems(prop: NavBarItemProp) {
   return (
     <li>
       {prop.icon && prop.icon}
-      <Button label={prop.label} onClick={(e) => prop.onClick} />
+      <Button label={prop.label} onClick={() => prop.onClick?.()} />
     </li>
   )
 }

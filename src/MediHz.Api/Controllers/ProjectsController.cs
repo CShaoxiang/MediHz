@@ -56,7 +56,7 @@ public class ProjectsController(
     )
     {
         var request = new GetProjectSingleAudioRequest(projectId, audioId);
-        var response = await getProjectSingleAudio.Handle(request,cancellationToken);
+        var response = await getProjectSingleAudio.Handle(request, cancellationToken);
         return StatusCode(response.StatusCode, response.Body);
     }
 }

@@ -16,7 +16,10 @@ export default function ProjectOverviewPage() {
   const { projectId } = useParams<PageParams>()
   const navigate = useNavigate()
 
-  const audioActions = [{ label: 'Delete', onClick: () => console.log("delete") }, { label: 'Rename', onClick: () => {}}]
+  const audioActions = [
+    { label: 'Delete', onClick: () => console.log('delete') },
+    { label: 'Rename', onClick: () => {} },
+  ]
 
   useEffect(() => {
     if (projectId) {
