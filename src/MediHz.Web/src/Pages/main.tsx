@@ -37,7 +37,13 @@ export default function MainPage() {
     <div className="flex items-start gap-4">
       <div className="flex items-start gap-4 mr-4">
         <aside className="flex flex-col gap-4">
-          <SideBar title="Audio Files" buttons={[{ label: 'Audio 1', onClick: ((e) => {} ) }, { label: 'Audio 2', onClick: ((e) => {}) }]} />
+          <SideBar
+            title="Audio Files"
+            buttons={[
+              { label: 'Audio 1', onClick: () => {} },
+              { label: 'Audio 2', onClick: () => {} },
+            ]}
+          />
 
           <SideBar
             title="Annotations"
@@ -62,6 +68,7 @@ export default function MainPage() {
         {selectedRegion && (
           <div className="m-2 flex min-h-0 max-h-[calc(100svh-12rem)] overflow-hidden">
             <Annotations
+              audioId="Test Audio"
               region={selectedRegion}
               selectedregionData={regionData.get(selectedRegion.id)}
               setRegionData={setRegionData}

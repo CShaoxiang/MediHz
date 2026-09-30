@@ -99,7 +99,17 @@ All MRs must pass the following checks before they can be merged:
 1. Testing - all dotnet tests in `MediHz.Tests` should pass.
 1. Backend formatting - CSharpier must be ran on backend files.
 1. Frontend formatting, linting, and typechecking - Prettier, eslint, and tsc checks must pass on the frontend.
+```bash
+dotnet tool restore
+dotnet csharpier check .
+dotnet test
 
+cd src/MediHz.Web
+npm run format:check
+npm run lint
+npm run typecheck
+npm run build
+```
 
 ### Deployment
 The deployment is a single Docker image containing the React SPA and .NET API. Terraform manages Azure Container Registry, PostgreSQL Flexible Server, App Service Plan, and Linux Web App; `deploy.sh` applies infrastructure, migrates the database, builds and pushes the image, and restarts the web app.

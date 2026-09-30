@@ -9,5 +9,4 @@ public record AudioFileFetchResultDto(
     string format,
     string contentType,
     string fileName
-
 );

@@ -8,9 +8,8 @@ namespace MediHz.Api.Controllers;
 [Route("api/[controller]")]
 [ApiController]
 [Authorize]
-public class AudioFileUploadController(
-    IAudioFileUploadHandler audioFileUploadHandler
-): ControllerBase
+public class AudioFileUploadController(IAudioFileUploadHandler audioFileUploadHandler)
+    : ControllerBase
 {
     [HttpPost("{projectId:guid}/batch")]
     [Consumes("multipart/form-data")]

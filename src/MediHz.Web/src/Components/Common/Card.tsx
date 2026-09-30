@@ -5,10 +5,11 @@ interface CardProps {
   title: string
   onClick: () => void
   children?: ReactNode
+  // TODO: Unused
   actions?: ButtonProps[]
 }
 
-export default function Card({ title, onClick, children, actions }: CardProps) {
+export default function Card({ title, onClick, children }: CardProps) {
   return (
     <button
       type="button"
@@ -18,9 +19,12 @@ export default function Card({ title, onClick, children, actions }: CardProps) {
       <span className="flex items-center gap-2">
         {children}
         <h5 className="text-lg font-semibold text-gray-800">{title}</h5>
-        {<span className='flex justify-end ml-auto'><DropdownMenuBasic/></span>}
+        {
+          <span className="flex justify-end ml-auto">
+            <DropdownMenuBasic />
+          </span>
+        }
       </span>
-      
     </button>
   )
 }

@@ -28,16 +28,20 @@ export default function ProjectsListingPage() {
   }
 
   const handleClickProject = (projectId: string) => {
-
     navigate(`/projects/${projectId}`)
   }
 
   return (
     <>
       <Grid>
-        <Card title={'Create Project'} onClick={() => setIsOpen(true)}><LuBookPlus className='icon-small-white'/></Card>
+        <Card title={'Create Project'} onClick={() => setIsOpen(true)}>
+          <LuBookPlus className="icon-small-white" />
+        </Card>
         {projects.map((project, i) => (
-          <Card key={i} title={project.name} onClick={() => handleClickProject(project.id)}> <LuBookAudio className='icon-small'/> </Card>
+          <Card key={i} title={project.name} onClick={() => handleClickProject(project.id)}>
+            {' '}
+            <LuBookAudio className="icon-small" />{' '}
+          </Card>
         ))}
       </Grid>
       <Modal modalHeader={''} state={isOpen} setState={setIsOpen}>
