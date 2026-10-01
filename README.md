@@ -63,6 +63,26 @@ npm run dev
 ```
 Runs and hosts the frontend. Click on local host link provided in console to appear on web.
 
+### HTTPS (optional)
+
+HTTP is the default for local development. To run locally over HTTPS, create a trusted certificate for `localhost` once, then use the HTTPS variants of the commands.
+
+1. Create and trust the certificate.
+   ```bash
+   dotnet dev-certs https --trust
+   mkdir src/MediHz.Web/certs
+   dotnet dev-certs https --export-path src/MediHz.Web/certs/localhost.pem --format Pem --no-password
+   ```
+1. Start the backend with the `development:https` profile:
+   ```bash
+   dotnet run --project src/MediHz.Api -lp development:https
+   ```
+1. Start the frontend over HTTPS:
+   ```bash
+   cd src/MediHz.Web
+   npm run dev:https
+   ```
+
 ## Development Process
 
 1. Create a branch according to the [Branching Strategy](#branching-strategy).
@@ -149,5 +169,3 @@ Copy `terraform.tfvars.example` to the ignored `terraform.tfvars` file and defin
    az webapp show --name "$(terraform output -raw web_app_name)" --resource-group "$(terraform output -raw resource_group_name)" --query defaultHostName -o tsv
    az webapp log tail --name "$(terraform output -raw web_app_name)" --resource-group "$(terraform output -raw resource_group_name)"
    ```
-
-
