@@ -13,7 +13,9 @@ public class ProjectsController(
     IGetProjectsHandler getProjectsHandler,
     ICreateProjectHandler createProjectHandler,
     IGetProjectAudioFilesHandler getProjectAudioFilesHandler,
-    IGetProjectSingleAudioHandler getProjectSingleAudio
+    IGetProjectSingleAudioHandler getProjectSingleAudio,
+    IPatchProjectHandler projectPatchHandler,
+    IDeleteProjectHandler projectDeleteHandler
 ) : ControllerBase
 {
     [HttpGet("all")]
@@ -57,6 +59,33 @@ public class ProjectsController(
     {
         var request = new GetProjectSingleAudioRequest(projectId, audioId);
         var response = await getProjectSingleAudio.Handle(request, cancellationToken);
+        return StatusCode(response.StatusCode, response.Body);
+    }
+
+    [HttpPatch("{projectId}/{userId}")]
+    [ProducesResponseType(typeof(ProjectDto), StatusCodes.Status200OK)]
+    public async Task<IActionResult> PatchProject(
+        Guid projectId,
+        Guid userId,
+        [FromBody] UpdateProjectRequest changes,
+        CancellationToken cancellationToken
+    )
+    {
+        var request = new ProjectPatchRequest(projectId, userId ,changes);
+        var response = await projectPatchHandler.Handle(request, cancellationToken);
+        return StatusCode(response.StatusCode, response.Body);
+    }
+
+    [HttpDelete("{projectId}/{userId}")]
+    [ProducesResponseType(StatusCodes.Status204NoContent)]
+    public async Task<IActionResult> DeleteProject(
+        Guid projectId,
+        Guid userId,
+        CancellationToken cancellationToken
+    )
+    {
+        var request = new ProjectDeleteRequest(projectId, userId);
+        var response = await projectDeleteHandler.Handle(request, cancellationToken);
         return StatusCode(response.StatusCode, response.Body);
     }
 }

@@ -35,6 +35,8 @@ public static class DependencyInjection
         services.Configure<JwtOptions>(configuration.GetSection(JwtOptions.SectionName));
 
         services.AddScoped<IUserService, UserService>();
+        services.AddScoped<IAudioFileDeleteService, AudioFileDeleteService>();
+        services.AddScoped<IAudioFilePatchService, AudioFilePatchService>();
         services.AddScoped<IAudioFileUploadService, AudioFileUploadService>();
         services.AddScoped<IAudioFileFetchService, AudioFileFetchService>();
         services.AddScoped<IStorageService, LocalStorageService>();

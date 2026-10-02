@@ -5,25 +5,20 @@ interface CardProps {
   title: string
   onClick: () => void
   children?: ReactNode
-  // TODO: Unused
   actions?: ButtonProps[]
 }
 
-export default function Card({ title, onClick, children }: CardProps) {
+export default function Card({ title, onClick, children, actions }: CardProps) {
   return (
     <button
       type="button"
       onClick={onClick}
-      className="rounded-lg border-2 border-dotted border-medihzprimary p-4 text-left shadow-lg transition-transform duration-300 hover:scale-105 focus:outline-none focus-visible:ring-2 focus-visible:ring-medihzprimary"
+      className="bg-white rounded-lg border-2 border-dotted border-medihzprimary p-4 text-left shadow-lg transition-transform duration-300 hover:scale-105 focus:outline-none focus-visible:ring-2 focus-visible:ring-medihzprimary"
     >
       <span className="flex items-center gap-2">
         {children}
-        <h5 className="text-lg font-semibold text-gray-800">{title}</h5>
-        {
-          <span className="flex justify-end ml-auto">
-            <DropdownMenuBasic />
-          </span>
-        }
+        <h5 className="text-lg font-semibold text-gray-800 truncate">{title}</h5>
+        {<span className='flex justify-end ml-auto'><DropdownMenuBasic title={title} actions={actions}/></span>}
       </span>
     </button>
   )

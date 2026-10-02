@@ -48,7 +48,12 @@ public class ProjectService(MediHzDbContext dbContext) : IProjectService
         CancellationToken cancellationToken = default
     )
     {
-        throw new NotImplementedException();
+        var project = await dbContext.Projects.FindAsync([projectId], cancellationToken);
+        if (project is null) return false;
+
+        dbContext.Projects.Remove(project);
+        await dbContext.SaveChangesAsync(cancellationToken);
+        return true;
     }
 
     public async Task<ProjectDto?> GetByIdAsync(
@@ -116,7 +121,19 @@ public class ProjectService(MediHzDbContext dbContext) : IProjectService
         CancellationToken cancellationToken = default
     )
     {
-        throw new NotImplementedException();
+        var project = await dbContext.Projects.FindAsync([projectId], cancellationToken);
+        if (project is null) return null;
+
+        if (request.Name is not null) project.Name = request.Name;
+        await dbContext.SaveChangesAsync(cancellationToken);
+
+        return new ProjectDto(
+            project.Id,
+            project.Name,
+            project.OwnerId,
+            "Owner",
+            project.CreatedAtUtc
+        );
     }
 
     public async Task<ProjectMemberDto?> UpdateMemberRoleAsync(

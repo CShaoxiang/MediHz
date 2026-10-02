@@ -2,10 +2,6 @@ using MediHz.Application.Abstractions.AudioFiles;
 using MediHz.Application.Abstractions.Auth;
 using MediHz.Application.Abstractions.Projects;
 using MediHz.Application.DTOs.AudioFiles;
-using MediHz.Domain.Audio;
-using Microsoft.AspNetCore.Http;
-using Microsoft.AspNetCore.Mvc;
-using Microsoft.Extensions.Logging;
 
 namespace MediHz.Application.Handlers.Audio;
 

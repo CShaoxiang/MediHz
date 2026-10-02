@@ -16,7 +16,7 @@ function App() {
   const isLoginPage = location.pathname === '/login'
 
   return (
-    <main className="App p-3">
+    <main className="App p-3 h-screen">
       {!isLoginPage && (
         <header className="pb-3">
           <NavBar>

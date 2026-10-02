@@ -17,12 +17,16 @@ public static class DependencyInjection
         // Audio
         services.AddScoped<IAudioFileUploadHandler, AudioFileUploadHandler>();
         services.AddScoped<IAudioFileFetchHandler, AudioFileFetchHandler>();
+        services.AddScoped<IAudioFilePatchHandler, AudioFilePatchHandler>();
+        services.AddScoped<IAudioFileDeleteHandler, AudioFileDeleteHandler>();
 
         // Projects
         services.AddScoped<ICreateProjectHandler, CreateProjectHandler>();
         services.AddScoped<IGetProjectsHandler, GetProjectsHandler>();
         services.AddScoped<IGetProjectAudioFilesHandler, GetProjectAudioFilesHandler>();
         services.AddScoped<IGetProjectSingleAudioHandler, GetProjectSingleAudioHandler>();
+        services.AddScoped<IPatchProjectHandler, PatchProjectHandler>();
+        services.AddScoped<IDeleteProjectHandler, DeleteProjectHandler>();
 
         // Annotations
         services.AddScoped<IGetAnnotationsByFileHandler, GetAnnotationsByFileHandler>();

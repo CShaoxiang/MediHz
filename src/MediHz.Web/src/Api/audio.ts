@@ -1,9 +1,9 @@
 import type { BatchAudioFileUploadResult } from '../Types/audio'
-import { apiFetch, apiFetchForm, apiGetFile } from './helpers'
+import {apiDelete, apiFetch, apiFetchForm, apiGetFile, apiPatch } from './helpers'
 import type { ApiResult } from '../Types/api'
 
 const AUDIO_FILE_UPLOAD_API_BASE = 'AudioFileUpload'
-const AUDIO_FILE_API_BASE = 'AudioFile'
+const AUDIO_FILE_API_BASE = "AudioFile"
 
 export async function addAudioFiles(projectId: string, files: File[]) {
   return await apiFetchForm<BatchAudioFileUploadResult>(
@@ -12,11 +12,16 @@ export async function addAudioFiles(projectId: string, files: File[]) {
   )
 }
 
-export async function getAudioFileUrl(
-  projectId: string,
-  audioId: string,
-): Promise<ApiResult<string>> {
+export async function getAudioFileUrl(projectId: string, audioId: string): Promise<ApiResult<string>> {
   return await apiGetFile(`${AUDIO_FILE_API_BASE}/${projectId}/${audioId}`)
+}
+
+export async function renameAudioFile(projectId: string, audioId: string, newName: string) {
+  return await apiPatch(`${AUDIO_FILE_API_BASE}/${projectId}/${audioId}`, { FileName: newName })
+}
+
+export async function deleteAudioFile(projectId: string, audioId: string){
+  return await apiDelete(`${AUDIO_FILE_API_BASE}/${projectId}/${audioId}`)
 }
 
 import type { AnnotationDto } from '../Types/audio'
