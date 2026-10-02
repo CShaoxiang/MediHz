@@ -54,7 +54,7 @@ export default function NavBar({ children }: NavBarProp) {
 
   return (
     <nav className="nav">
-      <div className="flex w-full items-center justify-between rounded-3xl bg-purple-700 text-white p-4 shadow">
+      <div className="flex w-full items-center justify-between rounded-3xl bg-purple-700 text-white p-4 shadow-lg">
         <header>
           <a href="#" className="text-xl font-semibold text-white p-4">
             MediHz
@@ -98,7 +98,7 @@ export function NavBarItems(prop: NavBarItemProp) {
   return (
     <li>
       {prop.icon && prop.icon}
-      <Button label={prop.label} onClick={() => prop.onClick?.()} />
+      <Button label={prop.label} onClick={() => prop.onClick} />
     </li>
   )
 }

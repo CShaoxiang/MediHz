@@ -1,7 +1,8 @@
+import { getStoredUser } from '../Auth/tokenStorage'
 import type { AudioFile } from '../Types/audio'
 import type { OmitId } from '../Types/helpers'
 import type { Project } from '../Types/projects'
-import { apiFetch, apiFetchForm } from './helpers'
+import { apiDelete, apiFetch, apiFetchForm, apiPatch } from './helpers'
 
 const PROJECTS_API_BASE = 'Projects'
 
@@ -23,4 +24,16 @@ export async function createProject(project: OmitId<Project>) {
 export async function fetchSingleAudio(projectId: string, audioId: string) {
   console.info('Fetching single audio file', audioId)
   return await apiFetch<AudioFile>(`${PROJECTS_API_BASE}/${projectId}/${audioId}`)
+}
+
+export async function renameProject(projectId: string, newName: string) {
+  console.info('Renaming selected project to:', newName)
+  return await apiPatch<Project>(`${PROJECTS_API_BASE}/${projectId}/${getStoredUser()?.userId}`, {
+    name: newName,
+  })
+}
+
+export async function deleteProject(projectId: string) {
+  console.info('Deleting selected project:', projectId)
+  return await apiDelete(`${PROJECTS_API_BASE}/${projectId}/${getStoredUser()?.userId}`)
 }

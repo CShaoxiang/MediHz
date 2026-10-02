@@ -7,28 +7,30 @@ import {
   DropdownMenuLabel,
   DropdownMenuSeparator,
   DropdownMenuTrigger,
-} from './dropdown-menu'
-import { Button } from './button'
-import { FiMoreVertical } from 'react-icons/fi'
+} from "./dropdown-menu"
+import { Button } from "./button"
+import { FiMoreVertical } from "react-icons/fi";
+import type { ButtonProps } from "../Common/Button.tsx";
 
-export function DropdownMenuBasic() {
+export interface DropdownMenuProp {
+  title: string,
+  actions?: ButtonProps[]
+}
+
+
+export function DropdownMenuBasic({title, actions}:DropdownMenuProp) {
   return (
     <DropdownMenuTrigger>
-      <Button variant="outline">
-        <FiMoreVertical />
-      </Button>
-      <DropdownMenu>
-        <DropdownMenuGroup>
-          <DropdownMenuLabel>My Account</DropdownMenuLabel>
-          <DropdownMenuItem>Profile</DropdownMenuItem>
-          <DropdownMenuItem>Billing</DropdownMenuItem>
-        </DropdownMenuGroup>
-        <DropdownMenuSeparator />
-        <DropdownMenuGroup>
-          <DropdownMenuItem>Team</DropdownMenuItem>
-          <DropdownMenuItem>Subscription</DropdownMenuItem>
-        </DropdownMenuGroup>
-      </DropdownMenu>
-    </DropdownMenuTrigger>
-  )
+  <Button variant="outline"><FiMoreVertical/></Button>
+  <DropdownMenu>
+    <DropdownMenuLabel>{title}</DropdownMenuLabel>
+      
+    <DropdownMenuSeparator />
+    <DropdownMenuGroup>
+      {actions && actions.map((action) => (
+        <DropdownMenuItem className = {action.classname} onAction={() => action.onClick()}>{action.label}</DropdownMenuItem>
+      ))}
+    </DropdownMenuGroup>
+  </DropdownMenu>
+</DropdownMenuTrigger> )
 }
