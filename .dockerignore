@@ -14,3 +14,4 @@
 .terraform.lock.hcl
 src/MediHz.Tests
 src/MediHz.Web/dist
+src/MediHz.Web/certs

@@ -35,4 +35,4 @@ docker push "${ACR_LOGIN_SERVER}/medihz-app:latest"
 echo "Refreshing Azure Web App Instance..."
 az webapp restart --name "$WEB_APP_NAME" --resource-group "$(terraform output -raw resource_group_name)"
 
-echo "✅ MediHz App successfully deployed to Production!"
+echo "✅ MediHz App successfully deployed to Production at $(terraform output -raw web_app_url)"

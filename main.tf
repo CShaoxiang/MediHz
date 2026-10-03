@@ -175,8 +175,12 @@ resource "azurerm_linux_web_app" "webapp" {
   location            = azurerm_resource_group.rg.location
   service_plan_id     = azurerm_service_plan.asp.id
 
+  https_only = true
+
   site_config {
-    always_on = true
+    always_on           = true
+    minimum_tls_version = "1.2"
+    ftps_state          = "Disabled"
     application_stack {
       docker_image_name = var.container_image_name
       # Natively handles Docker credentials in AzureRM v4.x:
@@ -187,7 +191,8 @@ resource "azurerm_linux_web_app" "webapp" {
   }
 
   app_settings = merge(var.web_app_settings, {
-    "ConnectionStrings__MediHz" = "Host=${azurerm_postgresql_flexible_server.postgres.fqdn};Database=${var.postgres_database_name};Username=${var.postgres_admin_login};Password=${var.postgres_admin_password};SSL Mode=Require;"
+    "ASPNETCORE_FORWARDEDHEADERS_ENABLED" = "true"
+    "ConnectionStrings__MediHz"           = "Host=${azurerm_postgresql_flexible_server.postgres.fqdn};Database=${var.postgres_database_name};Username=${var.postgres_admin_login};Password=${var.postgres_admin_password};SSL Mode=Require;"
   })
 }
 
@@ -205,6 +210,10 @@ output "postgres_fqdn" {
 
 output "web_app_name" {
   value = azurerm_linux_web_app.webapp.name
+}
+
+output "web_app_url" {
+  value = "https://${azurerm_linux_web_app.webapp.default_hostname}"
 }
 
 output "resource_group_name" {
