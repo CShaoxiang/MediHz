@@ -19,7 +19,10 @@ public class PatchProjectHandlerTests : UnitTestBase
         : base(output)
     {
         _currentUserMock.Setup(cu => cu.UserId).Returns(_userId);
-        _handler = new PatchProjectHandler(_projectServiceMock.Object, Logger<IPatchProjectHandler>());
+        _handler = new PatchProjectHandler(
+            _projectServiceMock.Object,
+            Logger<IPatchProjectHandler>()
+        );
     }
 
     [Fact]
@@ -27,10 +30,14 @@ public class PatchProjectHandlerTests : UnitTestBase
     {
         // Arrange
         var projectId = Guid.NewGuid();
-        var change = new ProjectPatchRequest(projectId, _userId, new UpdateProjectRequest("new name"));
+        var change = new ProjectPatchRequest(
+            projectId,
+            _userId,
+            new UpdateProjectRequest("new name")
+        );
         _projectServiceMock
             .Setup(s => s.GetByIdAsync(projectId, _userId, CancellationToken.None))
-            .ReturnsAsync((ProjectDto) null);
+            .ReturnsAsync((ProjectDto)null);
 
         // Act
         var result = await _handler.Handle(change, CancellationToken.None);
@@ -45,8 +52,18 @@ public class PatchProjectHandlerTests : UnitTestBase
     {
         // Arrange
         var projectId = Guid.NewGuid();
-        var change = new ProjectPatchRequest(projectId, _userId, new UpdateProjectRequest("new name"));
-        var updatedProject = new ProjectDto(projectId, "new name", _userId, "Owner", DateTime.UtcNow);
+        var change = new ProjectPatchRequest(
+            projectId,
+            _userId,
+            new UpdateProjectRequest("new name")
+        );
+        var updatedProject = new ProjectDto(
+            projectId,
+            "new name",
+            _userId,
+            "Owner",
+            DateTime.UtcNow
+        );
         _projectServiceMock
             .Setup(s => s.UpdateAsync(projectId, change.Change, CancellationToken.None))
             .ReturnsAsync(updatedProject);

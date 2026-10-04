@@ -15,6 +15,7 @@ app_service_plan_name   = "<app-service-plan-name>"
 app_service_sku         = "B1"
 web_app_name            = "<globally-unique-web-app-name>"
 container_image_name    = "medihz-app:latest"
+storage_account_name    = "<globally-unique-storage-account-name>"
 
 web_app_settings = {
   "Authentication__Google__ClientId" = "<google-oauth-client-id>"

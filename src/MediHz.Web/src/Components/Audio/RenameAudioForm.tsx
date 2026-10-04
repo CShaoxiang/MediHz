@@ -9,7 +9,7 @@ interface IProps {
 }
 
 export default function RenameAudioForm({ audio, onSubmit }: IProps) {
-  const [audioName, setAudioName] = useState("")
+  const [audioName, setAudioName] = useState('')
 
   const handleSubmit = async () => {
     if (audio) {

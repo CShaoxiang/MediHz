@@ -57,11 +57,13 @@ export default function ProjectsListingPage() {
 
   const handleRename = (project: Project) => {
     renameProject(project.id, project.name).then((res) => {
-      res.ok
-        ? setProjects((existingProjects) => {
-            return existingProjects.map((p) => (p.id === project.id ? project : p))
-          })
-        : console.error(res.error)
+      if (res.ok) {
+        setProjects((existingProjects) =>
+          existingProjects.map((p) => (p.id === project.id ? project : p)),
+        )
+      } else {
+        console.error(res.error)
+      }
     })
 
     setIsOpenRename(false)
@@ -69,11 +71,11 @@ export default function ProjectsListingPage() {
 
   const handleDelete = (project: Project) => {
     deleteProject(project.id).then((res) => {
-      res.ok
-        ? setProjects((existingProjects) => {
-            return existingProjects.filter((p) => p.id !== project.id)
-          })
-        : console.error(res.error)
+      if (res.ok) {
+        setProjects((existingProjects) => existingProjects.filter((p) => p.id !== project.id))
+      } else {
+        console.error(res.error)
+      }
     })
 
     setIsOpenDelete(false)
@@ -101,7 +103,11 @@ export default function ProjectsListingPage() {
         <CreateProjectForm onSubmit={handleOnSubmit} />
       </Modal>
       <Modal modalHeader={''} state={isOpenRename} setState={setIsOpenRename}>
-        <RenameProjectForm onSubmit={handleRename} project={selectedProject} setProject={setSelectedProject} />
+        <RenameProjectForm
+          onSubmit={handleRename}
+          project={selectedProject}
+          setProject={setSelectedProject}
+        />
       </Modal>
       <Modal modalHeader={''} state={isOpenDelete} setState={setIsOpenDelete}>
         <DeleteProjectForm onSubmit={handleDelete} project={selectedProject} />

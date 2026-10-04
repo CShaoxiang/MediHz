@@ -15,7 +15,7 @@ builder.Services.AddSignalR();
 builder.Services.AddHealthChecks();
 builder.Services.AddOpenApi();
 builder.Services.AddApplication(builder.Configuration);
-builder.Services.AddInfrastructure(builder.Configuration);
+builder.Services.AddInfrastructure(builder.Configuration, builder.Environment);
 
 builder.Services.AddCors(options =>
 {

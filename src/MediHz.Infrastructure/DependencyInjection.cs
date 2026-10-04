@@ -1,3 +1,4 @@
+using Azure.Storage.Blobs;
 using MediHz.Application.Abstractions.Annotations;
 using MediHz.Application.Abstractions.AudioFiles;
 using MediHz.Application.Abstractions.Auth;
@@ -13,6 +14,7 @@ using MediHz.Infrastructure.Services.Users;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Hosting;
 
 namespace MediHz.Infrastructure;
 
@@ -20,7 +22,8 @@ public static class DependencyInjection
 {
     public static IServiceCollection AddInfrastructure(
         this IServiceCollection services,
-        IConfiguration configuration
+        IConfiguration configuration,
+        IHostEnvironment environment
     )
     {
         var connectionString =
@@ -39,7 +42,22 @@ public static class DependencyInjection
         services.AddScoped<IAudioFilePatchService, AudioFilePatchService>();
         services.AddScoped<IAudioFileUploadService, AudioFileUploadService>();
         services.AddScoped<IAudioFileFetchService, AudioFileFetchService>();
-        services.AddScoped<IStorageService, LocalStorageService>();
+        if (environment.IsDevelopment())
+        {
+            services.AddScoped<IStorageService, LocalStorageService>();
+        }
+        else
+        {
+            var blobConnectionString =
+                configuration.GetConnectionString("BlobStorage")
+                ?? throw new InvalidOperationException(
+                    "Connection string 'BlobStorage' is missing."
+                );
+            services.AddSingleton(
+                new BlobContainerClient(blobConnectionString, AzureBlobStorageService.ContainerName)
+            );
+            services.AddScoped<IStorageService, AzureBlobStorageService>();
+        }
         services.AddScoped<IProjectService, ProjectService>();
         services.AddScoped<IAudioFileService, AudioFileService>();
         services.AddScoped<ILabelGroupService, LabelGroupService>();

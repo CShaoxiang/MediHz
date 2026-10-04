@@ -80,6 +80,11 @@ variable "container_image_name" {
   description = "Container image name and tag in Azure Container Registry"
 }
 
+variable "storage_account_name" {
+  type        = string
+  description = "Globally unique Azure Storage account name for uploaded files"
+}
+
 variable "web_app_settings" {
   type        = map(string)
   description = "Non-connection-string application settings for the Azure Web App"
@@ -168,7 +173,24 @@ resource "azurerm_service_plan" "asp" {
 }
 
 
-# 8. Web App for Containers (Frontend Host)
+# 8. Blob Storage for uploaded audio files
+resource "azurerm_storage_account" "storage" {
+  name                            = var.storage_account_name
+  resource_group_name             = azurerm_resource_group.rg.name
+  location                        = azurerm_resource_group.rg.location
+  account_tier                    = "Standard"
+  account_replication_type        = "LRS"
+  min_tls_version                 = "TLS1_2"
+  allow_nested_items_to_be_public = false
+}
+
+resource "azurerm_storage_container" "audio" {
+  name                  = "audio"
+  storage_account_id    = azurerm_storage_account.storage.id
+  container_access_type = "private"
+}
+
+# 9. Web App for Containers (Frontend Host)
 resource "azurerm_linux_web_app" "webapp" {
   name                = var.web_app_name
   resource_group_name = azurerm_resource_group.rg.name
@@ -191,8 +213,9 @@ resource "azurerm_linux_web_app" "webapp" {
   }
 
   app_settings = merge(var.web_app_settings, {
-    "ASPNETCORE_FORWARDEDHEADERS_ENABLED" = "true"
     "ConnectionStrings__MediHz"           = "Host=${azurerm_postgresql_flexible_server.postgres.fqdn};Database=${var.postgres_database_name};Username=${var.postgres_admin_login};Password=${var.postgres_admin_password};SSL Mode=Require;"
+    "ASPNETCORE_FORWARDEDHEADERS_ENABLED" = "true"
+    "ConnectionStrings__BlobStorage"      = azurerm_storage_account.storage.primary_connection_string
   })
 }
 

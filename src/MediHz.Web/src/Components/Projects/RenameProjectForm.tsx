@@ -10,7 +10,6 @@ interface IProps {
 }
 
 export default function RenameProjectForm({ project, setProject, onSubmit }: IProps) {
-
   if (!project || !setProject) {
     return <div>Project not found</div>
   }

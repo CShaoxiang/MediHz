@@ -71,7 +71,7 @@ public class ProjectsController(
         CancellationToken cancellationToken
     )
     {
-        var request = new ProjectPatchRequest(projectId, userId ,changes);
+        var request = new ProjectPatchRequest(projectId, userId, changes);
         var response = await projectPatchHandler.Handle(request, cancellationToken);
         return StatusCode(response.StatusCode, response.Body);
     }

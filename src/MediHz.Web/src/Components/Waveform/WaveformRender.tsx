@@ -83,7 +83,7 @@ export default function WaveformRender({
 
   const sendRegionData = useCallback(() => {
     if (selectedRegionRef.current && connection) {
-      sendData(connection, audioId , selectedRegionRef.current.id)
+      sendData(connection, audioId, selectedRegionRef.current.id)
     }
   }, [connection, audioId])
   const [audioDuration, setAudioDuration] = useState<number>(0)
@@ -132,7 +132,7 @@ export default function WaveformRender({
 
     wavesurfer.on('timeupdate', (time) => {
       setPlaybar(time)
-    })  
+    })
 
     wavesurfer.load(audio).catch((e) => {
       if (e.name !== 'AbortError') {
