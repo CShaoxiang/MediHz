@@ -24,20 +24,21 @@ public class AudioFileServiceTests : UnitTestBase
 
     private AudioFileUploadService _audioUploadService;
 
-    private AudioFileDeleteService _deleteService;        
+    private AudioFileDeleteService _deleteService;
     private AudioFileFetchService _fetchService;
 
     private Project _project;
 
-    public AudioFileServiceTests(ITestOutputHelper output) : base(output)
+    public AudioFileServiceTests(ITestOutputHelper output)
+        : base(output)
     {
         _project = new Project("Sample Project Name", Guid.NewGuid());
         _dbContext.Projects.Add(_project);
         _dbContext.SaveChanges();
 
-        _audioUploadService = new (_storageService,_dbContext, Logger<AudioFileUploadService>());
-        _deleteService = new (_dbContext, _storageService);
-        _fetchService = new (_storageService, Logger<AudioFileFetchService>());
+        _audioUploadService = new(_storageService, _dbContext, Logger<AudioFileUploadService>());
+        _deleteService = new(_dbContext, _storageService);
+        _fetchService = new(_storageService, Logger<AudioFileFetchService>());
     }
 
     Guid testGuid = Guid.NewGuid();
@@ -65,14 +66,22 @@ public class AudioFileServiceTests : UnitTestBase
         var changes = new AudioFilePatchDto(FileName: "renamed.mp3");
 
         // Act
-        var result = await service.patchAudioFileAsync(_project.Id, audioFile.Id, changes, CancellationToken.None);
+        var result = await service.patchAudioFileAsync(
+            _project.Id,
+            audioFile.Id,
+            changes,
+            CancellationToken.None
+        );
 
         // Assert
         result.Should().NotBeNull();
         result.Id.Should().Be(audioFile.Id);
         result.FileName.Should().Be("renamed.mp3");
 
-        var updatedAudioFile = await _dbContext.AudioFiles.FindAsync([audioFile.Id],CancellationToken.None);
+        var updatedAudioFile = await _dbContext.AudioFiles.FindAsync(
+            [audioFile.Id],
+            CancellationToken.None
+        );
         updatedAudioFile.Should().NotBeNull();
         updatedAudioFile.FileName.Should().Be("renamed.mp3");
     }
@@ -94,19 +103,28 @@ public class AudioFileServiceTests : UnitTestBase
 
         var audio = result.Items[0];
 
-        var deleteService = new AudioFileDeleteService(_dbContext, _storageService);        
-        var fetchService = new AudioFileFetchService(_storageService, Logger<AudioFileFetchService>());
+        var deleteService = new AudioFileDeleteService(_dbContext, _storageService);
+        var fetchService = new AudioFileFetchService(
+            _storageService,
+            Logger<AudioFileFetchService>()
+        );
 
         var storedFile = await fetchService.getAudioFileAsync(
             _project.Id,
             audio.Id,
             audio.MimeType,
-            CancellationToken.None);
+            CancellationToken.None
+        );
         storedFile.Should().NotBeNull();
         storedFile.stream.Length.Should().Be(wavStream.Length);
         await storedFile.stream.DisposeAsync();
 
-        var deletion = await deleteService.deleteAudioFileAsync(_project.Id,audio.Id,audio.MimeType, CancellationToken.None);
+        var deletion = await deleteService.deleteAudioFileAsync(
+            _project.Id,
+            audio.Id,
+            audio.MimeType,
+            CancellationToken.None
+        );
 
         // Assert
         deletion.Should().NotBeNull();
@@ -115,17 +133,20 @@ public class AudioFileServiceTests : UnitTestBase
         var deletedAudio = await _dbContext.AudioFiles.FindAsync(audio.Id);
         deletedAudio.Should().BeNull();
 
-        await FluentActions.Invoking(() => fetchService.getAudioFileAsync(
-                _project.Id,
-                audio.Id,
-                audio.MimeType,
-                CancellationToken.None))
+        await FluentActions
+            .Invoking(() =>
+                fetchService.getAudioFileAsync(
+                    _project.Id,
+                    audio.Id,
+                    audio.MimeType,
+                    CancellationToken.None
+                )
+            )
             .Should()
             .ThrowAsync<FileNotFoundException>();
     }
 
-
-   private static MemoryStream CreateDummyWavStream(int sampleRate, int durationSeconds)
+    private static MemoryStream CreateDummyWavStream(int sampleRate, int durationSeconds)
     {
         var ms = new MemoryStream();
         using var writer = new BinaryWriter(ms, Encoding.UTF8, true);

@@ -132,7 +132,7 @@ npm run build
 ```
 
 ### Deployment
-The deployment is a single Docker image containing the React SPA and .NET API. Terraform manages Azure Container Registry, PostgreSQL Flexible Server, App Service Plan, and Linux Web App; `deploy.sh` applies infrastructure, migrates the database, builds and pushes the image, and restarts the web app.
+The deployment is a single Docker image containing the React SPA and .NET API. Terraform manages Azure Container Registry, PostgreSQL Flexible Server, Storage Account, App Service Plan, and Linux Web App; `deploy.sh` applies infrastructure, migrates the database, builds and pushes the image, and restarts the web app.
 
 Copy `terraform.tfvars.example` to the ignored `terraform.tfvars` file and define the Azure subscription, resource names, capacity, database credentials, and Web App settings for the target environment. This keeps `main.tf` reusable across machines and Azure subscriptions. Never commit `.terraform/`, `terraform.tfstate*`, a real `terraform.tfvars`, Azure credentials, or production secrets.
 

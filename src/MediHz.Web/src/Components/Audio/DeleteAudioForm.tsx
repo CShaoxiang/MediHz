@@ -7,7 +7,6 @@ interface IProps {
 }
 
 export default function DeleteAudioForm({ audio, onSubmit }: IProps) {
-
   const handleSubmit = async () => {
     if (audio) {
       onSubmit(audio)

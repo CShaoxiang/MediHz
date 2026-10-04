@@ -7,7 +7,6 @@ interface IProps {
 }
 
 export default function DeleteProjectForm({ project, onSubmit }: IProps) {
-
   const handleSubmit = async () => {
     if (project) {
       onSubmit(project)

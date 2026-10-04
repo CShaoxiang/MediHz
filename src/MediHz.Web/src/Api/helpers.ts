@@ -61,15 +61,19 @@ export async function apiFetchForm<T = unknown>(
 
 export async function apiPatch<T = unknown>(
   path: string,
-  body?: Record<string,unknown>,
+  body?: Record<string, unknown>,
   method: HttpMethod = 'PATCH',
 ): Promise<ApiResult<T>> {
   return request<T>(
-    path,method,{'Content-Type': 'application/json'},body? JSON.stringify(body) : undefined,
+    path,
+    method,
+    { 'Content-Type': 'application/json' },
+    body ? JSON.stringify(body) : undefined,
   )
 }
 
-export async function apiDelete<T = unknown>(path: string,
+export async function apiDelete<T = unknown>(
+  path: string,
   body?: Record<string, unknown>,
   method: HttpMethod = 'DELETE',
 ): Promise<ApiResult<T>> {

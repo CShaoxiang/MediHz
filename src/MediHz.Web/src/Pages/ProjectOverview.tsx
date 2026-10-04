@@ -28,13 +28,15 @@ export default function ProjectOverviewPage() {
     {
       label: 'Rename',
       onClick: () => {
-        ;(setIsOpenRename(true), setSelectedAudio(audio))
+        setIsOpenRename(true)
+        setSelectedAudio(audio)
       },
     },
     {
       label: 'Delete',
       onClick: () => {
-        ;(setIsOpenDelete(true), setSelectedAudio(audio))
+        setIsOpenDelete(true)
+        setSelectedAudio(audio)
       },
       classname: 'text-red font-bold',
     },

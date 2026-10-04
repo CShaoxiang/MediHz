@@ -10,10 +10,10 @@ namespace MediHz.Api.Controllers;
 [ApiController]
 [Authorize]
 public class AudioFileController(
-        IAudioFileFetchHandler audioFileFetchHandler,
-        IAudioFilePatchHandler audioFilePatchHandler,
-        IAudioFileDeleteHandler audioFileDeleteHandler,
-        IGetAnnotationsByFileHandler getAnnotationsHandler
+    IAudioFileFetchHandler audioFileFetchHandler,
+    IAudioFilePatchHandler audioFilePatchHandler,
+    IAudioFileDeleteHandler audioFileDeleteHandler,
+    IGetAnnotationsByFileHandler getAnnotationsHandler
 ) : ControllerBase
 {
     [HttpGet("{projectId:guid}/{audioId:guid}")]
@@ -34,11 +34,11 @@ public class AudioFileController(
         // Return the stream and audio data to be sent over as a FileStreamResult
         // File seems to only to be usable in controllers
         Response.StatusCode = response.StatusCode;
-        return  File(response.Value.stream, response.Value.contentType, response.Value.fileName);
+        return File(response.Value.stream, response.Value.contentType, response.Value.fileName);
     }
 
     [HttpPatch("{projectId:guid}/{audioId:guid}")]
-    [ProducesResponseType(typeof(AudioFileRenameResultDto),StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(AudioFileRenameResultDto), StatusCodes.Status200OK)]
     public async Task<IActionResult> PatchAudioFile(
         Guid projectId,
         Guid audioId,
@@ -53,7 +53,7 @@ public class AudioFileController(
     }
 
     [HttpDelete("{projectId:guid}/{audioId:guid}")]
-    [ProducesResponseType(typeof(AudioFileRenameResultDto),StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(AudioFileRenameResultDto), StatusCodes.Status200OK)]
     public async Task<IActionResult> DeleteAudioFile(
         Guid projectId,
         Guid audioId,
@@ -61,9 +61,9 @@ public class AudioFileController(
     )
     {
         var request = new AudioFileDeleteRequest(projectId, audioId);
-        var response = await audioFileDeleteHandler.Handle(request,cancellationToken);
+        var response = await audioFileDeleteHandler.Handle(request, cancellationToken);
 
-        return StatusCode(response.StatusCode,response.Body);
+        return StatusCode(response.StatusCode, response.Body);
     }
 
     [HttpGet("{audioId:guid}/annotations")]

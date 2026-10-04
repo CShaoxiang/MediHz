@@ -49,7 +49,8 @@ public class ProjectService(MediHzDbContext dbContext) : IProjectService
     )
     {
         var project = await dbContext.Projects.FindAsync([projectId], cancellationToken);
-        if (project is null) return false;
+        if (project is null)
+            return false;
 
         dbContext.Projects.Remove(project);
         await dbContext.SaveChangesAsync(cancellationToken);
@@ -122,9 +123,11 @@ public class ProjectService(MediHzDbContext dbContext) : IProjectService
     )
     {
         var project = await dbContext.Projects.FindAsync([projectId], cancellationToken);
-        if (project is null) return null;
+        if (project is null)
+            return null;
 
-        if (request.Name is not null) project.Name = request.Name;
+        if (request.Name is not null)
+            project.Name = request.Name;
         await dbContext.SaveChangesAsync(cancellationToken);
 
         return new ProjectDto(

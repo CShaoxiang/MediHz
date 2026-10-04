@@ -28,7 +28,8 @@ public class DeleteProjectHandlerTests : UnitTestBase
             _projectServiceMock.Object,
             _audioFileServiceMock.Object,
             _audioFileDeleteHandlerMock.Object,
-            Logger<DeleteProjectHandler>());
+            Logger<DeleteProjectHandler>()
+        );
     }
 
     [Fact]
@@ -59,7 +60,9 @@ public class DeleteProjectHandlerTests : UnitTestBase
 
         _projectServiceMock
             .Setup(s => s.GetByIdAsync(projectId, _userId, CancellationToken.None))
-            .ReturnsAsync(new ProjectDto(projectId, "Test Project", _userId, "Owner", DateTime.UtcNow));
+            .ReturnsAsync(
+                new ProjectDto(projectId, "Test Project", _userId, "Owner", DateTime.UtcNow)
+            );
 
         var request = new ProjectDeleteRequest(projectId, _userId);
         _projectServiceMock
@@ -68,7 +71,6 @@ public class DeleteProjectHandlerTests : UnitTestBase
 
         // Act
         var result = await _handler.Handle(request, CancellationToken.None);
-
 
         // Assert
         result.StatusCode.Should().Be(StatusCodes.Status204NoContent);
@@ -101,18 +103,22 @@ public class DeleteProjectHandlerTests : UnitTestBase
         var request = new ProjectDeleteRequest(projectId, _userId);
         _projectServiceMock
             .Setup(s => s.GetByIdAsync(projectId, _userId, CancellationToken.None))
-            .ReturnsAsync(new ProjectDto(projectId, "Test Project", _userId, "Owner", DateTime.UtcNow));
+            .ReturnsAsync(
+                new ProjectDto(projectId, "Test Project", _userId, "Owner", DateTime.UtcNow)
+            );
 
         _projectServiceMock
             .Setup(s => s.DeleteAsync(projectId, CancellationToken.None))
             .ReturnsAsync(true);
-
 
         // Act
         var result = await _handler.Handle(request, CancellationToken.None);
 
         // Assert
         result.StatusCode.Should().Be(StatusCodes.Status204NoContent);
-        _projectServiceMock.Verify(s => s.DeleteAsync(projectId, CancellationToken.None), Times.Once);
+        _projectServiceMock.Verify(
+            s => s.DeleteAsync(projectId, CancellationToken.None),
+            Times.Once
+        );
     }
 }
