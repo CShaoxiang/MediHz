@@ -87,7 +87,7 @@ export default function WaveformRender({
     }
   }, [connection, audioId])
   const [audioDuration, setAudioDuration] = useState<number>(0)
-  const [zoom, setZoom] = useState(20)
+  const [zoom, setZoom] = useState(100)
 
   // Zoom Controls
   const zoomIn = () => {
@@ -97,14 +97,27 @@ export default function WaveformRender({
   }
 
   const zoomOut = () => {
-    const newZoom = Math.max(zoom - 100, 20)
+    const newZoom = Math.max(zoom - 100, 100)
     setZoom(newZoom)
     waveSurferInstance.current?.zoom(newZoom)
   }
 
   const resetZoom = () => {
-    setZoom(20)
-    waveSurferInstance.current?.zoom(20)
+    setZoom(100)
+    waveSurferInstance.current?.zoom(100)
+  }
+
+  const handleWheel = (delta: number) => {
+    console.log('Wheel event detected. Delta:', delta)
+    if (delta < 0) {
+      const newZoom = Math.min(zoom + 25, 1000)
+      setZoom(newZoom)
+      waveSurferInstance.current?.zoom(newZoom)
+    } else {
+      const newZoom = Math.max(zoom - 25, 100)
+      setZoom(newZoom)
+      waveSurferInstance.current?.zoom(newZoom)
+    }
   }
 
   //Intalises Audio Waveform configs
@@ -425,7 +438,11 @@ export default function WaveformRender({
   }
   return (
     <div className="space-y-4">
-      <div ref={waveformRef} className="w-full bg-violet-100 rounded-3xl shadow overflow-hidden" />
+      <div
+        ref={waveformRef}
+        className="w-full bg-violet-100 rounded-3xl shadow overflow-hidden"
+        onWheel={(e) => {e.preventDefault(); handleWheel(e.deltaY)}}
+      />
 
       <div className="-ml-1 -mr-1 info-box-parent">
         <Playbar
