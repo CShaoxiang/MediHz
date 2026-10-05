@@ -5,8 +5,8 @@ export interface ButtonProps {
   onClick: () => void
   children?: ReactNode
   border?: boolean
-  ariaLabel?: string
   classname?: string
+  ariaLabel?: string
 }
 
 export default function Button(props: ButtonProps) {

@@ -80,7 +80,6 @@ export default function ProjectsListingPage() {
 
     setIsOpenDelete(false)
   }
-
   return (
     <>
       <Grid>
