@@ -1,5 +1,6 @@
 using MediHz.Application.Abstractions.Annotations;
 using MediHz.Application.Abstractions.Auth;
+using MediHz.Application.Abstractions.Projects;
 using MediHz.Application.DTOs.Annotations;
 using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Logging;
@@ -10,6 +11,7 @@ public interface IUpdateAnnotationHandler : IRequestHandler<UpdateAnnotationComm
 
 public class UpdateAnnotationHandler(
     IAnnotationService annotationService,
+    IProjectService projectService,
     ICurrentUser currentUser,
     ILogger<UpdateAnnotationHandler> logger
 ) : IUpdateAnnotationHandler
@@ -29,11 +31,20 @@ public class UpdateAnnotationHandler(
 
         try
         {
-            var annotation = await annotationService.UpdateAsync(
+            var canAccess = await projectService.CanAccessAnnotationAsync(
                 request.AnnotationId,
-                updateRequest,
+                request.AudioFileId,
+                currentUser.UserId,
                 cancellationToken
             );
+
+            var annotation = canAccess
+                ? await annotationService.UpdateAsync(
+                    request.AnnotationId,
+                    updateRequest,
+                    cancellationToken
+                )
+                : null;
 
             if (annotation is null)
             {

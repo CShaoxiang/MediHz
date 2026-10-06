@@ -1,6 +1,8 @@
 using AutoFixture;
 using FluentAssertions;
 using MediHz.Application.Abstractions.Annotations;
+using MediHz.Application.Abstractions.Auth;
+using MediHz.Application.Abstractions.Projects;
 using MediHz.Application.DTOs.Annotations;
 using MediHz.Application.Handlers.Annotations;
 using Microsoft.AspNetCore.Http;
@@ -13,13 +15,31 @@ namespace MediHz.Tests.UnitTests.Handlers;
 public class DeleteAnnotationHandlerTests : UnitTestBase
 {
     private readonly Mock<IAnnotationService> _annotationServiceMock = new();
+    private readonly Mock<IProjectService> _projectServiceMock = new();
+    private readonly Mock<ICurrentUser> _currentUserMock = new();
 
     private DeleteAnnotationHandler _handler;
 
     public DeleteAnnotationHandlerTests(ITestOutputHelper output)
         : base(output)
     {
-        _handler = new(_annotationServiceMock.Object, Logger<DeleteAnnotationHandler>());
+        _currentUserMock.Setup(c => c.UserId).Returns(Guid.Empty);
+        _projectServiceMock
+            .Setup(s =>
+                s.CanAccessAnnotationAsync(
+                    It.IsAny<Guid>(),
+                    It.IsAny<Guid>(),
+                    It.IsAny<Guid>(),
+                    It.IsAny<CancellationToken>()
+                )
+            )
+            .ReturnsAsync(true);
+        _handler = new(
+            _annotationServiceMock.Object,
+            _projectServiceMock.Object,
+            _currentUserMock.Object,
+            Logger<DeleteAnnotationHandler>()
+        );
     }
 
     [Fact]
@@ -78,5 +98,33 @@ public class DeleteAnnotationHandlerTests : UnitTestBase
         result.Problem.Should().NotBeNull();
         result.Problem.Title.Should().Be("Annotation Deletion Failed");
         result.Problem.Detail.Should().Be(exceptionMessage);
+    }
+
+    [Fact]
+    public async Task Handle_ShouldReturnNotFound_WhenUserCannotAccessAnnotation()
+    {
+        // Arrange
+        var request = Fixture.Create<DeleteAnnotationCommand>();
+
+        _projectServiceMock
+            .Setup(s =>
+                s.CanAccessAnnotationAsync(
+                    request.AnnotationId,
+                    request.AudioFileId,
+                    Guid.Empty,
+                    CancellationToken.None
+                )
+            )
+            .ReturnsAsync(false);
+
+        // Act
+        var result = await _handler.Handle(request, CancellationToken.None);
+
+        // Assert
+        result.StatusCode.Should().Be(StatusCodes.Status404NotFound);
+        _annotationServiceMock.Verify(
+            s => s.DeleteAsync(It.IsAny<Guid>(), It.IsAny<CancellationToken>()),
+            Times.Never
+        );
     }
 }

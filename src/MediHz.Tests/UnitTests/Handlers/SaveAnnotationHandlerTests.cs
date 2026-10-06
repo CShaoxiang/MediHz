@@ -2,6 +2,7 @@ using AutoFixture;
 using FluentAssertions;
 using MediHz.Application.Abstractions.Annotations;
 using MediHz.Application.Abstractions.Auth;
+using MediHz.Application.Abstractions.Projects;
 using MediHz.Application.DTOs.Annotations;
 using MediHz.Application.Handlers.Annotations;
 using Microsoft.AspNetCore.Http;
@@ -14,6 +15,7 @@ namespace MediHz.Tests.UnitTests.Handlers;
 public class SaveAnnotationHandlerTests : UnitTestBase
 {
     private readonly Mock<IAnnotationService> _annotationServiceMock = new();
+    private readonly Mock<IProjectService> _projectServiceMock = new();
     private readonly Mock<ICurrentUser> _currentUserMock = new();
 
     private SaveAnnotationHandler _handler;
@@ -22,8 +24,18 @@ public class SaveAnnotationHandlerTests : UnitTestBase
         : base(output)
     {
         _currentUserMock.Setup(c => c.UserId).Returns(Guid.Empty);
+        _projectServiceMock
+            .Setup(s =>
+                s.CanAccessAudioFileAsync(
+                    It.IsAny<Guid>(),
+                    It.IsAny<Guid>(),
+                    It.IsAny<CancellationToken>()
+                )
+            )
+            .ReturnsAsync(true);
         _handler = new(
             _annotationServiceMock.Object,
+            _projectServiceMock.Object,
             _currentUserMock.Object,
             Logger<SaveAnnotationHandler>()
         );
@@ -41,7 +53,8 @@ public class SaveAnnotationHandlerTests : UnitTestBase
                 s.CreateAsync(
                     Guid.Empty,
                     It.Is<CreateAnnotationRequest>(r =>
-                        r.AudioFileId == request.AudioFileId
+                        r.Id == request.AnnotationId
+                        && r.AudioFileId == request.AudioFileId
                         && r.LabelNames.SequenceEqual(request.LabelNames)
                         && r.StartTimeSeconds == request.StartTimeSeconds
                         && r.EndTimeSeconds == request.EndTimeSeconds
@@ -84,5 +97,33 @@ public class SaveAnnotationHandlerTests : UnitTestBase
         result.Problem.Should().NotBeNull();
         result.Problem.Title.Should().Be("Annotation Creation Failed");
         result.Problem.Detail.Should().Be(exceptionMessage);
+    }
+
+    [Fact]
+    public async Task Handle_ShouldReturnNotFound_WhenUserIsNotProjectMember()
+    {
+        // Arrange
+        var request = Fixture.Create<SaveAnnotationCommand>();
+
+        _projectServiceMock
+            .Setup(s =>
+                s.CanAccessAudioFileAsync(request.AudioFileId, Guid.Empty, CancellationToken.None)
+            )
+            .ReturnsAsync(false);
+
+        // Act
+        var result = await _handler.Handle(request, CancellationToken.None);
+
+        // Assert
+        result.StatusCode.Should().Be(StatusCodes.Status404NotFound);
+        _annotationServiceMock.Verify(
+            s =>
+                s.CreateAsync(
+                    It.IsAny<Guid>(),
+                    It.IsAny<CreateAnnotationRequest>(),
+                    It.IsAny<CancellationToken>()
+                ),
+            Times.Never
+        );
     }
 }

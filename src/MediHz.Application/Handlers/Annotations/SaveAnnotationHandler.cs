@@ -1,5 +1,6 @@
 using MediHz.Application.Abstractions.Annotations;
 using MediHz.Application.Abstractions.Auth;
+using MediHz.Application.Abstractions.Projects;
 using MediHz.Application.DTOs.Annotations;
 using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Logging;
@@ -10,6 +11,7 @@ public interface ISaveAnnotationHandler : IRequestHandler<SaveAnnotationCommand,
 
 public class SaveAnnotationHandler(
     IAnnotationService annotationService,
+    IProjectService projectService,
     ICurrentUser currentUser,
     ILogger<SaveAnnotationHandler> logger
 ) : ISaveAnnotationHandler
@@ -23,6 +25,7 @@ public class SaveAnnotationHandler(
 
         // Map the Hub request to the standard Create request expected by the service
         var createRequest = new CreateAnnotationRequest(
+            request.AnnotationId,
             request.AudioFileId,
             request.LabelNames,
             request.StartTimeSeconds,
@@ -31,6 +34,20 @@ public class SaveAnnotationHandler(
 
         try
         {
+            var canAccess = await projectService.CanAccessAudioFileAsync(
+                request.AudioFileId,
+                currentUser.UserId,
+                cancellationToken
+            );
+            if (!canAccess)
+            {
+                return Result<AnnotationDto>.Failure(
+                    "Audio File Not Found",
+                    "The specified audio file does not exist.",
+                    StatusCodes.Status404NotFound
+                );
+            }
+
             var annotation = await annotationService.CreateAsync(
                 currentUser.UserId,
                 createRequest,

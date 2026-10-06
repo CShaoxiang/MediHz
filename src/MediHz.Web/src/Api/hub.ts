@@ -1,95 +1,82 @@
 import * as SignalR from '@microsoft/signalr'
-import type { RegionData } from '../Interfaces/RegionData'
+import type { AnnotationRegion } from '../Interfaces/AnnotationRegion'
 import { getToken } from '../Auth/tokenStorage'
+import type { ApiResult, ProblemDetails } from '../Types/api'
 
 const HUB_BASE = '/hubs'
 
-export async function hubConnection() {
-  const connection = new SignalR.HubConnectionBuilder()
-    .withUrl(`${HUB_BASE}/audio`, {
+export function createAudioHubConnection(audioId: string) {
+  return new SignalR.HubConnectionBuilder()
+    .withUrl(`${HUB_BASE}/audio?audioId=${encodeURIComponent(audioId)}`, {
       skipNegotiation: true,
       transport: SignalR.HttpTransportType.WebSockets,
       accessTokenFactory: () => getToken() || '',
     })
     .withAutomaticReconnect()
     .build()
-
-  connection.on('ReceiveMessage', (message: string) => {
-    if (message) {
-      console.log('Received message from server:', message)
-    }
-  })
-
-  connection.on('ReceiveRegionData', (audioId: string, regionId: string) => {
-    console.log('Recieved region from server: ', audioId, regionId)
-  })
-
-  await connection
-    .start()
-    .then(() => {
-      console.log('SignalR connection established.')
-    })
-    .catch((error) => {
-      console.error('Error establishing SignalR connection:', error)
-    })
-
-  return connection
 }
 
-export function callHub(connection: SignalR.HubConnection) {
-  connection.invoke('SendMessage', 'hello').catch((error) => console.log(error))
+export async function startHubConnection(connection: SignalR.HubConnection) {
+  try {
+    await connection.start()
+    console.log('SignalR connection established.')
+    return true
+  } catch (error) {
+    console.error('Error establishing SignalR connection:', error)
+    return false
+  }
 }
 
-export function sendData(connection: SignalR.HubConnection, audioId: string, regionId: string) {
-  connection.invoke('SendRegionData', audioId, regionId).catch((error) => console.log(error))
+function toAnnotationCommand(audioId: string, annotation: AnnotationRegion) {
+  return {
+    annotationId: annotation.id,
+    audioFileId: audioId,
+    labelNames: Array.from(annotation.tags),
+    startTimeSeconds: annotation.startTime,
+    endTimeSeconds: annotation.endTime,
+  }
 }
 
-export function joinAudioGroup(connection: SignalR.HubConnection, audioId: string) {
-  connection.invoke('JoinAudioGroup', audioId).catch(console.error)
+export const HUB_UNAVAILABLE: ProblemDetails = {
+  title: 'Not connected',
+  detail: 'Could not reach the server. Check your connection and try again.',
+  status: 0,
 }
 
-export function leaveAudioGroup(connection: SignalR.HubConnection, audioId: string) {
-  connection.invoke('LeaveAudioGroup', audioId).catch(console.error)
+async function invokeCommand(
+  connection: SignalR.HubConnection,
+  method: string,
+  ...args: unknown[]
+): Promise<ApiResult<null>> {
+  try {
+    const problem = await connection.invoke<ProblemDetails | null>(method, ...args)
+    return problem ? { ok: false, error: problem } : { ok: true, value: null }
+  } catch (error) {
+    console.error(error)
+    return { ok: false, error: HUB_UNAVAILABLE }
+  }
 }
 
-export function saveAnnotation(
+export async function saveAnnotation(
   connection: SignalR.HubConnection,
   audioId: string,
-  regionId: string,
-  regionData: RegionData,
+  annotation: AnnotationRegion,
 ) {
-  const request = {
-    regionId: regionId,
-    audioFileId: audioId,
-    labelNames: regionData.tags ? Array.from(regionData.tags) : [],
-    startTimeSeconds: regionData.startTime ?? 0,
-    endTimeSeconds: regionData.endTime ?? 0,
-  }
-  return connection.invoke('SaveAnnotation', request).catch((error) => console.log(error))
+  return invokeCommand(connection, 'SaveAnnotation', toAnnotationCommand(audioId, annotation))
 }
 
-export function updateAnnotation(
+export async function updateAnnotation(
   connection: SignalR.HubConnection,
-  annotationId: string,
   audioId: string,
-  regionData: RegionData,
+  annotation: AnnotationRegion,
 ) {
-  const request = {
-    annotationId: annotationId,
-    audioFileId: audioId,
-    labelNames: regionData.tags ? Array.from(regionData.tags) : [],
-    startTimeSeconds: regionData.startTime ?? 0,
-    endTimeSeconds: regionData.endTime ?? 0,
-  }
-  return connection.invoke('UpdateAnnotation', request).catch((error) => console.log(error))
+  return invokeCommand(connection, 'UpdateAnnotation', toAnnotationCommand(audioId, annotation))
 }
 
-export function deleteAnnotation(
+export async function deleteAnnotation(
   connection: SignalR.HubConnection,
   annotationId: string,
   audioId: string,
 ) {
-  return connection
-    .invoke('DeleteAnnotation', annotationId, audioId)
-    .catch((error) => console.log(error))
+  return invokeCommand(connection, 'DeleteAnnotation', annotationId, audioId)
 }

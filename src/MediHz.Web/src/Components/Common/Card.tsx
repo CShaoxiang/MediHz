@@ -19,7 +19,7 @@ export default function Card({ title, onClick, children, actions }: CardProps) {
         {children}
         <h5 className="text-lg font-semibold text-gray-800 truncate">{title}</h5>
         {actions && (
-          <span className='flex justify-end ml-auto'>
+          <span className="flex justify-end ml-auto">
             <DropdownMenuBasic title={title} actions={actions} />
           </span>
         )}

@@ -1,44 +1,41 @@
-import { useCallback, useEffect, useRef, useState, type ChangeEvent, type Dispatch } from 'react'
+import { useEffect, useRef, useState, type ChangeEvent } from 'react'
 import WaveSurfer from 'wavesurfer.js'
-import RegionsPlugin, { type Region } from 'wavesurfer.js/dist/plugins/regions.js'
+import RegionsPlugin from 'wavesurfer.js/dist/plugins/regions.js'
 import Button from '../Common/Button'
 import { FiMusic, FiPause, FiPlay } from 'react-icons/fi'
 import Slider from '../Common/Slider'
 import Playbar from './Playbar'
 import HoverInfo from '../Common/HoverInfo'
-import type { HubConnection } from '@microsoft/signalr'
-import { sendData, deleteAnnotation } from '../../Api/hub'
-import type { RegionData } from '../../Interfaces/RegionData'
-import type { AnnotationDto } from '../../Types/audio'
+import type { AnnotationRegion } from '../../Interfaces/AnnotationRegion'
 
 const NEUTRAL_REGION_COLOR = 'rgba(70, 115, 51, 0.2)'
 const SELECTED_REGION_COLOR = 'rgba(131, 0, 219, 0.2)'
 
 interface WaveformProp {
-  audio: string
-  audioId: string
-  setSelectedRegion: Dispatch<React.SetStateAction<Region | null>>
-  setRegionData: Dispatch<React.SetStateAction<Map<string, RegionData>>>
-  connection?: HubConnection
-  savedAnnotations?: AnnotationDto[]
+  audio?: string
+  annotations: Map<string, AnnotationRegion>
+  selectedId: string | null
+  onSelect: (id: string) => void
+  onDraw: (id: string, startTime: number, endTime: number) => void
+  onMove: (id: string, startTime: number, endTime: number) => void
+  onDelete: (id: string) => void
 }
 
 export default function WaveformRender({
   audio,
-  audioId,
-  setSelectedRegion,
-  setRegionData,
-  connection,
-  savedAnnotations = [],
+  annotations,
+  selectedId,
+  onSelect,
+  onDraw,
+  onMove,
+  onDelete,
 }: WaveformProp) {
   // Waveform rendering
   const waveformRef = useRef<HTMLDivElement | null>(null)
   const waveSurferInstance = useRef<WaveSurfer | null>(null)
-  const selectedRegionRef = useRef<Region | null>(null)
 
-  // Region Plugin Rendering
-  const regionInstance = useRef<RegionsPlugin>(null)
-  const disableSelection = useRef<(() => void) | null>(null)
+  const [regions, setRegions] = useState<RegionsPlugin | null>(null)
+  const syncingRegions = useRef(false)
 
   // Waveform interactions
   const [playbar, setPlaybar] = useState(0)
@@ -47,45 +44,6 @@ export default function WaveformRender({
   const [play, setPlay] = useState(false)
   const [volSlide, setVolSlide] = useState(false)
 
-  const createRegionData = useCallback(
-    (region: Region) => {
-      setRegionData((currentRegionData) => {
-        if (currentRegionData.has(region.id)) {
-          return currentRegionData
-        }
-        const nextRegionData = new Map(currentRegionData)
-        nextRegionData.set(region.id, {
-          startTime: region.start,
-          endTime: region.end,
-          tags: new Set<string>(),
-          description: '',
-        })
-        return nextRegionData
-      })
-    },
-    [setRegionData],
-  )
-  // Update region data when a region is edited
-  const updateRegionData = useCallback(
-    (region: Region) => {
-      setRegionData((currentRegionData) => {
-        const nextRegionData = new Map(currentRegionData)
-        nextRegionData.set(region.id, {
-          ...currentRegionData.get(region.id),
-          startTime: region.start,
-          endTime: region.end,
-        })
-        return nextRegionData
-      })
-    },
-    [setRegionData],
-  )
-
-  const sendRegionData = useCallback(() => {
-    if (selectedRegionRef.current && connection) {
-      sendData(connection, audioId, selectedRegionRef.current.id)
-    }
-  }, [connection, audioId])
   const [audioDuration, setAudioDuration] = useState<number>(0)
   const [zoom, setZoom] = useState(100)
 
@@ -107,22 +65,9 @@ export default function WaveformRender({
     waveSurferInstance.current?.zoom(100)
   }
 
-  const handleWheel = (delta: number) => {
-    console.log('Wheel event detected. Delta:', delta)
-    if (delta < 0) {
-      const newZoom = Math.min(zoom + 25, 1000)
-      setZoom(newZoom)
-      waveSurferInstance.current?.zoom(newZoom)
-    } else {
-      const newZoom = Math.max(zoom - 25, 100)
-      setZoom(newZoom)
-      waveSurferInstance.current?.zoom(newZoom)
-    }
-  }
-
   //Intalises Audio Waveform configs
   useEffect(() => {
-    if (!waveformRef.current) return
+    if (!audio || !waveformRef.current) return
 
     const wavesurfer = WaveSurfer.create({
       container: waveformRef.current,
@@ -136,11 +81,11 @@ export default function WaveformRender({
       normalize: true,
     })
 
-    const regions = wavesurfer.registerPlugin(RegionsPlugin.create())
-    regionInstance.current = regions
+    const regionsPlugin = wavesurfer.registerPlugin(RegionsPlugin.create())
 
     wavesurfer.on('ready', (duration) => {
       setAudioDuration(duration)
+      setRegions(regionsPlugin)
     })
 
     wavesurfer.on('timeupdate', (time) => {
@@ -156,232 +101,81 @@ export default function WaveformRender({
 
     return () => {
       //Memory Cleanup
-      disableSelection.current?.()
-      regionInstance.current = null
-
+      setRegions(null)
       waveSurferInstance.current = null
       wavesurfer.destroy()
     }
   }, [audio])
 
-  const syncSelectedRegion = useCallback(
-    (nextRegion: Region) => {
-      const previousRegion = selectedRegionRef.current
+  useEffect(() => {
+    if (!regions) return
 
-      if (previousRegion && previousRegion !== nextRegion) {
-        previousRegion.setOptions({ color: NEUTRAL_REGION_COLOR })
+    const unsubscribes = [
+      regions.on('region-created', (region) => {
+        if (syncingRegions.current) return
+        // Drawn by the user: give it the ID the server will also use
+        region.setOptions({ id: crypto.randomUUID() })
+        onDraw(region.id, region.start, region.end)
+      }),
+      regions.on('region-clicked', (region) => onSelect(region.id)),
+      // Tracks drags as they happen so a sync mid-drag doesn't snap the region back
+      regions.on('region-update', (region) => onMove(region.id, region.start, region.end)),
+      regions.on('region-updated', (region) => onSelect(region.id)),
+    ]
+
+    return () => unsubscribes.forEach((unsubscribe) => unsubscribe())
+  }, [regions, onSelect, onDraw, onMove])
+
+  // Make the waveform's regions match the annotations
+  useEffect(() => {
+    if (!regions) return
+
+    const existing = new Map(regions.getRegions().map((region) => [region.id, region]))
+    existing.forEach((region, id) => {
+      if (!annotations.has(id)) region.remove()
+    })
+
+    annotations.forEach((annotation, id) => {
+      const options = {
+        start: annotation.startTime,
+        end: annotation.endTime,
+        color: id === selectedId ? SELECTED_REGION_COLOR : NEUTRAL_REGION_COLOR,
+        drag: editing,
+        resize: editing,
       }
 
-      nextRegion.setOptions({ color: SELECTED_REGION_COLOR })
+      const region = existing.get(id)
+      if (region) {
+        region.setOptions(options)
+        return
+      }
 
-      selectedRegionRef.current = nextRegion
-      setSelectedRegion(nextRegion)
-    },
-    [setSelectedRegion],
-  )
-
-  useEffect(() => {
-    if (!regionInstance.current) return
-
-    const handleRegionClicked = (region: Region) => {
-      syncSelectedRegion(region)
-    }
-
-    const handleRegionUpdated = (region: Region) => {
-      syncSelectedRegion(region)
-      updateRegionData(region)
-      sendRegionData()
-    }
-
-    const handleRegionCreated = (region: Region) => {
-      syncSelectedRegion(region)
-      region.drag = false
-      region.resize = false
-      createRegionData(region)
-      sendRegionData()
-    }
-    regionInstance.current.on('region-clicked', handleRegionClicked)
-    regionInstance.current.on('region-updated', handleRegionUpdated)
-    regionInstance.current.on('region-created', handleRegionCreated)
-
-    return () => {
-      regionInstance.current?.un('region-clicked', handleRegionClicked)
-      regionInstance.current?.un('region-updated', handleRegionUpdated)
-      regionInstance.current?.un('region-created', handleRegionCreated)
-    }
-  }, [audio, syncSelectedRegion, updateRegionData, createRegionData, sendRegionData])
-
-  // Load saved annotations
-  useEffect(() => {
-    if (regionInstance.current && savedAnnotations.length > 0 && audioDuration > 0) {
-      setRegionData((currentRegionData) => {
-        const nextRegionData = new Map(currentRegionData)
-
-        savedAnnotations.forEach((annotation) => {
-          if (!regionInstance.current!.getRegions().some((r) => r.id === annotation.id)) {
-            regionInstance.current!.addRegion({
-              id: annotation.id,
-              start: annotation.startTimeSeconds,
-              end: annotation.endTimeSeconds,
-              color: NEUTRAL_REGION_COLOR,
-              drag: editing,
-              resize: editing,
-            })
-
-            nextRegionData.set(annotation.id, {
-              dbGuid: annotation.id,
-              startTime: annotation.startTimeSeconds,
-              endTime: annotation.endTimeSeconds,
-              tags: new Set(annotation.labelNames),
-              description: '',
-            })
-          }
-        })
-
-        return nextRegionData
-      })
-    }
-  }, [savedAnnotations, audioDuration, editing, setRegionData])
-
-  // Handle incoming remote deletion
-  useEffect(() => {
-    if (!connection || !regionInstance.current) return
-
-    const handleAnnotationDelete = (annotationId: string) => {
-      // Find the region locally. Often dbGuid is the region id if loaded from DB,
-      // but if created locally, they might differ. We will check regionData state.
-      setRegionData((currentRegionData) => {
-        const nextRegionData = new Map(currentRegionData)
-        let regionIdToRemove: string | null = null
-
-        // Find which local region corresponds to this dbGuid
-        for (const [rId, data] of nextRegionData.entries()) {
-          if (data.dbGuid === annotationId || rId === annotationId) {
-            regionIdToRemove = rId
-            break
-          }
-        }
-
-        if (regionIdToRemove) {
-          // Remove from wavesurfer
-          const regionToRemove = regionInstance.current
-            ?.getRegions()
-            .find((r) => r.id === regionIdToRemove)
-          if (regionToRemove) {
-            regionToRemove.remove()
-          }
-          // Remove from state
-          nextRegionData.delete(regionIdToRemove)
-        }
-
-        return nextRegionData
-      })
-    }
-
-    connection.on('ReceiveAnnotationDelete', handleAnnotationDelete)
-
-    return () => {
-      connection.off('ReceiveAnnotationDelete', handleAnnotationDelete)
-    }
-  }, [connection, setRegionData])
-
-  // Handle incoming remote updates (create/update)
-  useEffect(() => {
-    if (!connection || !regionInstance.current) return
-
-    const handleAnnotationUpdate = (annotation: AnnotationDto) => {
-      setRegionData((currentRegionData) => {
-        const nextRegionData = new Map(currentRegionData)
-        let existingRegionId: string | null = null
-
-        // Find if this annotation already exists locally
-        for (const [rId, data] of nextRegionData.entries()) {
-          if (data.dbGuid === annotation.id || rId === annotation.id) {
-            existingRegionId = rId
-            break
-          }
-        }
-
-        if (existingRegionId) {
-          // Update Case
-          const regionToUpdate = regionInstance.current
-            ?.getRegions()
-            .find((r) => r.id === existingRegionId)
-          if (regionToUpdate) {
-            if (
-              regionToUpdate.start !== annotation.startTimeSeconds ||
-              regionToUpdate.end !== annotation.endTimeSeconds
-            ) {
-              regionToUpdate.setOptions({
-                start: annotation.startTimeSeconds,
-                end: annotation.endTimeSeconds,
-              })
-            }
-          }
-
-          nextRegionData.set(existingRegionId, {
-            ...nextRegionData.get(existingRegionId),
-            dbGuid: annotation.id,
-            startTime: annotation.startTimeSeconds,
-            endTime: annotation.endTimeSeconds,
-            tags: new Set(annotation.labelNames),
-          })
-        } else {
-          // Create Case
-          regionInstance.current?.addRegion({
-            id: annotation.id,
-            start: annotation.startTimeSeconds,
-            end: annotation.endTimeSeconds,
-            color: NEUTRAL_REGION_COLOR,
-            drag: editing,
-            resize: editing,
-          })
-
-          nextRegionData.set(annotation.id, {
-            dbGuid: annotation.id,
-            startTime: annotation.startTimeSeconds,
-            endTime: annotation.endTimeSeconds,
-            tags: new Set(annotation.labelNames),
-            description: '',
-          })
-        }
-
-        return nextRegionData
-      })
-    }
-
-    connection.on('ReceiveAnnotationUpdate', handleAnnotationUpdate)
-
-    return () => {
-      connection.off('ReceiveAnnotationUpdate', handleAnnotationUpdate)
-    }
-  }, [connection, editing, setRegionData])
-
-  //Manages region selection
-  useEffect(() => {
-    if (!regionInstance.current) return
-
-    if (highlight) {
-      disableSelection.current = regionInstance.current.enableDragSelection({
-        color: NEUTRAL_REGION_COLOR,
-      })
-      return
-    }
-
-    disableSelection.current?.()
-    disableSelection.current = null
-  }, [highlight])
-
-  // Manages toggled editing
-  useEffect(() => {
-    if (!regionInstance.current) return
-
-    // Update all existing regions
-    regionInstance.current.getRegions().forEach((region) => {
-      region.drag = editing
-      region.resize = editing
+      syncingRegions.current = true
+      regions.addRegion({ id, ...options })
+      syncingRegions.current = false
     })
-  }, [editing])
+  }, [regions, annotations, selectedId, editing])
+
+  // React's onWheel is passive, so preventDefault only works on a listener added directly
+  useEffect(() => {
+    const container = waveformRef.current
+    if (!regions || !container) return
+
+    const handleWheel = (event: WheelEvent) => {
+      event.preventDefault()
+      const newZoom = event.deltaY < 0 ? Math.min(zoom + 25, 1000) : Math.max(zoom - 25, 100)
+      setZoom(newZoom)
+      waveSurferInstance.current?.zoom(newZoom)
+    }
+
+    container.addEventListener('wheel', handleWheel, { passive: false })
+    return () => container.removeEventListener('wheel', handleWheel)
+  }, [regions, zoom])
+
+  useEffect(() => {
+    if (!regions || !highlight) return
+    return regions.enableDragSelection({ color: NEUTRAL_REGION_COLOR })
+  }, [regions, highlight])
 
   const playPause = () => {
     setPlay(!play)
@@ -403,24 +197,8 @@ export default function WaveformRender({
   }
 
   const handleDelete = () => {
-    if (selectedRegionRef.current) {
-      const regionId = selectedRegionRef.current.id
-      selectedRegionRef.current.remove()
-      setSelectedRegion(null)
-
-      setRegionData((currentRegionData) => {
-        const nextRegionData = new Map(currentRegionData)
-        const regionInfo = nextRegionData.get(regionId)
-
-        if (regionInfo?.dbGuid && connection) {
-          deleteAnnotation(connection, regionInfo.dbGuid, audioId)
-        }
-
-        nextRegionData.delete(regionId)
-        return nextRegionData
-      })
-
-      selectedRegionRef.current = null
+    if (selectedId) {
+      onDelete(selectedId)
     }
   }
 
@@ -438,11 +216,7 @@ export default function WaveformRender({
   }
   return (
     <div className="space-y-4">
-      <div
-        ref={waveformRef}
-        className="w-full bg-violet-100 rounded-3xl shadow overflow-hidden"
-        onWheel={(e) => {e.preventDefault(); handleWheel(e.deltaY)}}
-      />
+      <div ref={waveformRef} className="w-full bg-violet-100 rounded-3xl shadow overflow-hidden" />
 
       <div className="-ml-1 -mr-1 info-box-parent">
         <Playbar
