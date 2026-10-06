@@ -1,9 +1,9 @@
 using AutoFixture;
 using FluentAssertions;
 using MediHz.Application.Abstractions.Annotations;
-using MediHz.Application.Abstractions.AudioFiles;
+using MediHz.Application.Abstractions.Auth;
+using MediHz.Application.Abstractions.Projects;
 using MediHz.Application.DTOs.Annotations;
-using MediHz.Application.DTOs.AudioFiles;
 using MediHz.Application.Handlers.Annotations;
 using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Logging;
@@ -15,31 +15,35 @@ namespace MediHz.Tests.UnitTests.Handlers;
 public class GetAnnotationsByFileHandlerTests : UnitTestBase
 {
     private readonly Mock<IAnnotationService> _annotationServiceMock = new();
-    private readonly Mock<IAudioFileService> _audioFileServiceMock = new();
+    private readonly Mock<IProjectService> _projectServiceMock = new();
+    private readonly Mock<ICurrentUser> _currentUserMock = new();
 
     private GetAnnotationsByFileHandler _handler;
 
     public GetAnnotationsByFileHandlerTests(ITestOutputHelper output)
         : base(output)
     {
+        _currentUserMock.Setup(c => c.UserId).Returns(Guid.Empty);
         _handler = new(
             _annotationServiceMock.Object,
-            _audioFileServiceMock.Object,
+            _projectServiceMock.Object,
+            _currentUserMock.Object,
             Logger<GetAnnotationsByFileHandler>()
         );
     }
 
     [Fact]
-    public async Task Handle_ShouldReturnOk_WhenAudioFileExists()
+    public async Task Handle_ShouldReturnOk_WhenUserCanAccessAudioFile()
     {
         // Arrange
         var request = Fixture.Create<GetAnnotationsByFileRequest>();
-        var audioFileDto = Fixture.Create<AudioFileDto>();
         var annotations = Fixture.CreateMany<AnnotationDto>().ToList();
 
-        _audioFileServiceMock
-            .Setup(s => s.GetByIdAsync(request.AudioFileId))
-            .ReturnsAsync(audioFileDto);
+        _projectServiceMock
+            .Setup(s =>
+                s.CanAccessAudioFileAsync(request.AudioFileId, Guid.Empty, CancellationToken.None)
+            )
+            .ReturnsAsync(true);
 
         _annotationServiceMock
             .Setup(s => s.GetForAudioFileAsync(request.AudioFileId, CancellationToken.None))
@@ -54,14 +58,16 @@ public class GetAnnotationsByFileHandlerTests : UnitTestBase
     }
 
     [Fact]
-    public async Task Handle_ShouldReturnFailure_WhenAudioFileDoesNotExist()
+    public async Task Handle_ShouldReturnFailure_WhenUserCannotAccessAudioFile()
     {
         // Arrange
         var request = Fixture.Create<GetAnnotationsByFileRequest>();
 
-        _audioFileServiceMock
-            .Setup(s => s.GetByIdAsync(request.AudioFileId))
-            .ReturnsAsync((AudioFileDto?)null);
+        _projectServiceMock
+            .Setup(s =>
+                s.CanAccessAudioFileAsync(request.AudioFileId, Guid.Empty, CancellationToken.None)
+            )
+            .ReturnsAsync(false);
 
         // Act
         var result = await _handler.Handle(request, CancellationToken.None);

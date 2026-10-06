@@ -78,6 +78,42 @@ public class ProjectService(MediHzDbContext dbContext) : IProjectService
             .SingleOrDefaultAsync(cancellationToken);
     }
 
+    public async Task<bool> CanAccessAudioFileAsync(
+        Guid audioFileId,
+        Guid userId,
+        CancellationToken cancellationToken = default
+    )
+    {
+        return await dbContext.AudioFiles.AnyAsync(
+            audio =>
+                audio.Id == audioFileId
+                && (
+                    audio.Project.OwnerId == userId
+                    || audio.Project.Members.Any(m => m.UserId == userId)
+                ),
+            cancellationToken
+        );
+    }
+
+    public async Task<bool> CanAccessAnnotationAsync(
+        Guid annotationId,
+        Guid audioFileId,
+        Guid userId,
+        CancellationToken cancellationToken = default
+    )
+    {
+        return await dbContext.Annotations.AnyAsync(
+            annotation =>
+                annotation.Id == annotationId
+                && annotation.AudioFileId == audioFileId
+                && (
+                    annotation.AudioFile.Project.OwnerId == userId
+                    || annotation.AudioFile.Project.Members.Any(m => m.UserId == userId)
+                ),
+            cancellationToken
+        );
+    }
+
     public async Task<IReadOnlyList<ProjectDto>> GetForUserAsync(
         Guid userId,
         CancellationToken cancellationToken = default

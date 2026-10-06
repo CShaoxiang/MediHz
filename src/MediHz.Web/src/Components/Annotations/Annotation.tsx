@@ -1,111 +1,61 @@
 import { useState } from 'react'
 import Button from '../Common/Button'
 import ListGroup from '../Common/ListGroup'
-import type { Region } from 'wavesurfer.js/dist/plugins/regions.js'
-import type { RegionData } from '../../Interfaces/RegionData'
+import type { AnnotationRegion } from '../../Interfaces/AnnotationRegion'
+import type { ApiResult } from '../../Types/api'
+import { showApiError } from '../../Api/helpers'
 import { FiX } from 'react-icons/fi'
-import type { HubConnection } from '@microsoft/signalr'
-import { saveAnnotation, updateAnnotation } from '../../Api/hub'
 
 interface AnnotationProp {
-  audioId: string
-  region: Region
-  selectedregionData: RegionData | undefined
-  setRegionData: React.Dispatch<React.SetStateAction<Map<string, RegionData>>>
-  regionTags: Set<string>
-  setRegionTags: React.Dispatch<React.SetStateAction<Set<string>>>
-  connection?: HubConnection
+  annotation: AnnotationRegion
+  onSave: (tags: Set<string>) => Promise<ApiResult<null>>
 }
 
-export default function Annotations({
-  audioId,
-  region,
-  selectedregionData,
-  setRegionData,
-  regionTags,
-  setRegionTags,
-  connection,
-}: AnnotationProp) {
-  const selectedRegion = selectedregionData
-  const [description, setDescription] = useState(selectedRegion?.description || '...')
+export default function Annotations({ annotation, onSave }: AnnotationProp) {
   const [customTag, setCustomTag] = useState<string>('')
-  const [prevSelectedRegion, setPrevSelectedRegion] = useState(selectedRegion)
+  const [draftTags, setDraftTags] = useState<Set<string> | null>(null)
+  const [saving, setSaving] = useState(false)
 
-  const sendRegionData = async (updatedData: RegionData) => {
-    if (selectedRegion && connection) {
-      if (updatedData.dbGuid) {
-        await updateAnnotation(connection, updatedData.dbGuid, audioId, updatedData)
-      } else {
-        const dbGuid = (await saveAnnotation(connection, audioId, region.id, updatedData)) as
-          string | undefined
+  const tags = draftTags ?? annotation.tags
 
-        if (dbGuid) {
-          setRegionData((currentRegionData) => {
-            const nextRegionData = new Map(currentRegionData)
-            const current = nextRegionData.get(region.id)
-            if (current) {
-              nextRegionData.set(region.id, { ...current, dbGuid })
-            }
-            return nextRegionData
-          })
-        }
-      }
+  const editTags = (edit: (tags: Set<string>) => void) => {
+    const nextTags = new Set(tags)
+    edit(nextTags)
+    setDraftTags(nextTags)
+  }
+
+  const addCustomTag = () => {
+    const tag = customTag.trim()
+    if (!tag) return
+    editTags((next) => next.add(tag))
+    setCustomTag('')
+  }
+
+  const handleSave = async () => {
+    if (saving) return
+
+    setSaving(true)
+    const result = await onSave(tags)
+    setSaving(false)
+
+    if (result.ok) {
+      setDraftTags(null)
+    } else {
+      showApiError(result.error)
     }
-  }
-
-  const handleSave = () => {
-    const nextRegionData = {
-      ...selectedRegion,
-      description: description,
-      tags: regionTags,
-    }
-
-    setRegionData((currentRegionData) => {
-      const updatedMap = new Map(currentRegionData)
-      updatedMap.set(region.id, nextRegionData)
-      return updatedMap
-    })
-
-    sendRegionData(nextRegionData)
-  }
-
-  const delRegionTag = (tag: string) => {
-    const updatedTags = new Set(regionTags)
-    updatedTags.delete(tag)
-    setRegionTags(updatedTags)
-  }
-
-  const addRegionTag = (Tag: string) => {
-    setRegionTags((currentTags) => {
-      const nextTags = new Set(currentTags)
-      nextTags.add(Tag)
-      return nextTags
-    })
-  }
-
-  if (selectedRegion !== prevSelectedRegion) {
-    setPrevSelectedRegion(selectedRegion)
-    if (selectedRegion) {
-      setRegionTags(selectedRegion.tags || new Set())
-      setDescription(selectedRegion.description || '')
-    }
-  }
-
-  if (!selectedRegion) {
-    return null
   }
 
   return (
     <div className="max-h-full min-h-0 max-w-full overflow-hidden rounded-xl bg-purple-700 p-4 font-medium text-white">
       <span className="flex min-h-0 gap-2">
         <section>
-          <h5>Start Time: {selectedRegion.startTime?.toFixed(2)} </h5>{' '}
-          <h5>End Time: {selectedRegion.endTime?.toFixed(2)}</h5>
+          <h5>Start Time: {annotation.startTime.toFixed(2)} </h5>{' '}
+          <h5>End Time: {annotation.endTime.toFixed(2)}</h5>
           <div className="relative m-1 flex h-full min-h-0 flex-col overflow-hidden rounded-xl bg-white/20 p-2 font-normal">
             <ListGroup
-              heading={'Tags' + (regionTags.size > 0 ? ` (${regionTags.size})` : '')}
-              items={Array.from(regionTags)}
-              onSelect={(item) => delRegionTag(item)}
+              heading={'Tags' + (tags.size > 0 ? ` (${tags.size})` : '')}
+              items={Array.from(tags)}
+              onSelect={(item) => editTags((next) => next.delete(item))}
               hoverable={<FiX className="icon-small size-6" />}
             />
             <input
@@ -115,33 +65,17 @@ export default function Annotations({
               onChange={(event) => setCustomTag(event.target.value)}
               onKeyDown={(event) => {
                 if (event.key === 'Enter') {
-                  addRegionTag(customTag)
+                  addCustomTag()
                 }
               }}
               placeholder="Add custom tag"
             />
           </div>
         </section>
-        <div>
-          <section className="h-auto bg-white/20 rounded-xl p-1">
-            Description:
-            <ul className="p-1">
-              <textarea
-                value={description}
-                onChange={(event) => setDescription(event.target.value)}
-                placeholder="Enter description"
-              />
-            </ul>
-          </section>
-        </div>
       </span>
       <footer className="flex justify-end align-center mt-4 items-center">
-        <span className="mr-4">
-          {selectedRegion?.description !== description || selectedRegion?.tags !== regionTags ? (
-            <span>Unsaved</span>
-          ) : null}
-        </span>
-        <Button label="SAVE" border={true} onClick={handleSave} />
+        <span className="mr-4">{draftTags ? <span>Unsaved</span> : null}</span>
+        <Button label={saving ? 'SAVING...' : 'SAVE'} border={true} onClick={handleSave} />
       </footer>
     </div>
   )

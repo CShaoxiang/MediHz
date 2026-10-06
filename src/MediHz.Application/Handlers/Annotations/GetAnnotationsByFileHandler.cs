@@ -1,5 +1,6 @@
 ﻿using MediHz.Application.Abstractions.Annotations;
-using MediHz.Application.Abstractions.AudioFiles;
+using MediHz.Application.Abstractions.Auth;
+using MediHz.Application.Abstractions.Projects;
 using MediHz.Application.DTOs.Annotations;
 using Microsoft.Extensions.Logging;
 
@@ -12,7 +13,8 @@ public interface IGetAnnotationsByFileHandler
 
 public class GetAnnotationsByFileHandler(
     IAnnotationService annotationService,
-    IAudioFileService audioFileService,
+    IProjectService projectService,
+    ICurrentUser currentUser,
     ILogger<GetAnnotationsByFileHandler> logger
 ) : IGetAnnotationsByFileHandler
 {
@@ -22,8 +24,12 @@ public class GetAnnotationsByFileHandler(
     )
     {
         logger.LogInformation("Getting  annotations for file {FileId}", request.AudioFileId);
-        var audioFile = await audioFileService.GetByIdAsync(request.AudioFileId);
-        if (audioFile is null)
+        var canAccess = await projectService.CanAccessAudioFileAsync(
+            request.AudioFileId,
+            currentUser.UserId,
+            cancellationToken
+        );
+        if (!canAccess)
         {
             return Result<IEnumerable<AnnotationDto>>.Failure(
                 "File not found",

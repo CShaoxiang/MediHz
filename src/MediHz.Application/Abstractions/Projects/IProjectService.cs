@@ -14,6 +14,25 @@ public interface IProjectService
     );
 
     /// <summary>
+    /// Whether the user is a member of the project the audio file belongs to.
+    /// </summary>
+    Task<bool> CanAccessAudioFileAsync(
+        Guid audioFileId,
+        Guid userId,
+        CancellationToken cancellationToken = default
+    );
+
+    /// <summary>
+    /// Whether the annotation belongs to the audio file and the user is a member of its project.
+    /// </summary>
+    Task<bool> CanAccessAnnotationAsync(
+        Guid annotationId,
+        Guid audioFileId,
+        Guid userId,
+        CancellationToken cancellationToken = default
+    );
+
+    /// <summary>
     /// Return all projects visible to the current user.
     /// </summary>
     Task<IReadOnlyList<ProjectDto>> GetForUserAsync(

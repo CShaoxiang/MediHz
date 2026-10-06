@@ -1,4 +1,6 @@
 using MediHz.Application.Abstractions.Annotations;
+using MediHz.Application.Abstractions.Auth;
+using MediHz.Application.Abstractions.Projects;
 using MediHz.Application.DTOs.Annotations;
 using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Logging;
@@ -9,6 +11,8 @@ public interface IDeleteAnnotationHandler : IRequestHandler<DeleteAnnotationComm
 
 public class DeleteAnnotationHandler(
     IAnnotationService annotationService,
+    IProjectService projectService,
+    ICurrentUser currentUser,
     ILogger<DeleteAnnotationHandler> logger
 ) : IDeleteAnnotationHandler
 {
@@ -21,10 +25,16 @@ public class DeleteAnnotationHandler(
 
         try
         {
-            var result = await annotationService.DeleteAsync(
+            var canAccess = await projectService.CanAccessAnnotationAsync(
                 request.AnnotationId,
+                request.AudioFileId,
+                currentUser.UserId,
                 cancellationToken
             );
+
+            var result =
+                canAccess
+                && await annotationService.DeleteAsync(request.AnnotationId, cancellationToken);
 
             if (!result)
             {

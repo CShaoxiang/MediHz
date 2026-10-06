@@ -25,12 +25,15 @@ public class AnnotationService(MediHzDbContext dbContext) : IAnnotationService
         if (!audioFileExists)
             throw new KeyNotFoundException("The specified audio file does not exist.");
 
-        if (request.LabelNames == null || !request.LabelNames.Any())
-            throw new ArgumentException("At least one LabelName must be provided.");
+        if (
+            request.LabelNames == null
+            || !request.LabelNames.Any(n => !string.IsNullOrWhiteSpace(n))
+        )
+            throw new ArgumentException("Add at least one tag before saving.");
 
         var duration = request.EndTimeSeconds - request.StartTimeSeconds;
         if (request.StartTimeSeconds < 0 || duration < 0.1m)
-            throw new ArgumentException("Invalid time range for annotation.");
+            throw new ArgumentException("Annotations must be at least 0.1 seconds long.");
 
         var labels = new List<Domain.Annotations.Label>();
         foreach (var labelName in request.LabelNames)
@@ -53,6 +56,7 @@ public class AnnotationService(MediHzDbContext dbContext) : IAnnotationService
 
         var annotation = new Domain.Annotations.Annotation
         {
+            Id = request.Id,
             AudioFileId = request.AudioFileId,
             UserId = authorId,
             Labels = labels,
@@ -146,12 +150,15 @@ public class AnnotationService(MediHzDbContext dbContext) : IAnnotationService
         if (annotation == null)
             return null;
 
-        if (request.LabelNames == null || !request.LabelNames.Any())
-            throw new ArgumentException("At least one LabelName must be provided.");
+        if (
+            request.LabelNames == null
+            || !request.LabelNames.Any(n => !string.IsNullOrWhiteSpace(n))
+        )
+            throw new ArgumentException("Add at least one tag before saving.");
 
         var duration = request.EndTimeSeconds - request.StartTimeSeconds;
         if (request.StartTimeSeconds < 0 || duration < 0.1m)
-            throw new ArgumentException("Invalid time range for annotation.");
+            throw new ArgumentException("Annotations must be at least 0.1 seconds long.");
 
         annotation.StartTimeSeconds = request.StartTimeSeconds;
         annotation.EndTimeSeconds = request.EndTimeSeconds;

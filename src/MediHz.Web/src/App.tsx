@@ -1,9 +1,8 @@
-import { Route, Routes, useLocation, useNavigate } from 'react-router-dom'
+import { Navigate, Route, Routes, useLocation, useNavigate } from 'react-router-dom'
 import ProtectedRoute from './Auth/ProtectedRoute'
 import Button from './Components/Common/Button'
 import NavBar from './Components/Common/NavBar'
 import LoginPage from './Pages/login'
-import MainPage from './Pages/main'
 import ProjectOverviewPage from './Pages/ProjectOverview'
 import Projects from './Pages/ProjectsListing'
 import LabelsPage from './Pages/LabelsPage'
@@ -20,7 +19,6 @@ function App() {
       {!isLoginPage && (
         <header className="pb-3">
           <NavBar>
-            <Button label="Home" onClick={() => navigate('/')} />
             <Button label="Projects" onClick={() => navigate('/projects')} />
             <Button label="Labels" onClick={() => navigate('/labels')} />
           </NavBar>
@@ -28,7 +26,7 @@ function App() {
       )}
 
       <Routes>
-        <Route path="/" element={<MainPage />} />
+        <Route path="/" element={<Navigate to="/projects" replace />} />
         <Route path="/login" element={<LoginPage />} />
         <Route
           path="/projects"

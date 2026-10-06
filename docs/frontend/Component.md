@@ -58,14 +58,6 @@ Properties:
 
     - children: ReactNode (optional)
 
-### `SideBar`
-Properties:
-
-    - title: string (optional)
-    - `Button` properties[] (optional)
-    - `list` properties[] (optional)
-    - children?: ReactNode (optional)
-
 ### `Slider`
 Properties: 
 
