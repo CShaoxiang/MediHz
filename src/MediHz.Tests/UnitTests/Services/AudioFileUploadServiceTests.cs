@@ -79,6 +79,90 @@ public class AudioFileUploadServiceTests : UnitTestBase
     }
 
     [Fact]
+    public async Task UploadBatchAsync_ShouldReturnFailure_WhenFileIsUnderMinDuration()
+    {
+        // Arrange
+        using var wavStream = CreateDummyWavStream(44100, 0); // 0 seconds < MinDuration (1)
+
+        var fileMock = new Mock<IFormFile>();
+        fileMock.Setup(f => f.Length).Returns(wavStream.Length); // Ensure length > 0 if possible, or stream will handle it.
+        fileMock.Setup(f => f.FileName).Returns("tooshort.wav");
+        fileMock.Setup(f => f.ContentType).Returns("audio/wav");
+        fileMock.Setup(f => f.OpenReadStream()).Returns(wavStream);
+
+        // Act
+        var result = await _service.UploadBatchAsync(_project.Id, [fileMock.Object]);
+
+        // Assert
+        result.Items.Should().ContainSingle();
+        result.Items[0].Status.Should().Be(Status.Failure);
+        result.Items[0].ErrorMessage.Should().Be("File is too short");
+    }
+
+    [Fact]
+    public async Task UploadBatchAsync_ShouldReturnFailure_WhenFileExceedsMaxSampleRate()
+    {
+        // Arrange
+        using var wavStream = CreateDummyWavStream(48001, 10); // 48001 > MaxSampleRate (48000)
+
+        var fileMock = new Mock<IFormFile>();
+        fileMock.Setup(f => f.Length).Returns(wavStream.Length);
+        fileMock.Setup(f => f.FileName).Returns("highsamplerate.wav");
+        fileMock.Setup(f => f.ContentType).Returns("audio/wav");
+        fileMock.Setup(f => f.OpenReadStream()).Returns(wavStream);
+
+        // Act
+        var result = await _service.UploadBatchAsync(_project.Id, [fileMock.Object]);
+
+        // Assert
+        result.Items.Should().ContainSingle();
+        result.Items[0].Status.Should().Be(Status.Failure);
+        result.Items[0].ErrorMessage.Should().Be("File does not reach maximum sample rate");
+    }
+
+    [Fact]
+    public async Task UploadBatchAsync_ShouldReturnFailure_WhenFileIsUnderMinSampleRate()
+    {
+        // Arrange
+        using var wavStream = CreateDummyWavStream(7999, 10); // 7999 < MinSampleRate (8000)
+
+        var fileMock = new Mock<IFormFile>();
+        fileMock.Setup(f => f.Length).Returns(wavStream.Length);
+        fileMock.Setup(f => f.FileName).Returns("lowsamplerate.wav");
+        fileMock.Setup(f => f.ContentType).Returns("audio/wav");
+        fileMock.Setup(f => f.OpenReadStream()).Returns(wavStream);
+
+        // Act
+        var result = await _service.UploadBatchAsync(_project.Id, [fileMock.Object]);
+
+        // Assert
+        result.Items.Should().ContainSingle();
+        result.Items[0].Status.Should().Be(Status.Failure);
+        result.Items[0].ErrorMessage.Should().Be("File does not reach minimum sample rate");
+    }
+
+    [Fact]
+    public async Task UploadBatchAsync_ShouldReturnFailure_WhenFileExceedsMaxFileSize()
+    {
+        // Arrange
+        using var wavStream = CreateDummyWavStream(44100, 10);
+
+        var fileMock = new Mock<IFormFile>();
+        fileMock.Setup(f => f.Length).Returns(350L * 1024 * 1024 + 1); // > MaxFileSize
+        fileMock.Setup(f => f.FileName).Returns("toolarge.wav");
+        fileMock.Setup(f => f.ContentType).Returns("audio/wav");
+        fileMock.Setup(f => f.OpenReadStream()).Returns(wavStream);
+
+        // Act
+        var result = await _service.UploadBatchAsync(_project.Id, [fileMock.Object]);
+
+        // Assert
+        result.Items.Should().ContainSingle();
+        result.Items[0].Status.Should().Be(Status.Failure);
+        result.Items[0].ErrorMessage.Should().Be("File is too large");
+    }
+
+    [Fact]
     public async Task UploadBatchAsync_ShouldReturnSuccess_WhenFileIsValid()
     {
         // Arrange

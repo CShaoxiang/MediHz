@@ -70,6 +70,22 @@ public class AudioFileUploadHandlerTests : UnitTestBase
     }
 
     [Fact]
+    public async Task Handle_ShouldReturnBadRequest_WhenMaxBatchSizeExceeded()
+    {
+        // Arrange
+        var files = Enumerable.Range(0, 6).Select(_ => new Mock<IFormFile>().Object).ToList();
+        var request = new AudioFileUploadRequest(Guid.NewGuid(), files);
+
+        // Act
+        var result = await _handler.Handle(request, CancellationToken.None);
+
+        // Assert
+        result.StatusCode.Should().Be(StatusCodes.Status400BadRequest);
+        result.Problem.Should().NotBeNull();
+        result.Problem.Title.Should().Be("Maximum batch size exceeded");
+    }
+
+    [Fact]
     public async Task Handle_ShouldReturnCreated_WhenAllFilesSucceed()
     {
         // Arrange
