@@ -17,6 +17,8 @@ public class AudioFileUploadHandler(
     ICurrentUser currentUser
 ) : IAudioFileUploadHandler
 {
+    private const int MaxBatchSize = 5;
+
     public async Task<Result<BatchAudioFileUploadResultDto>> Handle(
         AudioFileUploadRequest request,
         CancellationToken cancellationToken
@@ -39,6 +41,14 @@ public class AudioFileUploadHandler(
                 "No files uploaded",
                 "At least one audio file must be supplied in the request."
             );
+
+        if (request.Files.Count > MaxBatchSize)
+        {
+            return Result<BatchAudioFileUploadResultDto>.Failure(
+                "Maximum batch size exceeded",
+                $"Batch size must not exceed {MaxBatchSize}"
+            );
+        }
 
         var result = await audioFileUploadService.UploadBatchAsync(
             request.ProjectId,

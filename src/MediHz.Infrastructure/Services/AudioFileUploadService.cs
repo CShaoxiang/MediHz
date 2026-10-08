@@ -18,7 +18,9 @@ public class AudioFileUploadService(
 {
     private const int MaxDurationSeconds = 1800;
     private const int MinDurationSeconds = 1;
-    private const int MinSampleRate = 5000;
+    private const int MinSampleRate = 8000;
+    private const int MaxSampleRate = 48000;
+    private const int MaxFileSize = 350 * 1024 * 1024;
 
     public async Task<BatchAudioFileUploadResultDto> UploadBatchAsync(
         Guid projectId,
@@ -69,50 +71,87 @@ public class AudioFileUploadService(
                 channels = waveStream.WaveFormat.Channels;
 
                 // Perform verification on audioFile
-                if (duration.TotalSeconds > MaxDurationSeconds)
+                switch (duration.TotalSeconds)
                 {
-                    logger.LogError(
-                        "Audio file {FileName} exceeds maximum duration of {MaxDuration}",
-                        file.FileName,
-                        MaxDurationSeconds
-                    );
-                    fileResults.Add(
-                        new AudioFileUploadResultDto(
-                            Guid.NewGuid(),
+                    case > MaxDurationSeconds:
+                        logger.LogError(
+                            "Audio file {FileName} exceeds maximum duration of {MaxDuration}",
                             file.FileName,
-                            null,
-                            0,
-                            Status.Failure,
-                            "File is too long"
-                        )
-                    );
-                    continue;
+                            MaxDurationSeconds
+                        );
+                        fileResults.Add(
+                            new AudioFileUploadResultDto(
+                                Guid.NewGuid(),
+                                file.FileName,
+                                null,
+                                0,
+                                Status.Failure,
+                                "File is too long"
+                            )
+                        );
+                        continue;
+                    case < MinDurationSeconds:
+                        logger.LogError(
+                            "Audio file {FileName} does not reach minimum duration of {MinDuration}",
+                            file.FileName,
+                            MinDurationSeconds
+                        );
+                        fileResults.Add(
+                            new AudioFileUploadResultDto(
+                                Guid.NewGuid(),
+                                file.FileName,
+                                null,
+                                0,
+                                Status.Failure,
+                                "File is too short"
+                            )
+                        );
+                        continue;
                 }
-                if (duration.TotalSeconds < MinDurationSeconds)
+
+                switch (sampleRate)
                 {
-                    logger.LogError(
-                        "Audio file {FileName} does not reach minimum duration of {MinDuration}",
-                        file.FileName,
-                        MinDurationSeconds
-                    );
-                    fileResults.Add(
-                        new AudioFileUploadResultDto(
-                            Guid.NewGuid(),
+                    case > MaxSampleRate:
+                        logger.LogError(
+                            "Audio file {FileName} does not reach the minimum sample rate of {MaxRate}",
                             file.FileName,
-                            null,
-                            0,
-                            Status.Failure,
-                            "File is too short"
-                        )
-                    );
-                    continue;
+                            MaxSampleRate
+                        );
+                        fileResults.Add(
+                            new AudioFileUploadResultDto(
+                                Guid.NewGuid(),
+                                file.FileName,
+                                null,
+                                0,
+                                Status.Failure,
+                                "File does not reach maximum sample rate"
+                            )
+                        );
+                        continue;
+                    case < MinSampleRate:
+                        logger.LogError(
+                            "Audio file {FileName} does not reach the minimum sample rate of {MinRate}",
+                            file.FileName,
+                            MinSampleRate
+                        );
+                        fileResults.Add(
+                            new AudioFileUploadResultDto(
+                                Guid.NewGuid(),
+                                file.FileName,
+                                null,
+                                0,
+                                Status.Failure,
+                                "File does not reach minimum sample rate"
+                            )
+                        );
+                        continue;
                 }
-                if (sampleRate < MinSampleRate)
+                if (file.Length > MaxFileSize)
                 {
                     logger.LogError(
-                        "Audio file {FileName} does not reach the minimum sample rate of {MinRate}",
+                        "Audio file {FileName} exceeds maximum file size of {MaxSize} bytes",
                         file.FileName,
-                        MinSampleRate
+                        MaxFileSize
                     );
                     fileResults.Add(
                         new AudioFileUploadResultDto(
@@ -121,7 +160,7 @@ public class AudioFileUploadService(
                             null,
                             0,
                             Status.Failure,
-                            "File does not reach minimum sample rate"
+                            "File is too large"
                         )
                     );
                     continue;
