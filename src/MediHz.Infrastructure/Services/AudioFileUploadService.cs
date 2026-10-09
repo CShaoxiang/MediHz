@@ -18,7 +18,7 @@ public class AudioFileUploadService(
 {
     private const int MaxDurationSeconds = 1800;
     private const int MinDurationSeconds = 1;
-    private const int MinSampleRate = 8000;
+    private const int MinSampleRate = 4000;
     private const int MaxSampleRate = 48000;
     private const int MaxFileSize = 350 * 1024 * 1024;
 
