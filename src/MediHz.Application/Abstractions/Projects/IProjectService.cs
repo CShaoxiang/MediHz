@@ -1,4 +1,5 @@
 using MediHz.Application.DTOs.Projects;
+using MediHz.Domain.Projects;
 
 namespace MediHz.Application.Abstractions.Projects;
 
@@ -74,9 +75,10 @@ public interface IProjectService
     /// <summary>
     /// Add a user to a project.
     /// </summary>
-    Task<ProjectMemberDto> AddMemberAsync(
+    Task<AddProjectMemberOutcome> AddMemberAsync(
         Guid projectId,
-        AddProjectMemberRequest request,
+        Guid userId,
+        ProjectMemberRole role,
         CancellationToken cancellationToken = default
     );
 
@@ -94,6 +96,15 @@ public interface IProjectService
     /// Remove a member from a project.
     /// </summary>
     Task<bool> RemoveMemberAsync(
+        Guid projectId,
+        Guid userId,
+        CancellationToken cancellationToken = default
+    );
+
+    /// <summary>
+    /// check if member existin project
+    /// </summary>
+    Task<bool> IsMemberExistsAsync(
         Guid projectId,
         Guid userId,
         CancellationToken cancellationToken = default

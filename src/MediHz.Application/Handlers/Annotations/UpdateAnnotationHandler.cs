@@ -7,9 +7,12 @@ using Microsoft.Extensions.Logging;
 
 namespace MediHz.Application.Handlers.Annotations;
 
+using MediHz.Application.Abstractions.Projects;
+
 public interface IUpdateAnnotationHandler : IRequestHandler<UpdateAnnotationCommand, AnnotationDto>;
 
 public class UpdateAnnotationHandler(
+    IProjectAccessService access,
     IAnnotationService annotationService,
     IProjectService projectService,
     ICurrentUser currentUser,
@@ -21,6 +24,19 @@ public class UpdateAnnotationHandler(
         CancellationToken cancellationToken
     )
     {
+        var denied = await access.CheckAnnotationAsync(
+            request.AnnotationId,
+            request.AudioFileId,
+            ProjectPermission.Write,
+            cancellationToken
+        );
+        if (denied is not null)
+            return Result<AnnotationDto>.Failure(
+                denied.Title!,
+                denied.Detail!,
+                denied.Status!.Value
+            );
+
         logger.LogInformation("Updating an annotation via Hub request");
 
         var updateRequest = new UpdateAnnotationRequest(

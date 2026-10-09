@@ -27,5 +27,6 @@
     <ProjectReference Include="..\MediHz.Application\MediHz.Application.csproj" />
     <ProjectReference Include="..\MediHz.Infrastructure\MediHz.Infrastructure.csproj" />
     <ProjectReference Include="..\MediHz.Domain\MediHz.Domain.csproj" />
+    <ProjectReference Include="..\MediHz.Api\MediHz.Api.csproj" />
   </ItemGroup>
 </Project>

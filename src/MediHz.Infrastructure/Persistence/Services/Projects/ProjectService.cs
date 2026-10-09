@@ -7,13 +7,61 @@ namespace MediHz.Infrastructure.Persistence.Services.Projects;
 
 public class ProjectService(MediHzDbContext dbContext) : IProjectService
 {
-    public async Task<ProjectMemberDto> AddMemberAsync(
+    public async Task<AddProjectMemberOutcome> AddMemberAsync(
         Guid projectId,
-        AddProjectMemberRequest request,
+        Guid userId,
+        ProjectMemberRole role,
         CancellationToken cancellationToken = default
     )
     {
-        throw new NotImplementedException();
+        if (role is not (ProjectMemberRole.Annotator or ProjectMemberRole.Viewer))
+            return new(AddProjectMemberStatus.InvalidRole);
+        var project = await dbContext.Projects.FindAsync([projectId], cancellationToken);
+        if (project is null)
+            return new(AddProjectMemberStatus.ProjectNotFound);
+        if (project.OwnerId == userId)
+            return new(AddProjectMemberStatus.OwnerTarget);
+        var user = await dbContext.Users.FindAsync([userId], cancellationToken);
+        if (user is null)
+            return new(AddProjectMemberStatus.UserNotFound);
+        if (await IsMemberExistsAsync(projectId, userId, cancellationToken))
+            return new(AddProjectMemberStatus.Duplicate);
+
+        var member = new ProjectMember
+        {
+            ProjectId = projectId,
+            UserId = userId,
+            Role = role,
+        };
+        dbContext.ProjectMembers.Add(member);
+        try
+        {
+            await dbContext.SaveChangesAsync(cancellationToken);
+        }
+        catch (DbUpdateException ex)
+            when (ex.InnerException
+                    is Npgsql.PostgresException
+                    {
+                        SqlState: Npgsql.PostgresErrorCodes.UniqueViolation,
+                        ConstraintName: "PK_ProjectMembers"
+                    }
+            )
+        {
+            // Concurrent submissions can both pass the pre-check; the composite key arbitrates.
+            dbContext.Entry(member).State = EntityState.Detached;
+            return new(AddProjectMemberStatus.Duplicate);
+        }
+        return new(
+            AddProjectMemberStatus.Created,
+            new ProjectMemberDto(
+                member.ProjectId,
+                member.UserId,
+                user.Email,
+                user.DisplayName,
+                member.Role,
+                member.JoinedAt
+            )
+        );
     }
 
     public async Task<ProjectDto> CreateAsync(
@@ -38,8 +86,9 @@ public class ProjectService(MediHzDbContext dbContext) : IProjectService
             project.Id,
             project.Name,
             project.OwnerId,
-            "Owner",
-            project.CreatedAtUtc
+            (await dbContext.Users.FindAsync([project.OwnerId], cancellationToken))!.DisplayName,
+            project.CreatedAtUtc,
+            ProjectMemberRole.Owner
         );
     }
 
@@ -72,8 +121,11 @@ public class ProjectService(MediHzDbContext dbContext) : IProjectService
                 project.Id,
                 project.Name,
                 project.OwnerId,
-                "Owner",
-                project.CreatedAtUtc
+                project.Owner.DisplayName,
+                project.CreatedAtUtc,
+                project.OwnerId == userId
+                    ? ProjectMemberRole.Owner
+                    : project.Members.Where(m => m.UserId == userId).Select(m => m.Role).First()
             ))
             .SingleOrDefaultAsync(cancellationToken);
     }
@@ -121,7 +173,16 @@ public class ProjectService(MediHzDbContext dbContext) : IProjectService
     {
         return await dbContext
             .Projects.Where(p => p.OwnerId == userId || p.Members.Any(m => m.UserId == userId))
-            .Select(p => new ProjectDto(p.Id, p.Name, p.OwnerId, "Owner", p.CreatedAtUtc))
+            .Select(p => new ProjectDto(
+                p.Id,
+                p.Name,
+                p.OwnerId,
+                p.Owner.DisplayName,
+                p.CreatedAtUtc,
+                p.OwnerId == userId
+                    ? ProjectMemberRole.Owner
+                    : p.Members.Where(m => m.UserId == userId).Select(m => m.Role).First()
+            ))
             .ToListAsync(cancellationToken);
     }
 
@@ -170,8 +231,9 @@ public class ProjectService(MediHzDbContext dbContext) : IProjectService
             project.Id,
             project.Name,
             project.OwnerId,
-            "Owner",
-            project.CreatedAtUtc
+            (await dbContext.Users.FindAsync([project.OwnerId], cancellationToken))!.DisplayName,
+            project.CreatedAtUtc,
+            ProjectMemberRole.Owner
         );
     }
 
@@ -183,5 +245,17 @@ public class ProjectService(MediHzDbContext dbContext) : IProjectService
     )
     {
         throw new NotImplementedException();
+    }
+
+    public async Task<bool> IsMemberExistsAsync(
+        Guid projectId,
+        Guid userId,
+        CancellationToken cancellationToken = default
+    )
+    {
+        return await dbContext.ProjectMembers.AnyAsync(
+            member => member.ProjectId == projectId && member.UserId == userId,
+            cancellationToken
+        );
     }
 }

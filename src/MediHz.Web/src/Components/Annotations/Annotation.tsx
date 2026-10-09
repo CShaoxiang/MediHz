@@ -7,11 +7,28 @@ import { showApiError } from '../../Api/helpers'
 import { FiX } from 'react-icons/fi'
 
 interface AnnotationProp {
-  annotation: AnnotationRegion
-  onSave: (tags: Set<string>) => Promise<ApiResult<null>>
+  canEdit?: boolean
+  audioId: string
+  region: Region
+  selectedregionData: RegionData | undefined
+  setRegionData: React.Dispatch<React.SetStateAction<Map<string, RegionData>>>
+  regionTags: Set<string>
+  setRegionTags: React.Dispatch<React.SetStateAction<Set<string>>>
+  connection?: HubConnection
 }
 
-export default function Annotations({ annotation, onSave }: AnnotationProp) {
+export default function Annotations({
+  canEdit = false,
+  audioId,
+  region,
+  selectedregionData,
+  setRegionData,
+  regionTags,
+  setRegionTags,
+  connection,
+}: AnnotationProp) {
+  const selectedRegion = selectedregionData
+  const [description, setDescription] = useState(selectedRegion?.description || '...')
   const [customTag, setCustomTag] = useState<string>('')
   const [draftTags, setDraftTags] = useState<Set<string> | null>(null)
   const [saving, setSaving] = useState(false)
@@ -44,6 +61,59 @@ export default function Annotations({ annotation, onSave }: AnnotationProp) {
       showApiError(result.error)
     }
   }
+
+  const handleSave = () => {
+    if (!canEdit) return
+    const nextRegionData = {
+      ...selectedRegion,
+      description: description,
+      tags: regionTags,
+    }
+
+    setRegionData((currentRegionData) => {
+      const updatedMap = new Map(currentRegionData)
+      updatedMap.set(region.id, nextRegionData)
+      return updatedMap
+    })
+
+    sendRegionData(nextRegionData)
+  }
+
+  const delRegionTag = (tag: string) => {
+    const updatedTags = new Set(regionTags)
+    updatedTags.delete(tag)
+    setRegionTags(updatedTags)
+  }
+
+  const addRegionTag = (Tag: string) => {
+    setRegionTags((currentTags) => {
+      const nextTags = new Set(currentTags)
+      nextTags.add(Tag)
+      return nextTags
+    })
+  }
+
+  if (selectedRegion !== prevSelectedRegion) {
+    setPrevSelectedRegion(selectedRegion)
+    if (selectedRegion) {
+      setRegionTags(selectedRegion.tags || new Set())
+      setDescription(selectedRegion.description || '')
+    }
+  }
+
+  if (!selectedRegion) {
+    return null
+  }
+
+  if (!canEdit)
+    return (
+      <section className="rounded-xl bg-purple-700 p-4 text-white" aria-label="Annotation details">
+        <p>
+          Start: {selectedRegion.startTime?.toFixed(2)} · End: {selectedRegion.endTime?.toFixed(2)}
+        </p>
+        <p>Tags: {Array.from(selectedRegion.tags || []).join(', ') || 'None'}</p>
+      </section>
+    )
 
   return (
     <div className=" min-h-0 max-w-full rounded-xl bg-purple-700 p-4 font-medium text-white">

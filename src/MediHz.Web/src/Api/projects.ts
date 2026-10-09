@@ -1,10 +1,21 @@
 import { getStoredUser } from '../Auth/tokenStorage'
 import type { AudioFile } from '../Types/audio'
-import type { OmitId } from '../Types/helpers'
-import type { Project } from '../Types/projects'
+import type { Project, ProjectMember, AddMemberRole } from '../Types/projects'
 import { apiDelete, apiFetch, apiFetchForm, apiPatch } from './helpers'
 
 const PROJECTS_API_BASE = 'Projects'
+
+export function fetchProject(projectId: string) {
+  return apiFetch<Project>(`${PROJECTS_API_BASE}/${projectId}`)
+}
+
+export function addProjectMember(projectId: string, email: string, role: AddMemberRole) {
+  return apiFetch<ProjectMember>(
+    `${PROJECTS_API_BASE}/${projectId}/members`,
+    { email, role },
+    'POST',
+  )
+}
 
 export async function fetchProjects() {
   console.info('Fetching all projects')
@@ -16,7 +27,7 @@ export async function fetchProjectAudioFiles(projectId: string) {
   return await apiFetch<AudioFile[]>(`${PROJECTS_API_BASE}/${projectId}/files`)
 }
 
-export async function createProject(project: OmitId<Project>) {
+export async function createProject(project: Pick<Project, 'name'>) {
   console.info('Creating new project:', project)
   return await apiFetchForm<Project>(`${PROJECTS_API_BASE}/create`, project)
 }

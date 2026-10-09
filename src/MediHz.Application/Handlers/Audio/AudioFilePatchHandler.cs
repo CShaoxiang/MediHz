@@ -11,6 +11,7 @@ public interface IAudioFilePatchHandler
     : IRequestHandler<AudioFilePatchRequest, AudioFilePatchResultDto>;
 
 public class AudioFilePatchHandler(
+    IProjectAccessService access,
     IAudioFileService audioFileService,
     IAudioFilePatchService audioFilePatchService,
     IProjectService projectService,
@@ -22,6 +23,19 @@ public class AudioFilePatchHandler(
         CancellationToken cancellationToken
     )
     {
+        var denied = await access.CheckAudioAsync(
+            request.AudioId,
+            request.ProjectId,
+            ProjectPermission.Write,
+            cancellationToken
+        );
+        if (denied is not null)
+            return Result<AudioFilePatchResultDto>.Failure(
+                denied.Title!,
+                denied.Detail!,
+                denied.Status!.Value
+            );
+
         // Validate project
         var project = await projectService.GetByIdAsync(
             request.ProjectId,

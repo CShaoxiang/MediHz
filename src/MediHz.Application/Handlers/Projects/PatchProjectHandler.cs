@@ -12,6 +12,7 @@ public record ProjectPatchRequest(Guid ProjectId, Guid UserId, UpdateProjectRequ
 public interface IPatchProjectHandler : IRequestHandler<ProjectPatchRequest, ProjectDto>;
 
 public class PatchProjectHandler(
+    IProjectAccessService access,
     IProjectService projectService,
     ILogger<IPatchProjectHandler> logger
 ) : IPatchProjectHandler
@@ -21,6 +22,14 @@ public class PatchProjectHandler(
         CancellationToken cancellationToken
     )
     {
+        var denied = await access.CheckProjectAsync(
+            request.ProjectId,
+            ProjectPermission.Manage,
+            cancellationToken
+        );
+        if (denied is not null)
+            return Result<ProjectDto>.Failure(denied.Title!, denied.Detail!, denied.Status!.Value);
+
         logger.LogInformation("Patching project with ID {ProjectId}", request.ProjectId);
 
         var change = await projectService.UpdateAsync(

@@ -19,6 +19,7 @@ public class AudioFileUploadHandlerTests : UnitTestBase
     private readonly Guid _userId = Guid.NewGuid();
     private AudioFileUploadHandler _handler =>
         new(
+            Mock.Of<IProjectAccessService>(),
             _projectServiceMock.Object,
             _audioFileUploadServiceMock.Object,
             _currentUserMock.Object

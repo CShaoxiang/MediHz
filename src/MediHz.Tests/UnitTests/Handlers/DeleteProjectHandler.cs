@@ -25,6 +25,8 @@ public class DeleteProjectHandlerTests : UnitTestBase
     {
         _currentUserMock.Setup(cu => cu.UserId).Returns(_userId);
         _handler = new DeleteProjectHandler(
+            Mock.Of<IProjectAccessService>(),
+            _currentUserMock.Object,
             _projectServiceMock.Object,
             _audioFileServiceMock.Object,
             _audioFileDeleteHandlerMock.Object,

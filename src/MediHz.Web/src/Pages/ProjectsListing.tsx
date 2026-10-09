@@ -106,7 +106,7 @@ export default function ProjectsListingPage() {
             key={i}
             title={project.name}
             onClick={() => handleClickProject(project)}
-            actions={projectActions(project)}
+            actions={project.role === 'Owner' ? projectActions(project) : []}
           >
             {' '}
             <LuBookAudio className="icon-small" />{' '}

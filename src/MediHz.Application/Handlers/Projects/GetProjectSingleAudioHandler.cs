@@ -4,12 +4,15 @@ using Microsoft.Extensions.Logging;
 
 namespace MediHz.Application.Handlers.Projects;
 
+using MediHz.Application.Abstractions.Projects;
+
 public record GetProjectSingleAudioRequest(Guid ProjectId, Guid AudioId);
 
 public interface IGetProjectSingleAudioHandler
     : IRequestHandler<GetProjectSingleAudioRequest, AudioFileDto>;
 
 public class GetProjectSingleAudioHandler(
+    IProjectAccessService access,
     IAudioFileService audioFileService,
     ILogger<GetProjectSingleAudioHandler> logger
 ) : IGetProjectSingleAudioHandler
@@ -19,6 +22,19 @@ public class GetProjectSingleAudioHandler(
         CancellationToken cancellationToken
     )
     {
+        var denied = await access.CheckAudioAsync(
+            request.AudioId,
+            request.ProjectId,
+            ProjectPermission.Read,
+            cancellationToken
+        );
+        if (denied is not null)
+            return Result<AudioFileDto>.Failure(
+                denied.Title!,
+                denied.Detail!,
+                denied.Status!.Value
+            );
+
         logger.LogInformation(
             "Getting single file {AudioID} for project with ID {ProjectId}",
             request.AudioId,

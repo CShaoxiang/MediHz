@@ -18,7 +18,11 @@ public class GetProjectAudioFilesHandlerTests : UnitTestBase
     public GetProjectAudioFilesHandlerTests(ITestOutputHelper output)
         : base(output)
     {
-        _handler = new(_audioFileService.Object, Logger<GetProjectAudioFilesHandler>());
+        _handler = new(
+            Mock.Of<MediHz.Application.Abstractions.Projects.IProjectAccessService>(),
+            _audioFileService.Object,
+            Logger<GetProjectAudioFilesHandler>()
+        );
     }
 
     [Fact]

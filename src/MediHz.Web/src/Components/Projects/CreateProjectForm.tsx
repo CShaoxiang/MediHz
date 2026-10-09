@@ -3,18 +3,17 @@ import Button from '../Common/Button'
 import TextInput from '../Common/TextInput'
 import type { Project } from '../../Types/projects'
 import { createProject } from '../../Api/projects'
-import type { OmitId } from '../../Types/helpers'
 
 interface IProps {
   onSubmit: (project: Project) => void
 }
 
 export default function CreateProjectForm({ onSubmit }: IProps) {
-  const [project, setProject] = useState<OmitId<Project>>({
+  const [project, setProject] = useState<Pick<Project, 'name'>>({
     name: '',
   })
 
-  const validateProject = (project: OmitId<Project>): boolean => {
+  const validateProject = (project: Pick<Project, 'name'>): boolean => {
     return project.name.trim() !== ''
   }
 

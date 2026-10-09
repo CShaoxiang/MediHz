@@ -34,6 +34,7 @@ public class SaveAnnotationHandlerTests : UnitTestBase
             )
             .ReturnsAsync(true);
         _handler = new(
+            Mock.Of<MediHz.Application.Abstractions.Projects.IProjectAccessService>(),
             _annotationServiceMock.Object,
             _projectServiceMock.Object,
             _currentUserMock.Object,
