@@ -16,13 +16,15 @@ export function createAudioHubConnection(audioId: string) {
     .build()
 }
 
-export async function startHubConnection(connection: SignalR.HubConnection) {
+export async function startHubConnection(connection: SignalR.HubConnection, audioId: string) {
   try {
     await connection.start()
+    await connection.invoke('JoinAudioGroup', audioId)
     console.log('SignalR connection established.')
     return true
   } catch (error) {
     console.error('Error establishing SignalR connection:', error)
+    await connection.stop().catch(() => undefined)
     return false
   }
 }
@@ -49,11 +51,17 @@ async function invokeCommand(
   ...args: unknown[]
 ): Promise<ApiResult<null>> {
   try {
-    const problem = await connection.invoke<ProblemDetails | null>(method, ...args)
-    return problem ? { ok: false, error: problem } : { ok: true, value: null }
+    await connection.invoke(method, ...args)
+    return { ok: true, value: null }
   } catch (error) {
     console.error(error)
-    return { ok: false, error: HUB_UNAVAILABLE }
+    return {
+      ok: false,
+      error: {
+        ...HUB_UNAVAILABLE,
+        detail: error instanceof Error ? error.message : HUB_UNAVAILABLE.detail,
+      },
+    }
   }
 }
 

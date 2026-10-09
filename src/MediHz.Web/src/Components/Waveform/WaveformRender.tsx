@@ -17,12 +17,13 @@ const SELECTED_REGION_SPECTROGRAM_COLOR = 'rgba(76, 51, 239, 0.4)'
 
 interface WaveformProp {
   canEdit?: boolean
-  audio: string
-  audioId: string
-  setSelectedRegion: Dispatch<React.SetStateAction<Region | null>>
-  setRegionData: Dispatch<React.SetStateAction<Map<string, RegionData>>>
-  connection?: HubConnection
-  savedAnnotations?: AnnotationDto[]
+  audio?: string
+  annotations: Map<string, AnnotationRegion>
+  selectedId: string | null
+  onSelect: (id: string) => void
+  onDraw: (id: string, startTime: number, endTime: number) => void
+  onMove: (id: string, startTime: number, endTime: number) => void
+  onDelete: (id: string) => void
 }
 
 export default function WaveformRender({
@@ -37,6 +38,7 @@ export default function WaveformRender({
 }: WaveformProp) {
   // Waveform rendering
   const waveformRef = useRef<HTMLDivElement | null>(null)
+  const spectrogramContainer = useRef<HTMLDivElement | null>(null)
   const waveSurferInstance = useRef<WaveSurfer | null>(null)
 
   // Region Plugin Rendering
@@ -55,46 +57,6 @@ export default function WaveformRender({
   const [editing, setEditing] = useState(false)
   const [play, setPlay] = useState(false)
   const [volSlide, setVolSlide] = useState(false)
-
-  const createRegionData = useCallback(
-    (region: Region) => {
-      setRegionData((currentRegionData) => {
-        if (currentRegionData.has(region.id)) {
-          return currentRegionData
-        }
-        const nextRegionData = new Map(currentRegionData)
-        nextRegionData.set(region.id, {
-          startTime: region.start,
-          endTime: region.end,
-          tags: new Set<string>(),
-          description: '',
-        })
-        return nextRegionData
-      })
-    },
-    [setRegionData],
-  )
-  // Update region data when a region is edited
-  const updateRegionData = useCallback(
-    (region: Region) => {
-      setRegionData((currentRegionData) => {
-        const nextRegionData = new Map(currentRegionData)
-        nextRegionData.set(region.id, {
-          ...currentRegionData.get(region.id),
-          startTime: region.start,
-          endTime: region.end,
-        })
-        return nextRegionData
-      })
-    },
-    [setRegionData],
-  )
-
-  const sendRegionData = useCallback(() => {
-    if (canEdit && selectedRegionRef.current && connection) {
-      sendData(connection, audioId, selectedRegionRef.current.id)
-    }
-  }, [connection, audioId, canEdit])
   const [audioDuration, setAudioDuration] = useState<number>(0)
   const [zoom, setZoom] = useState(0)
 
@@ -160,12 +122,12 @@ export default function WaveformRender({
   }, [audio])
 
   const validateRegion = (region: Region) => {
-    if (region.end - region.start < 0.5){
+    if (region.end - region.start < 0.5) {
       region.setOptions({ end: region.start + 0.5 })
-    } 
+    }
   }
 
-  const playRegion = (region: Region,e: MouseEvent) => {
+  const playRegion = (region: Region, e: MouseEvent) => {
     e.stopPropagation()
     region.play(true)
   }
@@ -175,19 +137,30 @@ export default function WaveformRender({
     const unsubscribes = [
       regions.on('region-created', (region) => {
         if (syncingRegions.current) return
+        if (!canEdit) {
+          region.remove()
+          return
+        }
         // Drawn by the user: give it the ID the server will also use
         region.setOptions({ id: crypto.randomUUID() })
         validateRegion(region)
         onDraw(region.id, region.start, region.end)
       }),
-      regions.on('region-clicked', (region,e) => {onSelect(region.id); playRegion(region,e)}),
+      regions.on('region-clicked', (region, e) => {
+        onSelect(region.id)
+        playRegion(region, e)
+      }),
       // Tracks drags as they happen so a sync mid-drag doesn't snap the region back
-      regions.on('region-update', (region) => {validateRegion(region), onMove(region.id, region.start, region.end)}),
+      regions.on('region-update', (region) => {
+        if (!canEdit) return
+        validateRegion(region)
+        onMove(region.id, region.start, region.end)
+      }),
       regions.on('region-updated', (region) => onSelect(region.id)),
     ]
 
     return () => unsubscribes.forEach((unsubscribe) => unsubscribe())
-  }, [regions, onSelect, onDraw, onMove, validateRegion])
+  }, [regions, canEdit, onSelect, onDraw, onMove])
 
   // Make the waveform's regions match the annotations
   useEffect(() => {
@@ -203,8 +176,8 @@ export default function WaveformRender({
         start: annotation.startTime,
         end: annotation.endTime,
         color: id === selectedId ? regionSelectedColor.current : regionNeturalColor.current,
-        drag: editing,
-        resize: editing,
+        drag: canEdit && editing,
+        resize: canEdit && editing,
       }
 
       const region = existing.get(id)
@@ -217,7 +190,7 @@ export default function WaveformRender({
       regions.addRegion({ id, ...options })
       syncingRegions.current = false
     })
-  }, [regions, annotations, selectedId, editing])
+  }, [regions, annotations, selectedId, editing, canEdit])
 
   const handleWheel = (delta: number) => {
     console.log('Wheel event detected. Delta:', delta)
@@ -232,184 +205,37 @@ export default function WaveformRender({
     }
   }
 
-// Toggle Spectrogram
+  // Spectrogram and waveform use the same regions plugin and selection colors.
   useEffect(() => {
-    if (waveSurferInstance.current && regionInstance.current) {
-      if (spectro) {
-        regionNeturalColor.current = NEUTRAL_REGION_SPECTROGRAM_COLOR
-        regionSelectedColor.current = SELECTED_REGION_SPECTROGRAM_COLOR
-
-        waveSurferInstance.current.setOptions({
-          height: 0,
-        })
-        const spectrogram = waveSurferInstance.current.registerPlugin(
-          Spectrogram.create({
-            container: '#spectrogram',
-          }),
+    const wave = waveSurferInstance.current
+    if (!wave || !regions) return
+    if (spectro && spectrogramContainer.current) {
+      regionNeturalColor.current = NEUTRAL_REGION_SPECTROGRAM_COLOR
+      regionSelectedColor.current = SELECTED_REGION_SPECTROGRAM_COLOR
+      wave.setOptions({ height: 0 })
+      if (!spectrogramInstance.current) {
+        spectrogramInstance.current = wave.registerPlugin(
+          Spectrogram.create({ container: spectrogramContainer.current }),
         )
-        
-
-        spectrogramInstance.current = spectrogram
-      } else {
-        regionNeturalColor.current = NEUTRAL_REGION_COLOR
-        regionSelectedColor.current = SELECTED_REGION_COLOR
-
-    const handleRegionCreated = (region: Region) => {
-      syncSelectedRegion(region)
-      region.drag = false
-      region.resize = false
-      createRegionData(region)
-      sendRegionData()
+      }
+    } else {
+      regionNeturalColor.current = NEUTRAL_REGION_COLOR
+      regionSelectedColor.current = SELECTED_REGION_COLOR
+      wave.setOptions({ height: 200 })
+      spectrogramInstance.current?.destroy()
+      spectrogramInstance.current = null
     }
-    regionInstance.current.on('region-clicked', handleRegionClicked)
-    regionInstance.current.on('region-updated', handleRegionUpdated)
-    regionInstance.current.on('region-created', handleRegionCreated)
-
-    return () => {
-      regionInstance.current?.un('region-clicked', handleRegionClicked)
-      regionInstance.current?.un('region-updated', handleRegionUpdated)
-      regionInstance.current?.un('region-created', handleRegionCreated)
-    }
-  }, [audio, syncSelectedRegion, updateRegionData, createRegionData, sendRegionData])
-
-  // Load saved annotations
-  useEffect(() => {
-    if (regionInstance.current && savedAnnotations.length > 0 && audioDuration > 0) {
-      setRegionData((currentRegionData) => {
-        const nextRegionData = new Map(currentRegionData)
-
-        savedAnnotations.forEach((annotation) => {
-          if (!regionInstance.current!.getRegions().some((r) => r.id === annotation.id)) {
-            regionInstance.current!.addRegion({
-              id: annotation.id,
-              start: annotation.startTimeSeconds,
-              end: annotation.endTimeSeconds,
-              color: NEUTRAL_REGION_COLOR,
-              drag: canEdit && editing,
-              resize: canEdit && editing,
-            })
-
-            nextRegionData.set(annotation.id, {
-              dbGuid: annotation.id,
-              startTime: annotation.startTimeSeconds,
-              endTime: annotation.endTimeSeconds,
-              tags: new Set(annotation.labelNames),
-              description: '',
-            })
-          }
-        })
-
-        return nextRegionData
+    regions.getRegions().forEach((region) => {
+      region.setOptions({
+        color: region.id === selectedId ? regionSelectedColor.current : regionNeturalColor.current,
       })
-    }
-  }, [savedAnnotations, audioDuration, editing, canEdit, setRegionData])
-
-      regionInstance.current?.getRegions().forEach((region) => {
-          if (region.id === selectedId) {
-            region.setOptions({ color: regionSelectedColor.current })
-          } else {
-            region.setOptions({ color: regionNeturalColor.current })
-          }
-        })
-    }
-  }, [spectro])
-
-  useEffect(() => {
-    if (!connection || !regionInstance.current) return
-
-    const handleAnnotationUpdate = (annotation: AnnotationDto) => {
-      setRegionData((currentRegionData) => {
-        const nextRegionData = new Map(currentRegionData)
-        let existingRegionId: string | null = null
-
-        // Find if this annotation already exists locally
-        for (const [rId, data] of nextRegionData.entries()) {
-          if (data.dbGuid === annotation.id || rId === annotation.id) {
-            existingRegionId = rId
-            break
-          }
-        }
-
-        if (existingRegionId) {
-          // Update Case
-          const regionToUpdate = regionInstance.current
-            ?.getRegions()
-            .find((r) => r.id === existingRegionId)
-          if (regionToUpdate) {
-            if (
-              regionToUpdate.start !== annotation.startTimeSeconds ||
-              regionToUpdate.end !== annotation.endTimeSeconds
-            ) {
-              regionToUpdate.setOptions({
-                start: annotation.startTimeSeconds,
-                end: annotation.endTimeSeconds,
-              })
-            }
-          }
-
-          nextRegionData.set(existingRegionId, {
-            ...nextRegionData.get(existingRegionId),
-            dbGuid: annotation.id,
-            startTime: annotation.startTimeSeconds,
-            endTime: annotation.endTimeSeconds,
-            tags: new Set(annotation.labelNames),
-          })
-        } else {
-          // Create Case
-          regionInstance.current?.addRegion({
-            id: annotation.id,
-            start: annotation.startTimeSeconds,
-            end: annotation.endTimeSeconds,
-            color: NEUTRAL_REGION_COLOR,
-            drag: canEdit && editing,
-            resize: canEdit && editing,
-          })
-
-          nextRegionData.set(annotation.id, {
-            dbGuid: annotation.id,
-            startTime: annotation.startTimeSeconds,
-            endTime: annotation.endTimeSeconds,
-            tags: new Set(annotation.labelNames),
-            description: '',
-          })
-        }
-
-        return nextRegionData
-      })
-    }
-
-    connection.on('ReceiveAnnotationUpdate', handleAnnotationUpdate)
-
-    return () => {
-      connection.off('ReceiveAnnotationUpdate', handleAnnotationUpdate)
-    }
-  }, [connection, editing, canEdit, setRegionData])
-
-  //Manages region selection
-  useEffect(() => {
-    if (!regionInstance.current) return
-
-    if (canEdit && highlight) {
-      disableSelection.current = regionInstance.current.enableDragSelection({
-        color: NEUTRAL_REGION_COLOR,
-      })
-      return
-    }
-
-    disableSelection.current?.()
-    disableSelection.current = null
-  }, [highlight, canEdit])
-
-  // Manages toggled editing
-  useEffect(() => {
-    if (!regionInstance.current) return
-
-    // Update all existing regions
-    regionInstance.current.getRegions().forEach((region) => {
-      region.drag = canEdit && editing
-      region.resize = canEdit && editing
     })
-  }, [editing, canEdit])
+  }, [spectro, regions, selectedId])
+
+  useEffect(() => {
+    if (!regions || !canEdit || !highlight) return
+    return regions.enableDragSelection({ color: regionNeturalColor.current })
+  }, [regions, canEdit, highlight])
 
   const playPause = () => {
     setPlay(!play)
@@ -432,25 +258,7 @@ export default function WaveformRender({
 
   const handleDelete = () => {
     if (!canEdit) return
-    if (selectedRegionRef.current) {
-      const regionId = selectedRegionRef.current.id
-      selectedRegionRef.current.remove()
-      setSelectedRegion(null)
-
-      setRegionData((currentRegionData) => {
-        const nextRegionData = new Map(currentRegionData)
-        const regionInfo = nextRegionData.get(regionId)
-
-        if (regionInfo?.dbGuid && connection) {
-          deleteAnnotation(connection, regionInfo.dbGuid, audioId)
-        }
-
-        nextRegionData.delete(regionId)
-        return nextRegionData
-      })
-
-      selectedRegionRef.current = null
-    }
+    if (selectedId) onDelete(selectedId)
   }
 
   const formatTime = (time: number) => {
@@ -474,6 +282,10 @@ export default function WaveformRender({
           e.preventDefault()
           handleWheel(e.deltaY)
         }}
+      />
+      <div
+        ref={spectrogramContainer}
+        className={spectro ? 'w-full overflow-hidden rounded-3xl' : 'hidden'}
       />
 
       <div className="-ml-1 -mr-1 info-box-parent">

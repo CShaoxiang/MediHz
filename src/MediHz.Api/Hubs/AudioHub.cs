@@ -2,7 +2,6 @@ using MediHz.Application.Abstractions.Projects;
 using MediHz.Application.DTOs.Annotations;
 using MediHz.Application.Handlers.Annotations;
 using Microsoft.AspNetCore.Authorization;
-using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.SignalR;
 
 namespace MediHz.Api.Hubs;
@@ -12,14 +11,12 @@ public class AudioHub(
     IProjectAccessService access,
     ISaveAnnotationHandler saveAnnotationHandler,
     IUpdateAnnotationHandler updateAnnotationHandler,
-    IDeleteAnnotationHandler deleteAnnotationHandler,
-    IProjectService projectService,
-    ICurrentUser currentUser
+    IDeleteAnnotationHandler deleteAnnotationHandler
 ) : Hub
 {
     public override async Task OnConnectedAsync()
     {
-        await Clients.Caller.SendAsync("ReceiveMessage", message);
+        await base.OnConnectedAsync();
     }
 
     public async Task SendRegionData(string audioId, string regionId)
@@ -60,9 +57,7 @@ public class AudioHub(
         return null;
     }
 
-    public async Task<ProblemDetails?> UpdateAnnotation(
-        UpdateAnnotationCommand updateAnnotationCommand
-    )
+    public async Task<Guid?> UpdateAnnotation(UpdateAnnotationCommand updateAnnotationCommand)
     {
         var result = await updateAnnotationHandler.Handle(
             updateAnnotationCommand,
@@ -78,29 +73,21 @@ public class AudioHub(
             return result.Value.Id;
         }
 
-        await Clients
-            .OthersInGroup(updateAnnotationCommand.AudioFileId.ToString())
-            .SendAsync("ReceiveAnnotationUpdate", result.Value);
         return null;
     }
 
-    public async Task<ProblemDetails?> DeleteAnnotation(Guid annotationId, Guid audioId)
+    public async Task<bool> DeleteAnnotation(Guid annotationId, Guid audioId)
     {
         var command = new DeleteAnnotationCommand(annotationId, audioId);
         var result = await deleteAnnotationHandler.Handle(command, Context.ConnectionAborted);
         if (result.Problem is not null)
             throw new HubException(result.Problem.Detail);
 
-        // Already deleted counts as success
-        if (result.StatusCode == StatusCodes.Status404NotFound)
-            return null;
-        if (!result.Value)
-            return result.Problem;
-
-        await Clients
-            .OthersInGroup(audioId.ToString())
-            .SendAsync("ReceiveAnnotationDelete", annotationId);
-        return null;
+        if (result.Value)
+            await Clients
+                .OthersInGroup(audioId.ToString())
+                .SendAsync("ReceiveAnnotationDelete", annotationId);
+        return result.Value;
     }
 
     private async Task<Guid> AuthorizeAudio(string audioId, ProjectPermission permission)
