@@ -46,37 +46,38 @@ export default function Annotations({ annotation, onSave }: AnnotationProp) {
   }
 
   return (
-    <div className="max-h-full min-h-0 max-w-full overflow-hidden rounded-xl bg-purple-700 p-4 font-medium text-white">
-      <span className="flex min-h-0 gap-2">
-        <section>
+    <div className=" min-h-0 max-w-full rounded-xl bg-purple-700 p-4 font-medium text-white">
+      <div className="mb-4 flex items-start justify-between gap-3">
+        <section className="min-w-0">
           <h5>Start Time: {annotation.startTime.toFixed(2)} </h5>{' '}
           <h5>End Time: {annotation.endTime.toFixed(2)}</h5>
-          <div className="relative m-1 flex h-full min-h-0 flex-col overflow-hidden rounded-xl bg-white/20 p-2 font-normal">
-            <ListGroup
-              heading={'Tags' + (tags.size > 0 ? ` (${tags.size})` : '')}
-              items={Array.from(tags)}
-              onSelect={(item) => editTags((next) => next.delete(item))}
-              hoverable={<FiX className="icon-small size-6" />}
-            />
-            <input
-              className="mt-2 w-full shrink-0 rounded-xl border-2 border-dotted bg-purple-700/20 p-1"
-              type="text"
-              value={customTag}
-              onChange={(event) => setCustomTag(event.target.value)}
-              onKeyDown={(event) => {
-                if (event.key === 'Enter') {
-                  addCustomTag()
-                }
-              }}
-              placeholder="Add custom tag"
-            />
-          </div>
         </section>
-      </span>
-      <footer className="flex justify-end align-center mt-4 items-center">
-        <span className="mr-4">{draftTags ? <span>Unsaved</span> : null}</span>
-        <Button label={saving ? 'SAVING...' : 'SAVE'} border={true} onClick={handleSave} />
-      </footer>
+        <div className="flex shrink-0 items-center self-start">
+          <span className="mr-2">{draftTags ? <span>Unsaved</span> : null}</span>
+          <Button label={saving ? 'SAVING...' : 'SAVE'} border={true} onClick={handleSave} />
+        </div>
+      </div>
+
+      <div className="relative m-1 flex h-max min-h-0 flex-col overflow rounded-xl bg-white/20 p-2 font-normal">
+        <ListGroup
+          heading={'Tags' + (tags.size > 0 ? ` (${tags.size})` : '')}
+          items={Array.from(tags)}
+          onSelect={(item) => editTags((next) => next.delete(item))}
+          hoverable={<FiX className="icon-small size-6" />}
+        />
+        <input
+          className="mt-2 w-full shrink-0 rounded-xl border-2 border-dotted bg-purple-700/20 p-1"
+          type="text"
+          value={customTag}
+          onChange={(event) => setCustomTag(event.target.value)}
+          onKeyDown={(event) => {
+            if (event.key === 'Enter') {
+              addCustomTag()
+            }
+          }}
+          placeholder="Add custom tag"
+        />
+      </div>
     </div>
   )
 }

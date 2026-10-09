@@ -8,6 +8,20 @@ interface SliderProp {
 }
 
 export default function Slider({ min, max, state, onChange, ariaLabel, step = 1 }: SliderProp) {
+
+  const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {if (e.key === 'ArrowLeft' || e.key === 'ArrowRight') {
+          e.preventDefault()
+          if (e.key === 'ArrowLeft') {
+            onChange({
+              target: { value: Math.max(state - 1, min).toString() },
+            } as React.ChangeEvent<HTMLInputElement>)
+          }else{
+            onChange({
+              target: { value: Math.max(state + 1, min).toString() },
+            } as React.ChangeEvent<HTMLInputElement>)
+          }
+        }}
+
   return (
     <input
       type="range"
@@ -18,6 +32,7 @@ export default function Slider({ min, max, state, onChange, ariaLabel, step = 1 
       value={state}
       onChange={onChange}
       aria-label={ariaLabel}
+      onKeyDown={handleKeyDown}
     />
   )
 }

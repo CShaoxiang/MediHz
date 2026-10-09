@@ -10,7 +10,7 @@ interface Props {
 
 export default function ListGroup({ items = [], heading, onSelect, hoverable }: Props) {
   return (
-    <div className="flex h-full min-h-0 flex-col">
+    <div className="flex min-h-0 flex-1 flex-col">
       <h4>{heading}</h4>
       {items.length === 0 && <p>No item found</p>}
       <ul className="list-group mt-2 min-h-0 flex-1 overflow-y-auto">
