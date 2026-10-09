@@ -1,30 +1,27 @@
+import { useCallback, useEffect, useState } from 'react'
 import { useParams } from 'react-router-dom'
-import WaveformRender from '../Components/Waveform/WaveformRender'
-import Annotations from '../Components/Annotations/Annotation'
-import { useEffect, useState } from 'react'
-import type { Region } from 'wavesurfer.js/dist/plugins/regions.js'
-import type { RegionData } from '../Interfaces/RegionData'
-import type { HubConnection } from '@microsoft/signalr'
-import { getAudioFileUrl, getAnnotations } from '../Api/audio'
+import { getAudioFileUrl } from '../Api/audio'
+import { showApiError } from '../Api/helpers'
 import { fetchProject, fetchSingleAudio } from '../Api/projects'
-import { hubConnection } from '../Api/hub'
-import type { AnnotationDto } from '../Types/audio'
+import Annotations from '../Components/Annotations/Annotation'
+import WaveformRender from '../Components/Waveform/WaveformRender'
+import { useAnnotations } from '../Hooks/useAnnotations'
+
+type PageParams = { projectId: string; audioId: string }
 
 export default function AnnotationPage() {
-  const { projectId, audioId } = useParams<{ projectId: string; audioId: string }>()
+  const { projectId, audioId } = useParams<PageParams>()
   if (!projectId || !audioId) return <p role="alert">Audio not found.</p>
   return (
-    <AnnotationContent key={`${projectId}/${audioId}`} projectId={projectId} audioId={audioId} />
+    <AnnotationWorkspace key={`${projectId}/${audioId}`} projectId={projectId} audioId={audioId} />
   )
 }
 
-function AnnotationContent({ projectId, audioId }: { projectId: string; audioId: string }) {
-  const [selectedRegion, setSelectedRegion] = useState<Region | null>(null)
-  const [regionData, setRegionData] = useState<Map<string, RegionData>>(new Map())
-  const [regionTags, setRegionTags] = useState<Set<string>>(new Set())
-  const [savedAnnotations, setSavedAnnotations] = useState<AnnotationDto[]>([])
-  const [connection, setConnection] = useState<HubConnection>()
-  const [loaded, setLoaded] = useState<{ url: string; name: string; canWrite: boolean }>()
+function AnnotationWorkspace({ projectId, audioId }: PageParams) {
+  const { annotations, addAnnotation, moveAnnotation, saveTags, removeAnnotation } =
+    useAnnotations(audioId)
+  const [selectedId, setSelectedId] = useState<string | null>(null)
+  const [loaded, setLoaded] = useState<{ url: string; name: string; canEdit: boolean }>()
   const [error, setError] = useState('')
 
   useEffect(() => {
@@ -36,8 +33,6 @@ function AnnotationContent({ projectId, audioId }: { projectId: string; audioId:
         if (!project.ok) throw new Error(project.error.detail || 'Project unavailable.')
         const metadata = await fetchSingleAudio(projectId, audioId)
         if (!metadata.ok) throw new Error(metadata.error.detail || 'Audio unavailable.')
-        const annotations = await getAnnotations(audioId)
-        if (!annotations.ok) throw new Error(annotations.error.detail || 'Annotations unavailable.')
         const audio = await getAudioFileUrl(projectId, audioId)
         if (!audio.ok) throw new Error(audio.error.detail || 'Audio unavailable.')
         objectUrl = audio.value
@@ -45,11 +40,10 @@ function AnnotationContent({ projectId, audioId }: { projectId: string; audioId:
           URL.revokeObjectURL(objectUrl)
           return
         }
-        setSavedAnnotations(annotations.value)
         setLoaded({
-          url: audio.value,
+          url: objectUrl,
           name: metadata.value.fileName,
-          canWrite: project.value.role === 'Owner' || project.value.role === 'Annotator',
+          canEdit: project.value.role === 'Owner' || project.value.role === 'Annotator',
         })
       } catch (cause) {
         if (active) setError(cause instanceof Error ? cause.message : 'Unable to load audio.')
@@ -62,65 +56,48 @@ function AnnotationContent({ projectId, audioId }: { projectId: string; audioId:
     }
   }, [projectId, audioId])
 
-  useEffect(() => {
-    if (!loaded) return
-    let active = true
-    let live: HubConnection | undefined
-    async function connect() {
-      try {
-        live = await hubConnection()
-        if (!active) {
-          await live.stop()
-          return
-        }
-        const join = () => live!.invoke('JoinAudioGroup', audioId)
-        live.onreconnected(() => {
-          void join().catch(() => setError('Project access could not be restored.'))
-        })
-        await join()
-        if (!active) {
-          await live.stop()
-          return
-        }
-        setConnection(live)
-      } catch {
-        if (active) setError('Unable to connect to project updates. Please reload.')
-      }
-    }
-    void connect()
-    return () => {
-      active = false
-      if (live) void live.stop()
-    }
-  }, [loaded, audioId])
+  const handleDraw = useCallback(
+    (id: string, startTime: number, endTime: number) => {
+      if (!loaded?.canEdit) return
+      addAnnotation(id, startTime, endTime)
+      setSelectedId(id)
+    },
+    [addAnnotation, loaded?.canEdit],
+  )
+
+  const handleDelete = async (id: string) => {
+    if (!loaded?.canEdit) return
+    setSelectedId(null)
+    const result = await removeAnnotation(id)
+    if (!result.ok) showApiError(result.error)
+  }
+
+  const selected = selectedId ? annotations.get(selectedId) : undefined
 
   if (error) return <p role="alert">{error}</p>
   if (!loaded) return <p role="status">Loading audio…</p>
 
   return (
     <div className="w-full">
-      <h1 className="text-xl m-1">{loaded.name}</h1>
-      {!loaded.canWrite && <p>Viewer access — annotations are read-only.</p>}
+      <h1 className="m-1 text-xl">{loaded.name}</h1>
+      {!loaded.canEdit && <p>Viewer access — annotations are read-only.</p>}
       <WaveformRender
         audio={loaded.url}
-        audioId={audioId}
-        canEdit={loaded.canWrite}
-        setSelectedRegion={setSelectedRegion}
-        setRegionData={setRegionData}
-        connection={connection}
-        savedAnnotations={savedAnnotations}
+        annotations={annotations}
+        selectedId={selectedId}
+        canEdit={loaded.canEdit}
+        onSelect={setSelectedId}
+        onDraw={handleDraw}
+        onMove={moveAnnotation}
+        onDelete={handleDelete}
       />
       {selected && (
         <div className="m-2 flex min-h-0 max-h-[calc(100svh-12rem)] overflow-hidden">
           <Annotations
-            audioId={audioId}
-            region={selectedRegion}
-            canEdit={loaded.canWrite}
-            selectedregionData={regionData.get(selectedRegion.id)}
-            setRegionData={setRegionData}
-            regionTags={regionTags}
-            setRegionTags={setRegionTags}
-            connection={connection}
+            key={selected.id}
+            annotation={selected}
+            canEdit={loaded.canEdit}
+            onSave={(tags) => saveTags(selected.id, tags)}
           />
         </div>
       )}

@@ -1,44 +1,30 @@
 import { useState } from 'react'
-import Button from '../Common/Button'
-import ListGroup from '../Common/ListGroup'
+import { FiX } from 'react-icons/fi'
+import { showApiError } from '../../Api/helpers'
 import type { AnnotationRegion } from '../../Interfaces/AnnotationRegion'
 import type { ApiResult } from '../../Types/api'
-import { showApiError } from '../../Api/helpers'
-import { FiX } from 'react-icons/fi'
+import Button from '../Common/Button'
+import ListGroup from '../Common/ListGroup'
 
 interface AnnotationProp {
-  canEdit?: boolean
-  audioId: string
-  region: Region
-  selectedregionData: RegionData | undefined
-  setRegionData: React.Dispatch<React.SetStateAction<Map<string, RegionData>>>
-  regionTags: Set<string>
-  setRegionTags: React.Dispatch<React.SetStateAction<Set<string>>>
-  connection?: HubConnection
+  annotation: AnnotationRegion
+  canEdit: boolean
+  onSave: (tags: Set<string>) => Promise<ApiResult<null>>
 }
 
-export default function Annotations({
-  canEdit = false,
-  audioId,
-  region,
-  selectedregionData,
-  setRegionData,
-  regionTags,
-  setRegionTags,
-  connection,
-}: AnnotationProp) {
-  const selectedRegion = selectedregionData
-  const [description, setDescription] = useState(selectedRegion?.description || '...')
-  const [customTag, setCustomTag] = useState<string>('')
+export default function Annotations({ annotation, canEdit, onSave }: AnnotationProp) {
+  const [customTag, setCustomTag] = useState('')
   const [draftTags, setDraftTags] = useState<Set<string> | null>(null)
   const [saving, setSaving] = useState(false)
-
+  const [error, setError] = useState('')
   const tags = draftTags ?? annotation.tags
 
   const editTags = (edit: (tags: Set<string>) => void) => {
+    if (!canEdit) return
     const nextTags = new Set(tags)
     edit(nextTags)
     setDraftTags(nextTags)
+    setError('')
   }
 
   const addCustomTag = () => {
@@ -49,105 +35,67 @@ export default function Annotations({
   }
 
   const handleSave = async () => {
-    if (saving) return
-
+    if (!canEdit || saving) return
+    const nextTags = new Set(tags)
+    const pendingTag = customTag.trim()
+    if (pendingTag) nextTags.add(pendingTag)
+    if (nextTags.size === 0) {
+      setError('Add at least one tag before saving.')
+      return
+    }
+    setError('')
     setSaving(true)
-    const result = await onSave(tags)
+    const result = await onSave(nextTags)
     setSaving(false)
-
     if (result.ok) {
+      setCustomTag('')
       setDraftTags(null)
-    } else {
-      showApiError(result.error)
-    }
+    } else showApiError(result.error)
   }
-
-  const handleSave = () => {
-    if (!canEdit) return
-    const nextRegionData = {
-      ...selectedRegion,
-      description: description,
-      tags: regionTags,
-    }
-
-    setRegionData((currentRegionData) => {
-      const updatedMap = new Map(currentRegionData)
-      updatedMap.set(region.id, nextRegionData)
-      return updatedMap
-    })
-
-    sendRegionData(nextRegionData)
-  }
-
-  const delRegionTag = (tag: string) => {
-    const updatedTags = new Set(regionTags)
-    updatedTags.delete(tag)
-    setRegionTags(updatedTags)
-  }
-
-  const addRegionTag = (Tag: string) => {
-    setRegionTags((currentTags) => {
-      const nextTags = new Set(currentTags)
-      nextTags.add(Tag)
-      return nextTags
-    })
-  }
-
-  if (selectedRegion !== prevSelectedRegion) {
-    setPrevSelectedRegion(selectedRegion)
-    if (selectedRegion) {
-      setRegionTags(selectedRegion.tags || new Set())
-      setDescription(selectedRegion.description || '')
-    }
-  }
-
-  if (!selectedRegion) {
-    return null
-  }
-
-  if (!canEdit)
-    return (
-      <section className="rounded-xl bg-purple-700 p-4 text-white" aria-label="Annotation details">
-        <p>
-          Start: {selectedRegion.startTime?.toFixed(2)} · End: {selectedRegion.endTime?.toFixed(2)}
-        </p>
-        <p>Tags: {Array.from(selectedRegion.tags || []).join(', ') || 'None'}</p>
-      </section>
-    )
 
   return (
-    <div className=" min-h-0 max-w-full rounded-xl bg-purple-700 p-4 font-medium text-white">
+    <section
+      className="min-h-0 max-w-full rounded-xl bg-purple-700 p-4 font-medium text-white"
+      aria-label="Annotation details"
+    >
       <div className="mb-4 flex items-start justify-between gap-3">
-        <section className="min-w-0">
-          <h5>Start Time: {annotation.startTime.toFixed(2)} </h5>{' '}
-          <h5>End Time: {annotation.endTime.toFixed(2)}</h5>
-        </section>
-        <div className="flex shrink-0 items-center self-start">
-          <span className="mr-2">{draftTags ? <span>Unsaved</span> : null}</span>
-          <Button label={saving ? 'SAVING...' : 'SAVE'} border={true} onClick={handleSave} />
+        <div className="min-w-0">
+          <p>Start Time: {annotation.startTime.toFixed(2)}</p>
+          <p>End Time: {annotation.endTime.toFixed(2)}</p>
         </div>
+        {canEdit && (
+          <div className="flex shrink-0 items-center self-start">
+            <span className="mr-2">{draftTags ? 'Unsaved' : null}</span>
+            <Button label={saving ? 'SAVING...' : 'SAVE'} border={true} onClick={handleSave} />
+          </div>
+        )}
       </div>
 
-      <div className="relative m-1 flex h-max min-h-0 flex-col overflow rounded-xl bg-white/20 p-2 font-normal">
+      <div className="relative m-1 flex h-max min-h-0 flex-col rounded-xl bg-white/20 p-2 font-normal">
         <ListGroup
           heading={'Tags' + (tags.size > 0 ? ` (${tags.size})` : '')}
           items={Array.from(tags)}
-          onSelect={(item) => editTags((next) => next.delete(item))}
-          hoverable={<FiX className="icon-small size-6" />}
+          onSelect={canEdit ? (item) => editTags((next) => next.delete(item)) : undefined}
+          hoverable={canEdit ? <FiX className="icon-small size-6" /> : undefined}
         />
-        <input
-          className="mt-2 w-full shrink-0 rounded-xl border-2 border-dotted bg-purple-700/20 p-1"
-          type="text"
-          value={customTag}
-          onChange={(event) => setCustomTag(event.target.value)}
-          onKeyDown={(event) => {
-            if (event.key === 'Enter') {
-              addCustomTag()
-            }
-          }}
-          placeholder="Add custom tag"
-        />
+        {canEdit && (
+          <input
+            className="mt-2 w-full shrink-0 rounded-xl border-2 border-dotted bg-purple-700/20 p-1"
+            type="text"
+            value={customTag}
+            onChange={(event) => {
+              setCustomTag(event.target.value)
+              setError('')
+            }}
+            onKeyDown={(event) => {
+              if (event.key === 'Enter') addCustomTag()
+            }}
+            placeholder="Add custom tag"
+            aria-label="Add custom tag"
+          />
+        )}
+        {error && <p role="alert">{error}</p>}
       </div>
-    </div>
+    </section>
   )
 }

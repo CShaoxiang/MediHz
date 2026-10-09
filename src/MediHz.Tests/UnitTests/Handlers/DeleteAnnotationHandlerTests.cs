@@ -23,9 +23,21 @@ public class DeleteAnnotationHandlerTests : UnitTestBase
     public DeleteAnnotationHandlerTests(ITestOutputHelper output)
         : base(output)
     {
+        _projectServiceMock
+            .Setup(s =>
+                s.CanAccessAnnotationAsync(
+                    It.IsAny<Guid>(),
+                    It.IsAny<Guid>(),
+                    It.IsAny<Guid>(),
+                    It.IsAny<CancellationToken>()
+                )
+            )
+            .ReturnsAsync(true);
         _handler = new(
             Mock.Of<MediHz.Application.Abstractions.Projects.IProjectAccessService>(),
             _annotationServiceMock.Object,
+            _projectServiceMock.Object,
+            _currentUserMock.Object,
             Logger<DeleteAnnotationHandler>()
         );
     }

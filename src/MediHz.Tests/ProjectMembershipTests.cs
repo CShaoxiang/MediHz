@@ -267,7 +267,8 @@ public class ProjectMembershipTests : IDisposable
         var getAnnotations = new GetAnnotationsByFileHandler(
             access,
             annotations,
-            audioFiles,
+            projects,
+            actor.Object,
             NullLogger<GetAnnotationsByFileHandler>.Instance
         );
         Assert.Equal(
@@ -429,10 +430,11 @@ public class ProjectMembershipTests : IDisposable
         var save = new SaveAnnotationHandler(
             access,
             annotations,
+            projects,
             actor.Object,
             NullLogger<SaveAnnotationHandler>.Instance
         );
-        var saved = await save.Handle(new("region", audio.Id, ["Test"], 1, 2), Token);
+        var saved = await save.Handle(new(Guid.NewGuid(), audio.Id, ["Test"], 1, 2), Token);
         Assert.Equal(
             write ? 201
                 : read ? 403
@@ -442,6 +444,7 @@ public class ProjectMembershipTests : IDisposable
         var update = new UpdateAnnotationHandler(
             access,
             annotations,
+            projects,
             actor.Object,
             NullLogger<UpdateAnnotationHandler>.Instance
         );
@@ -454,6 +457,8 @@ public class ProjectMembershipTests : IDisposable
         var delete = new DeleteAnnotationHandler(
             access,
             annotations,
+            projects,
+            actor.Object,
             NullLogger<DeleteAnnotationHandler>.Instance
         );
         Assert.Equal(
@@ -507,6 +512,7 @@ public class ProjectMembershipTests : IDisposable
         var update = new UpdateAnnotationHandler(
             access,
             annotations,
+            projects,
             actor.Object,
             NullLogger<UpdateAnnotationHandler>.Instance
         );
@@ -547,18 +553,22 @@ public class ProjectMembershipTests : IDisposable
             new SaveAnnotationHandler(
                 access,
                 annotations,
+                projects,
                 actor.Object,
                 NullLogger<SaveAnnotationHandler>.Instance
             ),
             new UpdateAnnotationHandler(
                 access,
                 annotations,
+                projects,
                 actor.Object,
                 NullLogger<UpdateAnnotationHandler>.Instance
             ),
             new DeleteAnnotationHandler(
                 access,
                 annotations,
+                projects,
+                actor.Object,
                 NullLogger<DeleteAnnotationHandler>.Instance
             )
         )
@@ -588,7 +598,7 @@ public class ProjectMembershipTests : IDisposable
         if (canWrite)
         {
             await hub.SendRegionData(audio.Id.ToString(), "region");
-            Assert.NotNull(await hub.SaveAnnotation(new("region", audio.Id, ["Test"], 1, 2)));
+            Assert.NotNull(await hub.SaveAnnotation(new(Guid.NewGuid(), audio.Id, ["Test"], 1, 2)));
             Assert.NotNull(
                 await hub.UpdateAnnotation(new(annotation.Id, audio.Id, ["Changed"], 0, 2))
             );
@@ -600,7 +610,7 @@ public class ProjectMembershipTests : IDisposable
                 hub.SendRegionData(audio.Id.ToString(), "region")
             );
             await Assert.ThrowsAsync<HubException>(() =>
-                hub.SaveAnnotation(new("region", audio.Id, ["Test"], 1, 2))
+                hub.SaveAnnotation(new(Guid.NewGuid(), audio.Id, ["Test"], 1, 2))
             );
             await Assert.ThrowsAsync<HubException>(() =>
                 hub.UpdateAnnotation(new(annotation.Id, audio.Id, ["Changed"], 0, 2))

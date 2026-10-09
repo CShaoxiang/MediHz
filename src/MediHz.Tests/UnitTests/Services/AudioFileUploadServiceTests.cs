@@ -124,7 +124,7 @@ public class AudioFileUploadServiceTests : UnitTestBase
     public async Task UploadBatchAsync_ShouldReturnFailure_WhenFileIsUnderMinSampleRate()
     {
         // Arrange
-        using var wavStream = CreateDummyWavStream(7999, 10); // 7999 < MinSampleRate (8000)
+        using var wavStream = CreateDummyWavStream(3999, 10); // 3999 < MinSampleRate (4000)
 
         var fileMock = new Mock<IFormFile>();
         fileMock.Setup(f => f.Length).Returns(wavStream.Length);

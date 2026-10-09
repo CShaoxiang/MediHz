@@ -69,10 +69,17 @@ export function useAnnotations(audioId: string) {
     hub.on('ReceiveAnnotationDelete', (id: string) =>
       setAnnotations((current) => withoutAnnotation(current, id)),
     )
-    hub.onreconnected(() => loadAnnotations())
+    hub.onreconnected(async () => {
+      try {
+        await hub.invoke('JoinAudioGroup', audioId)
+        await loadAnnotations()
+      } catch (error) {
+        console.error('Could not rejoin audio updates:', error)
+      }
+    })
 
     const connect = async () => {
-      if (await startHubConnection(hub)) {
+      if (await startHubConnection(hub, audioId)) {
         setConnection(hub)
       }
       await loadAnnotations()
