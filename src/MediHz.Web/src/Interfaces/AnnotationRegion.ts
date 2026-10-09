@@ -4,4 +4,5 @@ export interface AnnotationRegion {
   startTime: number
   endTime: number
   tags: Set<string>
+  authorDisplayName?: string
 }

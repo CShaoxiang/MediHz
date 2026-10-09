@@ -32,6 +32,7 @@ function fromDto(dto: AnnotationDto): AnnotationRegion {
     startTime: dto.startTimeSeconds,
     endTime: dto.endTimeSeconds,
     tags: new Set(dto.labelNames),
+    authorDisplayName: dto.authorDisplayName,
   }
 }
 
@@ -132,6 +133,8 @@ export function useAnnotations(audioId: string) {
       setAnnotations((current) =>
         current.get(id) === next ? withAnnotation(current, annotation) : current,
       )
+    } else if (!annotation.saved) {
+      await loadAnnotations()
     }
     return result
   }

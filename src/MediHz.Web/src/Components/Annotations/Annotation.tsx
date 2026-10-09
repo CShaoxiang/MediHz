@@ -62,6 +62,9 @@ export default function Annotations({ annotation, canEdit, onSave }: AnnotationP
         <div className="min-w-0">
           <p>Start Time: {annotation.startTime.toFixed(2)}</p>
           <p>End Time: {annotation.endTime.toFixed(2)}</p>
+          {annotation.authorDisplayName && (
+            <p className="mt-1 text-sm">Annotated by: {annotation.authorDisplayName}</p>
+          )}
         </div>
         {canEdit && (
           <div className="flex shrink-0 items-center self-start">
