@@ -9,6 +9,8 @@ import Grid from '../Components/Common/Grid'
 import { LuBookAudio, LuBookPlus } from 'react-icons/lu'
 import RenameProjectForm from '../Components/Projects/RenameProjectForm'
 import DeleteProjectForm from '../Components/Projects/DeleteProjectForm'
+import { exportProject } from '../Api/exports'
+import { downloadJsonFile } from '../Utilities/download'
 
 export default function ProjectsListingPage() {
   const [isOpen, setIsOpen] = useState(false)
@@ -43,6 +45,19 @@ export default function ProjectsListingPage() {
       onClick: () => {
         setSelectedProject(project)
         setIsOpenRename(true)
+      },
+    },
+    {
+      label: 'Export',
+      onClick: () => {
+        exportProject(project.id).then((res) => {
+          if (res.ok) {
+            downloadJsonFile(res.value, `${project.name || 'project'}_export.json`)
+          } else {
+            console.error(res.error)
+            alert(res.error?.detail || 'Failed to export project.')
+          }
+        })
       },
     },
     {

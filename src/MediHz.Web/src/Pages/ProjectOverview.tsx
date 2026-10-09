@@ -10,6 +10,8 @@ import Modal from '../Components/Common/Modal'
 import RenameAudioForm from '../Components/Audio/RenameAudioForm'
 import { deleteAudioFile, renameAudioFile } from '../Api/audio'
 import DeleteAudioForm from '../Components/Audio/DeleteAudioForm'
+import { exportFile } from '../Api/exports'
+import { downloadJsonFile } from '../Utilities/download'
 
 type PageParams = {
   projectId: string
@@ -30,6 +32,19 @@ export default function ProjectOverviewPage() {
       onClick: () => {
         setIsOpenRename(true)
         setSelectedAudio(audio)
+      },
+    },
+    {
+      label: 'Export',
+      onClick: () => {
+        exportFile(audio.id).then((res) => {
+          if (res.ok) {
+            downloadJsonFile(res.value, `${audio.fileName || 'file'}_export.json`)
+          } else {
+            console.error(res.error)
+            alert(res.error?.detail || 'Failed to export file.')
+          }
+        })
       },
     },
     {
