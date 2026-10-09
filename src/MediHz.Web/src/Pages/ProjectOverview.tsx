@@ -2,8 +2,10 @@ import Card from '../Components/Common/Card'
 import AudioUploader from '../Components/AudioUploader'
 import type { AudioFile } from '../Types/audio'
 import { useEffect, useState } from 'react'
-import { fetchProjectAudioFiles } from '../Api/projects'
-import { useLocation, useNavigate, useParams } from 'react-router-dom'
+import { fetchProject, fetchProjectAudioFiles } from '../Api/projects'
+import { useNavigate, useParams } from 'react-router-dom'
+import type { Project } from '../Types/projects'
+import AddProjectMemberForm from '../Components/Projects/AddProjectMemberForm'
 import Grid from '../Components/Common/Grid'
 import { LuAudioLines } from 'react-icons/lu'
 import Modal from '../Components/Common/Modal'
@@ -22,7 +24,8 @@ export default function ProjectOverviewPage() {
   const [isOpenRename, setIsOpenRename] = useState(false)
   const [isOpenDelete, setIsOpenDelete] = useState(false)
   const [selectedAudio, setSelectedAudio] = useState<AudioFile>()
-  const location = useLocation()
+  const [project, setProject] = useState<Project>()
+  const [error, setError] = useState('')
   const { projectId } = useParams<PageParams>()
   const navigate = useNavigate()
 
@@ -58,15 +61,32 @@ export default function ProjectOverviewPage() {
   ]
 
   useEffect(() => {
-    if (projectId) {
-      fetchProjectAudioFiles(projectId)
-        .then((result) => {
-          if (result.ok) setAudioFiles(result.value)
-          else console.error(result.error)
-        })
-        .catch((e) => console.error(e))
-    } else {
-      console.warn('projectId is undefined')
+    let active = true
+    async function load() {
+      if (!projectId) return
+      try {
+        const result = await fetchProject(projectId)
+        if (!active) return
+        if (!result.ok) {
+          setError(result.error.detail || 'Project unavailable.')
+          return
+        }
+        const files = await fetchProjectAudioFiles(projectId)
+        if (!active) return
+        if (!files.ok) {
+          setError(files.error.detail || 'Unable to load audio.')
+          return
+        }
+        setProject(result.value)
+        setAudioFiles(files.value)
+        setError('')
+      } catch {
+        if (active) setError('Unable to load the project. Please try again.')
+      }
+    }
+    void load()
+    return () => {
+      active = false
     }
   }, [projectId])
 
@@ -100,28 +120,53 @@ export default function ProjectOverviewPage() {
     setIsOpenDelete(false)
   }
 
+  if (error) return <p role="alert">{error}</p>
+  if (!project || project.id !== projectId) return <p role="status">Loading project…</p>
+  const canWrite = project.role === 'Owner' || project.role === 'Annotator'
+
   return (
-    <div className="">
-      <h1 className="text-2xl font-bold p-4 text-center">
-        {location.state?.projectName}'s
-        <br />
-        Project Overview:
-      </h1>
-      <Grid>
-        {projectId && <AudioUploader projectId={projectId} onUploadFiles={onUploadFiles} />}
-        {audioFiles.map((audioFile, i) => (
-          <Card
-            key={i}
-            title={audioFile.fileName}
-            onClick={() => {
-              navigate(`${audioFile.id}`)
-            }}
-            actions={audioActions(audioFile)}
-          >
-            <LuAudioLines className="icon-small" />
-          </Card>
-        ))}
-      </Grid>
+    <div className="mx-auto w-full max-w-6xl px-4 pb-10 pt-8 sm:px-6">
+      <header className="flex flex-wrap items-center justify-between gap-4 border-b border-slate-200 pb-6">
+        <div className="min-w-0">
+          <p className="mb-1 text-sm font-medium text-purple-700">Project overview</p>
+          <h1 className="wrap-break-word text-2xl font-semibold tracking-tight text-slate-900 sm:text-3xl">
+            {project.name}
+          </h1>
+          {project.role === 'Viewer' && (
+            <p className="mt-2 text-sm text-slate-600">Viewer access · Read only</p>
+          )}
+        </div>
+        {project.role === 'Owner' && (
+          <AddProjectMemberForm key={project.id} projectId={project.id} />
+        )}
+      </header>
+      <section aria-labelledby="audio-files-heading" className="pt-7">
+        <div className="mb-5 flex items-baseline justify-between gap-4">
+          <h2 id="audio-files-heading" className="text-lg font-semibold text-slate-900">
+            Audio files
+          </h2>
+          <span className="text-sm text-slate-500">
+            {audioFiles.length} {audioFiles.length === 1 ? 'file' : 'files'}
+          </span>
+        </div>
+        <Grid>
+          {projectId && canWrite && (
+            <AudioUploader projectId={projectId} onUploadFiles={onUploadFiles} />
+          )}
+          {audioFiles.map((audioFile) => (
+            <Card
+              key={audioFile.id}
+              title={audioFile.fileName}
+              onClick={() => {
+                navigate(`${audioFile.id}`)
+              }}
+              actions={canWrite ? audioActions(audioFile) : []}
+            >
+              <LuAudioLines className="icon-small" />
+            </Card>
+          ))}
+        </Grid>
+      </section>
       <Modal modalHeader={''} state={isOpenRename} setState={setIsOpenRename}>
         <RenameAudioForm onSubmit={handleRename} audio={selectedAudio} />
       </Modal>

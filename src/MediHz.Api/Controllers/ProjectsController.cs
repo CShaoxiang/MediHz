@@ -15,6 +15,7 @@ public class ProjectsController(
     IGetProjectAudioFilesHandler getProjectAudioFilesHandler,
     IGetProjectSingleAudioHandler getProjectSingleAudio,
     IPatchProjectHandler projectPatchHandler,
+    IAddProjectMemberHandler addProjectMemberHandler,
     IDeleteProjectHandler projectDeleteHandler
 ) : ControllerBase
 {
@@ -86,6 +87,27 @@ public class ProjectsController(
     {
         var request = new ProjectDeleteRequest(projectId, userId);
         var response = await projectDeleteHandler.Handle(request, cancellationToken);
+        return StatusCode(response.StatusCode, response.Body);
+    }
+
+    [HttpGet("{projectId:guid}")]
+    public async Task<IActionResult> GetProject(Guid projectId, CancellationToken cancellationToken)
+    {
+        var response = await getProjectsHandler.GetByIdAsync(projectId, cancellationToken);
+        return StatusCode(response.StatusCode, response.Body);
+    }
+
+    [HttpPost("{projectId:guid}/members")]
+    [ProducesResponseType(typeof(ProjectMemberDto), StatusCodes.Status201Created)]
+    public async Task<IActionResult> AddMember(
+        Guid projectId,
+        [FromBody] AddProjectMemberRequest request,
+        CancellationToken cancellationToken
+    )
+    {
+        var command = new AddProjectMemberCommand(projectId, request.Email, request.Role);
+
+        var response = await addProjectMemberHandler.Handle(command, cancellationToken);
         return StatusCode(response.StatusCode, response.Body);
     }
 }

@@ -10,6 +10,6 @@ public class ProjectMember
     // join many to many
     public Project Project { get; set; } = null!;
     public User User { get; set; } = null!;
-    public ProjectMemberRole Role { get; set; } = ProjectMemberRole.Owner;
+    public ProjectMemberRole Role { get; set; } = ProjectMemberRole.Viewer;
     public DateTimeOffset JoinedAt { get; set; } = DateTime.UtcNow;
 }

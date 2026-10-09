@@ -13,6 +13,9 @@ public class Project(string Name, Guid ownerId) : EntityBase
     public ICollection<AudioFile> AudioFiles { get; set; } = [];
 }
 
+[System.Text.Json.Serialization.JsonConverter(
+    typeof(System.Text.Json.Serialization.JsonStringEnumConverter<ProjectMemberRole>)
+)]
 public enum ProjectMemberRole
 {
     Owner = 0,

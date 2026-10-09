@@ -5,7 +5,10 @@ using Microsoft.Extensions.Logging;
 
 namespace MediHz.Application.Handlers.Projects;
 
-public interface IGetProjectsHandler : IRequestHandler<EmptyRequest, IEnumerable<ProjectDto>>;
+public interface IGetProjectsHandler : IRequestHandler<EmptyRequest, IEnumerable<ProjectDto>>
+{
+    Task<Result<ProjectDto>> GetByIdAsync(Guid projectId, CancellationToken cancellationToken);
+}
 
 public class GetProjectsHandler(
     IProjectService projectService,
@@ -22,5 +25,20 @@ public class GetProjectsHandler(
 
         var projects = await projectService.GetForUserAsync(currentUser.UserId, cancellationToken);
         return Result<IEnumerable<ProjectDto>>.Success(projects);
+    }
+
+    public async Task<Result<ProjectDto>> GetByIdAsync(
+        Guid projectId,
+        CancellationToken cancellationToken
+    )
+    {
+        var project = await projectService.GetByIdAsync(
+            projectId,
+            currentUser.UserId,
+            cancellationToken
+        );
+        return project is null
+            ? Result<ProjectDto>.Failure("Not found", "Project not found or access denied.", 404)
+            : Result<ProjectDto>.Success(project);
     }
 }

@@ -6,12 +6,15 @@ using Microsoft.Extensions.Logging;
 
 namespace MediHz.Application.Handlers.Annotations;
 
+using MediHz.Application.Abstractions.Projects;
+
 public sealed record GetAnnotationsByFileRequest(Guid AudioFileId);
 
 public interface IGetAnnotationsByFileHandler
     : IRequestHandler<GetAnnotationsByFileRequest, IEnumerable<AnnotationDto>>;
 
 public class GetAnnotationsByFileHandler(
+    IProjectAccessService access,
     IAnnotationService annotationService,
     IProjectService projectService,
     ICurrentUser currentUser,
@@ -23,6 +26,19 @@ public class GetAnnotationsByFileHandler(
         CancellationToken cancellationToken
     )
     {
+        var denied = await access.CheckAudioAsync(
+            request.AudioFileId,
+            null,
+            ProjectPermission.Read,
+            cancellationToken
+        );
+        if (denied is not null)
+            return Result<IEnumerable<AnnotationDto>>.Failure(
+                denied.Title!,
+                denied.Detail!,
+                denied.Status!.Value
+            );
+
         logger.LogInformation("Getting  annotations for file {FileId}", request.AudioFileId);
         var canAccess = await projectService.CanAccessAudioFileAsync(
             request.AudioFileId,

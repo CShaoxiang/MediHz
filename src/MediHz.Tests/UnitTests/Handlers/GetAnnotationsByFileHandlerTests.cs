@@ -25,6 +25,7 @@ public class GetAnnotationsByFileHandlerTests : UnitTestBase
     {
         _currentUserMock.Setup(c => c.UserId).Returns(Guid.Empty);
         _handler = new(
+            Mock.Of<MediHz.Application.Abstractions.Projects.IProjectAccessService>(),
             _annotationServiceMock.Object,
             _projectServiceMock.Object,
             _currentUserMock.Object,

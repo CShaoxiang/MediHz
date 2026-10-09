@@ -14,10 +14,9 @@ public interface IAudioFileDeleteHandler
     : IRequestHandler<AudioFileDeleteRequest, AudioFileDeleteResultDto>;
 
 public class AudioFileDeleteHandler(
+    IProjectAccessService access,
     IAudioFileService audioFileService,
     IAudioFileDeleteService audioFileDeleteService,
-    IAnnotationService annotationService,
-    IDeleteAnnotationHandler annotationDeleteHandler,
     IProjectService projectService,
     ICurrentUser currentUser
 ) : IAudioFileDeleteHandler
@@ -27,6 +26,19 @@ public class AudioFileDeleteHandler(
         CancellationToken cancellationToken
     )
     {
+        var denied = await access.CheckAudioAsync(
+            request.AudioId,
+            request.ProjectId,
+            ProjectPermission.Write,
+            cancellationToken
+        );
+        if (denied is not null)
+            return Result<AudioFileDeleteResultDto>.Failure(
+                denied.Title!,
+                denied.Detail!,
+                denied.Status!.Value
+            );
+
         // Validate project
         var project = await projectService.GetByIdAsync(
             request.ProjectId,
@@ -62,27 +74,7 @@ public class AudioFileDeleteHandler(
             cancellationToken
         );
 
-        //delete all annotations for the audio file
-
-        var annotations = await annotationService.GetForAudioFileAsync(
-            request.AudioId,
-            cancellationToken
-        );
-
-        if (annotations is not null)
-        {
-            await Task.WhenAll(
-                annotations
-                    .ToList()
-                    .Select(async annotation =>
-                    {
-                        await annotationDeleteHandler.Handle(
-                            new DeleteAnnotationCommand(annotation.Id, request.AudioId),
-                            cancellationToken
-                        );
-                    })
-            );
-        }
+        // Annotation rows are deleted by the existing AudioFile foreign-key cascade.
         return Result<AudioFileDeleteResultDto>.Success(result);
     }
 }

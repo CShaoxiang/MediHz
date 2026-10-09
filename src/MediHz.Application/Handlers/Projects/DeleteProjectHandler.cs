@@ -16,6 +16,8 @@ public record ProjectDeleteRequest(Guid ProjectId, Guid UserId);
 public interface IDeleteProjectHandler : IRequestHandler<ProjectDeleteRequest, ProjectDto?>;
 
 public class DeleteProjectHandler(
+    IProjectAccessService access,
+    ICurrentUser currentUser,
     IProjectService projectService,
     IAudioFileService audioFileService,
     IAudioFileDeleteHandler audioFileDeleteHandler,
@@ -27,6 +29,14 @@ public class DeleteProjectHandler(
         CancellationToken cancellationToken
     )
     {
+        var denied = await access.CheckProjectAsync(
+            request.ProjectId,
+            ProjectPermission.Manage,
+            cancellationToken
+        );
+        if (denied is not null)
+            return Result<ProjectDto?>.Failure(denied.Title!, denied.Detail!, denied.Status!.Value);
+
         logger.LogInformation(
             "Deleting project with ID {ProjectId} for user {UserId}",
             request.ProjectId,
@@ -37,7 +47,7 @@ public class DeleteProjectHandler(
 
         var project = await projectService.GetByIdAsync(
             request.ProjectId,
-            request.UserId,
+            currentUser.UserId,
             cancellationToken
         );
         if (project == null)
@@ -61,16 +71,19 @@ public class DeleteProjectHandler(
 
         if (audioFiles is not null)
         {
-            await Task.WhenAll(
-                audioFiles
-                    .ToList()
-                    .Select(async audioFile =>
-                        await audioFileDeleteHandler.Handle(
-                            new AudioFileDeleteRequest(request.ProjectId, audioFile.Id),
-                            cancellationToken
-                        )
-                    )
-            );
+            foreach (var audioFile in audioFiles)
+            {
+                var deleted = await audioFileDeleteHandler.Handle(
+                    new AudioFileDeleteRequest(request.ProjectId, audioFile.Id),
+                    cancellationToken
+                );
+                if (deleted.Problem is not null)
+                    return Result<ProjectDto?>.Failure(
+                        deleted.Problem.Title!,
+                        deleted.Problem.Detail!,
+                        deleted.StatusCode
+                    );
+            }
         }
 
         var projectDeleted = await projectService.DeleteAsync(request.ProjectId, cancellationToken);

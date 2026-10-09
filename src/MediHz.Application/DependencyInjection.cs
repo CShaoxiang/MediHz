@@ -21,6 +21,11 @@ public static class DependencyInjection
         services.AddScoped<IAudioFileDeleteHandler, AudioFileDeleteHandler>();
 
         // Projects
+        services.AddScoped<IAddProjectMemberHandler, AddProjectMemberHandler>();
+        services.AddScoped<
+            MediHz.Application.Abstractions.Projects.IProjectAccessService,
+            MediHz.Application.Services.ProjectAccessService
+        >();
         services.AddScoped<ICreateProjectHandler, CreateProjectHandler>();
         services.AddScoped<IGetProjectsHandler, GetProjectsHandler>();
         services.AddScoped<IGetProjectAudioFilesHandler, GetProjectAudioFilesHandler>();

@@ -12,6 +12,7 @@ public interface IAudioFileUploadHandler
     : IRequestHandler<AudioFileUploadRequest, BatchAudioFileUploadResultDto>;
 
 public class AudioFileUploadHandler(
+    IProjectAccessService access,
     IProjectService projectService,
     IAudioFileUploadService audioFileUploadService,
     ICurrentUser currentUser
@@ -24,6 +25,18 @@ public class AudioFileUploadHandler(
         CancellationToken cancellationToken
     )
     {
+        var denied = await access.CheckProjectAsync(
+            request.ProjectId,
+            ProjectPermission.Write,
+            cancellationToken
+        );
+        if (denied is not null)
+            return Result<BatchAudioFileUploadResultDto>.Failure(
+                denied.Title!,
+                denied.Detail!,
+                denied.Status!.Value
+            );
+
         // Validate project
         var project = await projectService.GetByIdAsync(
             request.ProjectId,

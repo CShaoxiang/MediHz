@@ -88,4 +88,32 @@ public class GetProjectsHandlerTests : UnitTestBase
         result.StatusCode.Should().Be(StatusCodes.Status200OK);
         result.Value.Should().BeEmpty();
     }
+
+    [Fact]
+    public async Task GetByIdAsync_ReturnsVisibleProject()
+    {
+        var projectId = Guid.NewGuid();
+        var project = Fixture.Create<ProjectDto>();
+        _projectServiceMock
+            .Setup(service => service.GetByIdAsync(projectId, _userId, CancellationToken.None))
+            .ReturnsAsync(project);
+
+        var result = await _handler.GetByIdAsync(projectId, CancellationToken.None);
+
+        result.StatusCode.Should().Be(StatusCodes.Status200OK);
+        result.Value.Should().BeEquivalentTo(project);
+    }
+
+    [Fact]
+    public async Task GetByIdAsync_ReturnsNotFoundWhenProjectIsInaccessible()
+    {
+        var projectId = Guid.NewGuid();
+        _projectServiceMock
+            .Setup(service => service.GetByIdAsync(projectId, _userId, CancellationToken.None))
+            .ReturnsAsync((ProjectDto?)null);
+
+        var result = await _handler.GetByIdAsync(projectId, CancellationToken.None);
+
+        result.StatusCode.Should().Be(StatusCodes.Status404NotFound);
+    }
 }

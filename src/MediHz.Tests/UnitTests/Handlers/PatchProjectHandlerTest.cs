@@ -20,6 +20,7 @@ public class PatchProjectHandlerTests : UnitTestBase
     {
         _currentUserMock.Setup(cu => cu.UserId).Returns(_userId);
         _handler = new PatchProjectHandler(
+            Mock.Of<IProjectAccessService>(),
             _projectServiceMock.Object,
             Logger<IPatchProjectHandler>()
         );

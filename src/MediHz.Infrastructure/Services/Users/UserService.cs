@@ -64,12 +64,19 @@ public class UserService(MediHzDbContext db) : IUserService
         return ToDto(user);
     }
 
-    public Task<UserDto?> GetByEmailAsync(
+    public async Task<UserDto?> GetByEmailAsync(
         string email,
         CancellationToken cancellationToken = default
     )
     {
-        throw new NotImplementedException();
+        if (string.IsNullOrWhiteSpace(email))
+            return null;
+        var normalisedEmail = email.Trim().ToLowerInvariant();
+        var user = await db.Users.FirstOrDefaultAsync(
+            u => u.Email.ToLower() == normalisedEmail,
+            cancellationToken
+        );
+        return user is null ? null : ToDto(user);
     }
 
     public Task<UserDto?> GetByIdAsync(Guid userId, CancellationToken cancellationToken = default)

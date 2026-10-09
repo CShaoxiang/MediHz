@@ -11,6 +11,7 @@ public interface IAudioFileFetchHandler
     : IRequestHandler<AudioFileFetchRequest, AudioFileFetchResultDto>;
 
 public class AudioFileFetchHandler(
+    IProjectAccessService access,
     IAudioFileService audioFileService,
     IAudioFileFetchService audioFileFetchService,
     IProjectService projectService,
@@ -22,6 +23,19 @@ public class AudioFileFetchHandler(
         CancellationToken cancellationToken
     )
     {
+        var denied = await access.CheckAudioAsync(
+            request.AudioId,
+            request.ProjectId,
+            ProjectPermission.Read,
+            cancellationToken
+        );
+        if (denied is not null)
+            return Result<AudioFileFetchResultDto>.Failure(
+                denied.Title!,
+                denied.Detail!,
+                denied.Status!.Value
+            );
+
         // Validate project
         var project = await projectService.GetByIdAsync(
             request.ProjectId,
