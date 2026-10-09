@@ -3,7 +3,7 @@ import { Link, useMatch } from 'react-router-dom'
 import Button from './Button'
 import Dropdown from './Dropdown'
 import { useAuth } from '../../Auth/AuthContext'
-import { exportProject } from '../../Api/exports'
+import { exportProject, exportFile } from '../../Api/exports'
 import { downloadJsonFile } from '../../Utilities/download'
 
 interface NavBarProp {
@@ -13,7 +13,9 @@ interface NavBarProp {
 export default function NavBar({ children }: NavBarProp) {
   const { user, logout } = useAuth()
   const projectMatch = useMatch('/projects/:projectId')
-  const projectId = projectMatch?.params.projectId
+  const fileMatch = useMatch('/projects/:projectId/:audioId')
+  const projectId = projectMatch?.params.projectId || fileMatch?.params.projectId
+  const audioId = fileMatch?.params.audioId
 
   const handleExportProject = async () => {
     if (!projectId) {
@@ -36,9 +38,25 @@ export default function NavBar({ children }: NavBarProp) {
     }
   }
 
-  const handleExportFile = () => {
-    // TODO: Implement file export once current file context/selection is available
-    console.warn('Export file is not yet implemented')
+  const handleExportFile = async () => {
+    if (!audioId) {
+      alert('Please open a file to export it.')
+      return
+    }
+
+    try {
+      const result = await exportFile(audioId)
+      if (result.ok) {
+        const filename = `${result.value.file_name || 'file'}_export.json`
+        downloadJsonFile(result.value, filename)
+      } else {
+        console.error('Failed to export file:', result.error)
+        alert(result.error?.detail || 'Failed to export file.')
+      }
+    } catch (error) {
+      console.error('Error exporting file:', error)
+      alert('An unexpected error occurred while exporting the file.')
+    }
   }
 
   const exportButtons = [
