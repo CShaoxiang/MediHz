@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState, type ChangeEvent } from 'react'
 import WaveSurfer from 'wavesurfer.js'
-import RegionsPlugin from 'wavesurfer.js/dist/plugins/regions.js'
+import RegionsPlugin, { type Region } from 'wavesurfer.js/dist/plugins/regions.js'
+import Spectrogram from 'wavesurfer.js/dist/plugins/spectrogram.js'
 import Button from '../Common/Button'
 import { FiMusic, FiPause, FiPlay } from 'react-icons/fi'
 import Slider from '../Common/Slider'
@@ -10,6 +11,9 @@ import type { AnnotationRegion } from '../../Interfaces/AnnotationRegion'
 
 const NEUTRAL_REGION_COLOR = 'rgba(70, 115, 51, 0.2)'
 const SELECTED_REGION_COLOR = 'rgba(131, 0, 219, 0.2)'
+
+const NEUTRAL_REGION_SPECTROGRAM_COLOR = 'rgba(51, 239, 230, 0.4)'
+const SELECTED_REGION_SPECTROGRAM_COLOR = 'rgba(76, 51, 239, 0.4)'
 
 interface WaveformProp {
   audio?: string
@@ -34,10 +38,17 @@ export default function WaveformRender({
   const waveformRef = useRef<HTMLDivElement | null>(null)
   const waveSurferInstance = useRef<WaveSurfer | null>(null)
 
+  // Region Plugin Rendering
+  const regionInstance = useRef<RegionsPlugin>(null)
+  const spectrogramInstance = useRef<Spectrogram>(null)
+
+  const regionNeturalColor = useRef<string>(NEUTRAL_REGION_COLOR)
+  const regionSelectedColor = useRef<string>(SELECTED_REGION_COLOR)
   const [regions, setRegions] = useState<RegionsPlugin | null>(null)
   const syncingRegions = useRef(false)
 
   // Waveform interactions
+  const [spectro, setSpectro] = useState(false)
   const [playbar, setPlaybar] = useState(0)
   const [highlight, setHighlight] = useState(false)
   const [editing, setEditing] = useState(false)
@@ -45,7 +56,7 @@ export default function WaveformRender({
   const [volSlide, setVolSlide] = useState(false)
 
   const [audioDuration, setAudioDuration] = useState<number>(0)
-  const [zoom, setZoom] = useState(100)
+  const [zoom, setZoom] = useState(0)
 
   // Zoom Controls
   const zoomIn = () => {
@@ -55,14 +66,14 @@ export default function WaveformRender({
   }
 
   const zoomOut = () => {
-    const newZoom = Math.max(zoom - 100, 100)
+    const newZoom = Math.max(zoom - 100, 0)
     setZoom(newZoom)
     waveSurferInstance.current?.zoom(newZoom)
   }
 
   const resetZoom = () => {
-    setZoom(100)
-    waveSurferInstance.current?.zoom(100)
+    setZoom(0)
+    waveSurferInstance.current?.zoom(0)
   }
 
   //Intalises Audio Waveform configs
@@ -98,6 +109,7 @@ export default function WaveformRender({
       }
     })
     waveSurferInstance.current = wavesurfer
+    regionInstance.current = regionsPlugin
 
     return () => {
       //Memory Cleanup
@@ -107,6 +119,16 @@ export default function WaveformRender({
     }
   }, [audio])
 
+  const validateRegion = (region: Region) => {
+    if (region.end - region.start < 0.5){
+      region.setOptions({ end: region.start + 0.5 })
+    } 
+  }
+
+  const playRegion = (region: Region,e: MouseEvent) => {
+    e.stopPropagation()
+    region.play(true)
+  }
   useEffect(() => {
     if (!regions) return
 
@@ -115,16 +137,17 @@ export default function WaveformRender({
         if (syncingRegions.current) return
         // Drawn by the user: give it the ID the server will also use
         region.setOptions({ id: crypto.randomUUID() })
+        validateRegion(region)
         onDraw(region.id, region.start, region.end)
       }),
-      regions.on('region-clicked', (region) => onSelect(region.id)),
+      regions.on('region-clicked', (region,e) => {onSelect(region.id); playRegion(region,e)}),
       // Tracks drags as they happen so a sync mid-drag doesn't snap the region back
-      regions.on('region-update', (region) => onMove(region.id, region.start, region.end)),
+      regions.on('region-update', (region) => {validateRegion(region), onMove(region.id, region.start, region.end)}),
       regions.on('region-updated', (region) => onSelect(region.id)),
     ]
 
     return () => unsubscribes.forEach((unsubscribe) => unsubscribe())
-  }, [regions, onSelect, onDraw, onMove])
+  }, [regions, onSelect, onDraw, onMove, validateRegion])
 
   // Make the waveform's regions match the annotations
   useEffect(() => {
@@ -139,7 +162,7 @@ export default function WaveformRender({
       const options = {
         start: annotation.startTime,
         end: annotation.endTime,
-        color: id === selectedId ? SELECTED_REGION_COLOR : NEUTRAL_REGION_COLOR,
+        color: id === selectedId ? regionSelectedColor.current : regionNeturalColor.current,
         drag: editing,
         resize: editing,
       }
@@ -156,25 +179,63 @@ export default function WaveformRender({
     })
   }, [regions, annotations, selectedId, editing])
 
-  // React's onWheel is passive, so preventDefault only works on a listener added directly
-  useEffect(() => {
-    const container = waveformRef.current
-    if (!regions || !container) return
-
-    const handleWheel = (event: WheelEvent) => {
-      event.preventDefault()
-      const newZoom = event.deltaY < 0 ? Math.min(zoom + 25, 1000) : Math.max(zoom - 25, 100)
+  const handleWheel = (delta: number) => {
+    console.log('Wheel event detected. Delta:', delta)
+    if (delta < 0) {
+      const newZoom = Math.min(zoom + 25, 1000)
+      setZoom(newZoom)
+      waveSurferInstance.current?.zoom(newZoom)
+    } else {
+      const newZoom = Math.max(zoom - 25, 0)
       setZoom(newZoom)
       waveSurferInstance.current?.zoom(newZoom)
     }
+  }
 
-    container.addEventListener('wheel', handleWheel, { passive: false })
-    return () => container.removeEventListener('wheel', handleWheel)
-  }, [regions, zoom])
+// Toggle Spectrogram
+  useEffect(() => {
+    if (waveSurferInstance.current && regionInstance.current) {
+      if (spectro) {
+        regionNeturalColor.current = NEUTRAL_REGION_SPECTROGRAM_COLOR
+        regionSelectedColor.current = SELECTED_REGION_SPECTROGRAM_COLOR
+
+        waveSurferInstance.current.setOptions({
+          height: 0,
+        })
+        const spectrogram = waveSurferInstance.current.registerPlugin(
+          Spectrogram.create({
+            container: '#spectrogram',
+          }),
+        )
+        
+
+        spectrogramInstance.current = spectrogram
+      } else {
+        regionNeturalColor.current = NEUTRAL_REGION_COLOR
+        regionSelectedColor.current = SELECTED_REGION_COLOR
+
+        waveSurferInstance.current.setOptions({
+          height: 200,
+        })
+
+        
+        spectrogramInstance.current?.destroy()
+        spectrogramInstance.current = null
+      }
+
+      regionInstance.current?.getRegions().forEach((region) => {
+          if (region.id === selectedId) {
+            region.setOptions({ color: regionSelectedColor.current })
+          } else {
+            region.setOptions({ color: regionNeturalColor.current })
+          }
+        })
+    }
+  }, [spectro])
 
   useEffect(() => {
     if (!regions || !highlight) return
-    return regions.enableDragSelection({ color: NEUTRAL_REGION_COLOR })
+    return regions.enableDragSelection({ color: regionNeturalColor.current })
   }, [regions, highlight])
 
   const playPause = () => {
@@ -216,7 +277,7 @@ export default function WaveformRender({
   }
   return (
     <div className="space-y-4">
-      <div ref={waveformRef} className="w-full bg-violet-100 rounded-3xl shadow overflow-hidden" />
+      <div ref={waveformRef} className="w-full bg-violet-100 rounded-3xl shadow overflow-hidden" onWheel={(e) => handleWheel(e.deltaY)} />
 
       <div className="-ml-1 -mr-1 info-box-parent">
         <Playbar
@@ -258,6 +319,7 @@ export default function WaveformRender({
         <Button label="Zoom In" onClick={zoomIn} />
         <Button label="Zoom Out" onClick={zoomOut} />
         <Button label="Reset Zoom" onClick={resetZoom} />
+        <Button label="Toggle Spectrogram" onClick={() => setSpectro(!spectro)} />
       </div>
     </div>
   )

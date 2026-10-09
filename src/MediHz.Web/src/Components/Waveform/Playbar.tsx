@@ -14,6 +14,7 @@ export default function Playbar({ audioDuration, state, onChange }: PlaybarProp)
       state={state}
       onChange={onChange}
       ariaLabel="Audio playback position"
+      step = {0.001}
     />
   )
 }
