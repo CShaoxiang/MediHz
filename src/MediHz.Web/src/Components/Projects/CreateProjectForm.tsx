@@ -1,6 +1,8 @@
-import { useState } from 'react'
-import Button from '../Common/Button'
-import TextInput from '../Common/TextInput'
+import { useState, type FormEvent } from 'react'
+import { Button } from '../Shadcn/button'
+import { DialogFooter, DialogHeader, DialogTitle } from '../Shadcn/dialog'
+import { Field, FieldError, FieldLabel } from '../Shadcn/field'
+import { Input } from '../Shadcn/input'
 import type { Project } from '../../Types/projects'
 import { createProject } from '../../Api/projects'
 
@@ -9,21 +11,17 @@ interface IProps {
 }
 
 export default function CreateProjectForm({ onSubmit }: IProps) {
-  const [project, setProject] = useState<Pick<Project, 'name'>>({
-    name: '',
-  })
+  const [name, setName] = useState('')
+  const [error, setError] = useState<string | null>(null)
 
-  const validateProject = (project: Pick<Project, 'name'>): boolean => {
-    return project.name.trim() !== ''
-  }
-
-  const handleSubmit = async () => {
-    if (!validateProject(project)) {
-      alert('Invalid project details')
+  const handleSubmit = (event: FormEvent) => {
+    event.preventDefault()
+    if (name.trim() === '') {
+      setError('Project name is required')
       return
     }
 
-    createProject(project)
+    createProject({ name })
       .then((result) => {
         if (result.ok) onSubmit(result.value)
         else console.error(result.error)
@@ -32,20 +30,27 @@ export default function CreateProjectForm({ onSubmit }: IProps) {
   }
 
   return (
-    <div className="flex flex-col gap-2">
-      <h2>New Project</h2>
-      <label htmlFor="project-name" className="text-sm font-medium text-gray-700">
-        Project name
-      </label>
-
-      <TextInput
-        id="project-name"
-        type="text"
-        placeholder="Name"
-        value={project.name}
-        onChange={(e) => setProject({ ...project, name: e.target.value })}
-      />
-      <Button label="Create +" onClick={handleSubmit} />
-    </div>
+    <form onSubmit={handleSubmit} className="contents">
+      <DialogHeader>
+        <DialogTitle>New Project</DialogTitle>
+      </DialogHeader>
+      <Field data-invalid={!!error}>
+        <FieldLabel htmlFor="project-name">Project name</FieldLabel>
+        <Input
+          id="project-name"
+          placeholder="Name"
+          value={name}
+          aria-invalid={!!error}
+          onChange={(e) => {
+            setName(e.target.value)
+            setError(null)
+          }}
+        />
+        <FieldError>{error}</FieldError>
+      </Field>
+      <DialogFooter>
+        <Button type="submit">Create</Button>
+      </DialogFooter>
+    </form>
   )
 }

@@ -16,13 +16,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   async function login(idToken: string) {
     const response = await loginWithGoogle(idToken)
-    if (response.ok) {
-      const { accessToken, user } = response.value
-      saveSession(accessToken, user)
-      setUser(user)
-    } else {
-      alert(response.error.detail)
+    if (!response.ok) {
+      throw new Error(response.error.detail || response.error.title)
     }
+    const { accessToken, user } = response.value
+    saveSession(accessToken, user)
+    setUser(user)
   }
 
   function logout() {

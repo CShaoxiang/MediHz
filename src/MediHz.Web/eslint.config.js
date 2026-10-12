@@ -28,4 +28,10 @@ export default defineConfig([
       'prettier/prettier': 'error',
     },
   },
+  {
+    files: ['src/Components/Shadcn/**'],
+    rules: {
+      'react-refresh/only-export-components': 'off',
+    },
+  },
 ])

@@ -1,3 +1,4 @@
+import { toast } from 'sonner'
 import type { ApiResult, ProblemDetails } from '../Types/api'
 import { getToken } from '../Auth/tokenStorage'
 
@@ -87,7 +88,7 @@ export async function apiDelete<T = unknown>(
 
 export function showApiError(error: ProblemDetails) {
   console.error(error)
-  alert(error.detail || error.title)
+  toast.error(error.detail || error.title)
 }
 
 export async function apiGetFile(path: string): Promise<ApiResult<string>> {

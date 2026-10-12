@@ -1,5 +1,6 @@
-import Button from '../Common/Button'
-import Select from '../Common/Select'
+import { Button } from '../Shadcn/button'
+import LabelGroupSelect from './LabelGroupSelect'
+import { Card, CardContent, CardHeader, CardTitle } from '../Shadcn/card'
 import type { Label, LabelGroup } from '../../Types/labels'
 import { deleteLabel, moveLabelToGroup } from '../../Api/labels'
 import { showApiError } from '../../Api/helpers'
@@ -26,24 +27,22 @@ export default function LabelItem({ label, allGroups, onDelete, onMove }: IProps
   }
 
   return (
-    <div className="flex flex-col gap-2 rounded-lg border border-gray-200 p-3">
-      <span className="font-medium break-words">{label.name}</span>
-      <div className="flex items-center justify-between gap-2">
-        <Select
+    <Card size="sm">
+      <CardHeader>
+        <CardTitle className="break-words">{label.name}</CardTitle>
+      </CardHeader>
+      <CardContent className="flex items-center gap-2">
+        <LabelGroupSelect
           aria-label={`Move ${label.name} to label group`}
-          value={label.labelGroupId ?? ''}
-          onChange={(e) => handleMove(e.target.value || null)}
           className="min-w-0 flex-1"
-        >
-          <option value="">Unassigned</option>
-          {allGroups.map((g) => (
-            <option key={g.id} value={g.id}>
-              {g.name}
-            </option>
-          ))}
-        </Select>
-        <Button label="Delete" onClick={handleDelete} />
-      </div>
-    </div>
+          groups={allGroups}
+          value={label.labelGroupId}
+          onValueChange={handleMove}
+        />
+        <Button variant="destructive" onClick={handleDelete}>
+          Delete
+        </Button>
+      </CardContent>
+    </Card>
   )
 }

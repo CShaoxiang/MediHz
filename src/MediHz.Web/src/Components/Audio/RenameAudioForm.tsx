@@ -1,6 +1,8 @@
-import { useState } from 'react'
-import Button from '../Common/Button'
-import TextInput from '../Common/TextInput'
+import { useState, type FormEvent } from 'react'
+import { Button } from '../Shadcn/button'
+import { DialogFooter, DialogHeader, DialogTitle } from '../Shadcn/dialog'
+import { Field, FieldError, FieldLabel } from '../Shadcn/field'
+import { Input } from '../Shadcn/input'
 import type { AudioFile } from '../../Types/audio'
 
 interface IProps {
@@ -9,31 +11,40 @@ interface IProps {
 }
 
 export default function RenameAudioForm({ audio, onSubmit }: IProps) {
-  const [audioName, setAudioName] = useState('')
+  const [audioName, setAudioName] = useState(audio?.fileName ?? '')
+  const [error, setError] = useState<string | null>(null)
 
-  const handleSubmit = async () => {
-    if (audio) {
-      if (audioName?.trim() == '') {
-        alert('Invalid project details')
-        return
-      }
-
-      const renamedAudio: AudioFile = { ...audio, fileName: audioName }
-
-      onSubmit(renamedAudio)
+  const handleSubmit = (event: FormEvent) => {
+    event.preventDefault()
+    if (!audio) return
+    if (audioName.trim() === '') {
+      setError('File name is required')
+      return
     }
+    onSubmit({ ...audio, fileName: audioName })
   }
 
   return (
-    <div className="flex flex-col gap-2">
-      <h2>Rename Audio</h2>
-      <TextInput
-        type="text"
-        placeholder={audio?.fileName}
-        value={audioName}
-        onChange={(e) => setAudioName(e.target.value)}
-      />
-      <Button label="Rename" onClick={handleSubmit} />
-    </div>
+    <form onSubmit={handleSubmit} className="contents">
+      <DialogHeader>
+        <DialogTitle>Rename Audio</DialogTitle>
+      </DialogHeader>
+      <Field data-invalid={!!error}>
+        <FieldLabel htmlFor="audio-rename">File name</FieldLabel>
+        <Input
+          id="audio-rename"
+          value={audioName}
+          aria-invalid={!!error}
+          onChange={(e) => {
+            setAudioName(e.target.value)
+            setError(null)
+          }}
+        />
+        <FieldError>{error}</FieldError>
+      </Field>
+      <DialogFooter>
+        <Button type="submit">Rename</Button>
+      </DialogFooter>
+    </form>
   )
 }

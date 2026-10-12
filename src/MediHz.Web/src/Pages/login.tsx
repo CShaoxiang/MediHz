@@ -1,64 +1,70 @@
 import { GoogleLogin } from '@react-oauth/google'
 import { Navigate, useNavigate } from 'react-router-dom'
-import { useState } from 'react'
+import { toast } from 'sonner'
 import { useAuth } from '../Auth/AuthContext'
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardFooter,
+  CardHeader,
+  CardTitle,
+} from '../Components/Shadcn/card'
 
 export default function LoginPage() {
   const { user, login } = useAuth()
   const navigate = useNavigate()
-  const [error, setError] = useState<string | null>(null)
 
   if (user) {
     return <Navigate to="/projects" replace />
   }
 
   return (
-    <main className="flex min-h-screen items-center justify-center bg-purple-50 px-4">
-      <div className="w-full max-w-md rounded-2xl bg-white p-8 text-center shadow-xl">
-        <div className="mb-6">
-          <h1 className="text-4xl font-bold text-purple-700">MediHz</h1>
-          <p className="mt-2 text-gray-600">Medical Audio Annotation Platform</p>
-        </div>
+    <div className="flex h-full items-center justify-center rounded-3xl bg-accent px-4">
+      <Card className="w-full max-w-md text-center">
+        <CardHeader>
+          <CardTitle className="text-4xl font-bold text-primary">MediHz</CardTitle>
+          <CardDescription>Medical Audio Annotation Platform</CardDescription>
+        </CardHeader>
 
-        <div className="mb-6">
-          <h2 className="text-2xl font-semibold text-gray-800">Welcome</h2>
-          <p className="mt-2 text-sm text-gray-500">
-            Sign in to access your projects and continue annotating medical audio.
-          </p>
-        </div>
-
-        {error && (
-          <div role="alert" className="mb-4 rounded-lg bg-red-50 p-3 text-sm text-red-700">
-            {error}
+        <CardContent className="flex flex-col gap-4">
+          <div>
+            <h2 className="text-2xl font-semibold">Welcome</h2>
+            <p className="mt-2 text-muted-foreground">
+              Sign in to access your projects and continue annotating medical audio.
+            </p>
           </div>
-        )}
 
-        <div className="flex justify-center">
-          <GoogleLogin
-            onSuccess={async (response) => {
-              if (!response.credential) {
-                setError('Google sign-in did not return a credential')
-                return
-              }
+          <div className="flex justify-center">
+            <GoogleLogin
+              onSuccess={async (response) => {
+                if (!response.credential) {
+                  toast.error('Google sign-in did not return a credential')
+                  return
+                }
 
-              try {
-                setError(null)
-                await login(response.credential)
-                navigate('/projects', { replace: true })
-              } catch {
-                setError('Unable to login. Please try again.')
-              }
-            }}
-            onError={() => {
-              setError('Google sign-in failed. Please try again.')
-            }}
-          />
-        </div>
+                try {
+                  await login(response.credential)
+                  navigate('/projects', { replace: true })
+                } catch (error) {
+                  toast.error(
+                    error instanceof Error && error.message
+                      ? error.message
+                      : 'Unable to login. Please try again.',
+                  )
+                }
+              }}
+              onError={() => {
+                toast.error('Google sign-in failed. Please try again.')
+              }}
+            />
+          </div>
+        </CardContent>
 
-        <p className="mt-6 text-xs text-gray-400">
+        <CardFooter className="justify-center text-xs text-muted-foreground">
           Secure access to the MediHz annotation platform
-        </p>
-      </div>
-    </main>
+        </CardFooter>
+      </Card>
+    </div>
   )
 }

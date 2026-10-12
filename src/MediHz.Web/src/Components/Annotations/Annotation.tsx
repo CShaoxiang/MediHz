@@ -1,10 +1,20 @@
-import { useState } from 'react'
+import { useState, type FormEvent } from 'react'
 import { FiX } from 'react-icons/fi'
 import { showApiError } from '../../Api/helpers'
 import type { AnnotationRegion } from '../../Interfaces/AnnotationRegion'
 import type { ApiResult } from '../../Types/api'
-import Button from '../Common/Button'
-import ListGroup from '../Common/ListGroup'
+import { Button } from '../Shadcn/button'
+import { Input } from '../Shadcn/input'
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardFooter,
+  CardHeader,
+  CardTitle,
+} from '../Shadcn/card'
+import { Badge } from '../Shadcn/badge'
+import { Spinner } from '../Shadcn/spinner'
 
 interface AnnotationProp {
   annotation: AnnotationRegion
@@ -27,7 +37,8 @@ export default function Annotations({ annotation, canEdit, onSave }: AnnotationP
     setError('')
   }
 
-  const addCustomTag = () => {
+  const addCustomTag = (event: FormEvent) => {
+    event.preventDefault()
     const tag = customTag.trim()
     if (!tag) return
     editTags((next) => next.add(tag))
@@ -54,51 +65,75 @@ export default function Annotations({ annotation, canEdit, onSave }: AnnotationP
   }
 
   return (
-    <section
-      className="min-h-0 max-w-full rounded-xl bg-purple-700 p-4 font-medium text-white"
-      aria-label="Annotation details"
-    >
-      <div className="mb-4 flex items-start justify-between gap-3">
-        <div className="min-w-0">
-          <p>Start Time: {annotation.startTime.toFixed(2)}</p>
-          <p>End Time: {annotation.endTime.toFixed(2)}</p>
-          {annotation.authorDisplayName && (
-            <p className="mt-1 text-sm">Annotated by: {annotation.authorDisplayName}</p>
-          )}
-        </div>
-        {canEdit && (
-          <div className="flex shrink-0 items-center self-start">
-            <span className="mr-2">{draftTags ? 'Unsaved' : null}</span>
-            <Button label={saving ? 'SAVING...' : 'SAVE'} border={true} onClick={handleSave} />
+    <Card className="max-h-full min-h-0" aria-label="Annotation details">
+      <CardHeader>
+        <CardTitle>Annotation</CardTitle>
+        <CardDescription>
+          <p>
+            Start Time: {annotation.startTime.toFixed(2)} · End Time:{' '}
+            {annotation.endTime.toFixed(2)}
+          </p>
+          {annotation.authorDisplayName && <p>Annotated by: {annotation.authorDisplayName}</p>}
+        </CardDescription>
+      </CardHeader>
+      <CardContent className="flex min-h-0 flex-1 flex-col gap-2">
+        <h3 className="font-medium">Tags{tags.size > 0 && ` (${tags.size})`}</h3>
+        {tags.size === 0 ? (
+          <p className="text-muted-foreground">No tags yet</p>
+        ) : (
+          <div className="flex min-h-0 flex-wrap gap-1.5 overflow-y-auto">
+            {Array.from(tags).map((tag) =>
+              canEdit ? (
+                <Badge
+                  key={tag}
+                  variant="secondary"
+                  render={
+                    <button
+                      type="button"
+                      aria-label={`Remove tag ${tag}`}
+                      onClick={() => editTags((next) => next.delete(tag))}
+                    />
+                  }
+                >
+                  {tag}
+                  <FiX data-icon="inline-end" />
+                </Badge>
+              ) : (
+                <Badge key={tag} variant="secondary">
+                  {tag}
+                </Badge>
+              ),
+            )}
           </div>
         )}
-      </div>
-
-      <div className="relative m-1 flex h-max min-h-0 flex-col rounded-xl bg-white/20 p-2 font-normal">
-        <ListGroup
-          heading={'Tags' + (tags.size > 0 ? ` (${tags.size})` : '')}
-          items={Array.from(tags)}
-          onSelect={canEdit ? (item) => editTags((next) => next.delete(item)) : undefined}
-          hoverable={canEdit ? <FiX className="icon-small size-6" /> : undefined}
-        />
         {canEdit && (
-          <input
-            className="mt-2 w-full shrink-0 rounded-xl border-2 border-dotted bg-purple-700/20 p-1"
-            type="text"
-            value={customTag}
-            onChange={(event) => {
-              setCustomTag(event.target.value)
-              setError('')
-            }}
-            onKeyDown={(event) => {
-              if (event.key === 'Enter') addCustomTag()
-            }}
-            placeholder="Add custom tag"
-            aria-label="Add custom tag"
-          />
+          <form onSubmit={addCustomTag} className="shrink-0">
+            <Input
+              aria-label="Add custom tag"
+              placeholder="Add custom tag"
+              value={customTag}
+              onChange={(event) => {
+                setCustomTag(event.target.value)
+                setError('')
+              }}
+            />
+          </form>
         )}
-        {error && <p role="alert">{error}</p>}
-      </div>
-    </section>
+        {error && (
+          <p role="alert" className="text-destructive">
+            {error}
+          </p>
+        )}
+      </CardContent>
+      {canEdit && (
+        <CardFooter className="justify-end gap-4">
+          {draftTags && <span className="text-muted-foreground">Unsaved</span>}
+          <Button disabled={saving} onClick={handleSave}>
+            {saving && <Spinner data-icon="inline-start" />}
+            {saving ? 'Saving' : 'Save'}
+          </Button>
+        </CardFooter>
+      )}
+    </Card>
   )
 }

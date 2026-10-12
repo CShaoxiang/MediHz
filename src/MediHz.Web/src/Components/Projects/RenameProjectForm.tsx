@@ -1,7 +1,9 @@
-import Button from '../Common/Button'
-import TextInput from '../Common/TextInput'
+import { useState, type FormEvent } from 'react'
+import { Button } from '../Shadcn/button'
+import { DialogFooter, DialogHeader, DialogTitle } from '../Shadcn/dialog'
+import { Field, FieldError, FieldLabel } from '../Shadcn/field'
+import { Input } from '../Shadcn/input'
 import type { Project } from '../../Types/projects'
-import type { OmitId } from '../../Types/helpers'
 
 interface IProps {
   project?: Project
@@ -10,32 +12,43 @@ interface IProps {
 }
 
 export default function RenameProjectForm({ project, setProject, onSubmit }: IProps) {
+  const [error, setError] = useState<string | null>(null)
+
   if (!project || !setProject) {
     return <div>Project not found</div>
   }
 
-  const validateProject = (project: OmitId<Project>): boolean => {
-    return project.name.trim() !== ''
-  }
-
-  const handleSubmit = async () => {
-    if (!validateProject(project)) {
-      alert('Invalid project details')
+  const handleSubmit = (event: FormEvent) => {
+    event.preventDefault()
+    if (project.name.trim() === '') {
+      setError('Project name is required')
       return
     }
     onSubmit(project)
   }
 
   return (
-    <div className="flex flex-col gap-2">
-      <h2>Rename Project</h2>
-      <TextInput
-        type="text"
-        placeholder="Name"
-        value={project.name}
-        onChange={(e) => setProject({ ...project, name: e.target.value })}
-      />
-      <Button label="Rename" onClick={handleSubmit} />
-    </div>
+    <form onSubmit={handleSubmit} className="contents">
+      <DialogHeader>
+        <DialogTitle>Rename Project</DialogTitle>
+      </DialogHeader>
+      <Field data-invalid={!!error}>
+        <FieldLabel htmlFor="project-rename">Project name</FieldLabel>
+        <Input
+          id="project-rename"
+          placeholder="Name"
+          value={project.name}
+          aria-invalid={!!error}
+          onChange={(e) => {
+            setProject({ ...project, name: e.target.value })
+            setError(null)
+          }}
+        />
+        <FieldError>{error}</FieldError>
+      </Field>
+      <DialogFooter>
+        <Button type="submit">Rename</Button>
+      </DialogFooter>
+    </form>
   )
 }
