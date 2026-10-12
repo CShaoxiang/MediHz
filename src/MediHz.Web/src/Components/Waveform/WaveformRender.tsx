@@ -1,19 +1,27 @@
-import { useEffect, useRef, useState, type ChangeEvent } from 'react'
+import { useEffect, useId, useRef, useState } from 'react'
 import WaveSurfer from 'wavesurfer.js'
 import RegionsPlugin, { type Region } from 'wavesurfer.js/dist/plugins/regions.js'
 import Spectrogram from 'wavesurfer.js/dist/plugins/spectrogram.js'
-import Button from '../Common/Button'
+import { Button } from '../Shadcn/button'
 import { FiMusic, FiPause, FiPlay } from 'react-icons/fi'
-import Slider from '../Common/Slider'
-import Playbar from './Playbar'
-import HoverInfo from '../Common/HoverInfo'
+import { Slider } from '../Shadcn/slider'
+import { Toggle } from '../Shadcn/toggle'
+import { ButtonGroup } from '../Shadcn/button-group'
+import { Popover, PopoverContent, PopoverTitle, PopoverTrigger } from '../Shadcn/popover'
+import { Tooltip, TooltipContent, TooltipTrigger } from '../Shadcn/tooltip'
 import type { AnnotationRegion } from '../../Interfaces/AnnotationRegion'
 
-const NEUTRAL_REGION_COLOR = 'rgba(70, 115, 51, 0.2)'
-const SELECTED_REGION_COLOR = 'rgba(131, 0, 219, 0.2)'
+const NEUTRAL_REGION_COLOR = 'var(--region)'
+const SELECTED_REGION_COLOR = 'var(--region-selected)'
 
-const NEUTRAL_REGION_SPECTROGRAM_COLOR = 'rgba(51, 239, 230, 0.4)'
-const SELECTED_REGION_SPECTROGRAM_COLOR = 'rgba(76, 51, 239, 0.4)'
+const sliderValue = (value: number | readonly number[]) =>
+  typeof value === 'number' ? value : value[0]
+
+const themeColor = (name: string) =>
+  getComputedStyle(document.documentElement).getPropertyValue(name)
+
+const NEUTRAL_REGION_SPECTROGRAM_COLOR = 'var(--spectrogram-region)'
+const SELECTED_REGION_SPECTROGRAM_COLOR = 'var(--spectrogram-region-selected)'
 
 interface WaveformProp {
   canEdit?: boolean
@@ -38,7 +46,6 @@ export default function WaveformRender({
 }: WaveformProp) {
   // Waveform rendering
   const waveformRef = useRef<HTMLDivElement | null>(null)
-  const spectrogramContainer = useRef<HTMLDivElement | null>(null)
   const waveSurferInstance = useRef<WaveSurfer | null>(null)
 
   // Region Plugin Rendering
@@ -56,27 +63,18 @@ export default function WaveformRender({
   const [highlight, setHighlight] = useState(false)
   const [editing, setEditing] = useState(false)
   const [play, setPlay] = useState(false)
-  const [volSlide, setVolSlide] = useState(false)
   const [audioDuration, setAudioDuration] = useState<number>(0)
-  const [zoom, setZoom] = useState(0)
+  const zoom = useRef(0)
 
   // Zoom Controls
-  const zoomIn = () => {
-    const newZoom = Math.min(zoom + 100, 1000)
-    setZoom(newZoom)
-    waveSurferInstance.current?.zoom(newZoom)
+  const applyZoom = (next: number) => {
+    zoom.current = Math.min(Math.max(next, 0), 1000)
+    waveSurferInstance.current?.zoom(zoom.current)
   }
 
-  const zoomOut = () => {
-    const newZoom = Math.max(zoom - 100, 0)
-    setZoom(newZoom)
-    waveSurferInstance.current?.zoom(newZoom)
-  }
-
-  const resetZoom = () => {
-    setZoom(0)
-    waveSurferInstance.current?.zoom(0)
-  }
+  const zoomIn = () => applyZoom(zoom.current + 100)
+  const zoomOut = () => applyZoom(zoom.current - 100)
+  const resetZoom = () => applyZoom(0)
 
   //Intalises Audio Waveform configs
   useEffect(() => {
@@ -84,15 +82,25 @@ export default function WaveformRender({
 
     const wavesurfer = WaveSurfer.create({
       container: waveformRef.current,
-      waveColor: '#8300db7e',
-      progressColor: '#f5076a',
+      waveColor: themeColor('--waveform'),
+      progressColor: themeColor('--waveform-progress'),
       barWidth: 2,
       barRadius: 10,
       height: 200,
       cursorWidth: 2,
-      cursorColor: '#000000',
+      cursorColor: themeColor('--foreground'),
       normalize: true,
+      hideScrollbar: true,
+      autoScroll: false,
     })
+
+    const centerOnPlayhead = () => {
+      const duration = wavesurfer.getDuration()
+      if (!duration) return
+      const playheadX =
+        (wavesurfer.getCurrentTime() / duration) * wavesurfer.getWrapper().scrollWidth
+      wavesurfer.setScroll(playheadX - wavesurfer.getWidth() / 2)
+    }
 
     const regionsPlugin = wavesurfer.registerPlugin(RegionsPlugin.create())
 
@@ -103,7 +111,10 @@ export default function WaveformRender({
 
     wavesurfer.on('timeupdate', (time) => {
       setPlaybar(time)
+      centerOnPlayhead()
     })
+    wavesurfer.on('zoom', centerOnPlayhead)
+    wavesurfer.on('redrawcomplete', centerOnPlayhead)
 
     wavesurfer.load(audio).catch((e) => {
       if (e.name !== 'AbortError') {
@@ -192,31 +203,30 @@ export default function WaveformRender({
     })
   }, [regions, annotations, selectedId, editing, canEdit])
 
-  const handleWheel = (delta: number) => {
-    console.log('Wheel event detected. Delta:', delta)
-    if (delta < 0) {
-      const newZoom = Math.min(zoom + 25, 1000)
-      setZoom(newZoom)
-      waveSurferInstance.current?.zoom(newZoom)
-    } else {
-      const newZoom = Math.max(zoom - 25, 0)
-      setZoom(newZoom)
-      waveSurferInstance.current?.zoom(newZoom)
+  // React's onWheel is passive, so preventDefault only works on a listener added directly
+  useEffect(() => {
+    const container = waveformRef.current
+    if (!regions || !container) return
+
+    const handleWheel = (event: WheelEvent) => {
+      event.preventDefault()
+      applyZoom(zoom.current + (event.deltaY < 0 ? 25 : -25))
     }
-  }
+
+    container.addEventListener('wheel', handleWheel, { passive: false })
+    return () => container.removeEventListener('wheel', handleWheel)
+  }, [regions])
 
   // Spectrogram and waveform use the same regions plugin and selection colors.
   useEffect(() => {
     const wave = waveSurferInstance.current
     if (!wave || !regions) return
-    if (spectro && spectrogramContainer.current) {
+    if (spectro) {
       regionNeturalColor.current = NEUTRAL_REGION_SPECTROGRAM_COLOR
       regionSelectedColor.current = SELECTED_REGION_SPECTROGRAM_COLOR
       wave.setOptions({ height: 0 })
       if (!spectrogramInstance.current) {
-        spectrogramInstance.current = wave.registerPlugin(
-          Spectrogram.create({ container: spectrogramContainer.current }),
-        )
+        spectrogramInstance.current = wave.registerPlugin(Spectrogram.create())
       }
     } else {
       regionNeturalColor.current = NEUTRAL_REGION_COLOR
@@ -242,18 +252,9 @@ export default function WaveformRender({
     waveSurferInstance.current?.playPause()
   }
 
-  const changeVolume = (event: ChangeEvent<HTMLInputElement>) => {
-    const newVolume = Number(event.target.value)
+  const changeVolume = (newVolume: number) => {
     setVolume(newVolume)
     waveSurferInstance.current?.setVolume(newVolume / 100)
-  }
-
-  const handleHighlight = () => {
-    setHighlight(!highlight)
-  }
-
-  const handleEditing = () => {
-    setEditing(!editing)
   }
 
   const handleDelete = () => {
@@ -268,6 +269,8 @@ export default function WaveformRender({
   }
 
   const [volume, setVolume] = useState(100)
+  const playbarLabelId = useId()
+  const volumeLabelId = useId()
 
   const changePlaybar = (time: number) => {
     waveSurferInstance.current?.setTime(time)
@@ -275,67 +278,91 @@ export default function WaveformRender({
   }
   return (
     <div className="space-y-4">
-      <div
-        ref={waveformRef}
-        className="w-full bg-violet-100 rounded-3xl shadow overflow-hidden"
-        onWheel={(e) => {
-          e.preventDefault()
-          handleWheel(e.deltaY)
-        }}
-      />
-      <div
-        ref={spectrogramContainer}
-        className={spectro ? 'w-full overflow-hidden rounded-3xl' : 'hidden'}
-      />
+      <div ref={waveformRef} className="w-full bg-secondary rounded-3xl shadow overflow-hidden" />
 
-      <div className="-ml-1 -mr-1 info-box-parent">
-        <Playbar
-          audioDuration={audioDuration}
-          state={playbar}
-          onChange={(e) => changePlaybar(Number(e.target.value))}
+      <div className="flex items-center gap-3">
+        <span id={playbarLabelId} className="sr-only">
+          Audio playback position
+        </span>
+        <Slider
+          aria-labelledby={playbarLabelId}
+          max={audioDuration}
+          step={0.001}
+          value={[playbar]}
+          onValueChange={(value) => changePlaybar(sliderValue(value))}
         />
 
-        <HoverInfo>
-          {formatTime(playbar)} / {formatTime(audioDuration || 0)}
-        </HoverInfo>
+        <span className="shrink-0 text-sm text-muted-foreground tabular-nums">
+          {formatTime(playbar)} / {formatTime(audioDuration)}
+        </span>
       </div>
 
       <div className="flex gap-2 items-center">
-        <Button ariaLabel={play ? 'Pause audio' : 'Play audio'} onClick={playPause}>
-          {play ? (
-            <FiPause className="icon-small size-7" aria-hidden="true" />
-          ) : (
-            <FiPlay className="icon-small size-7" aria-hidden="true" />
-          )}
-        </Button>
+        <Tooltip>
+          <TooltipTrigger
+            render={
+              <Button
+                size="icon"
+                aria-label={play ? 'Pause audio' : 'Play audio'}
+                onClick={playPause}
+              />
+            }
+          >
+            {play ? <FiPause aria-hidden="true" /> : <FiPlay aria-hidden="true" />}
+          </TooltipTrigger>
+          <TooltipContent>{play ? 'Pause' : 'Play'}</TooltipContent>
+        </Tooltip>
 
-        <Button
-          ariaLabel={volSlide ? 'Hide volume control' : 'Show volume control'}
-          onClick={() => setVolSlide(!volSlide)}
-        >
-          <FiMusic className="icon-small size-7" aria-hidden="true" />
-        </Button>
-
-        {volSlide && (
-          <div className="max-w-20 mt-2">
-            <Slider min={0} max={100} state={volume} onChange={changeVolume} ariaLabel="Volume" />
-          </div>
-        )}
+        <Popover>
+          <Tooltip>
+            <TooltipTrigger
+              render={
+                <PopoverTrigger
+                  render={<Button variant="outline" size="icon" aria-label="Volume" />}
+                />
+              }
+            >
+              <FiMusic aria-hidden="true" />
+            </TooltipTrigger>
+            <TooltipContent>Volume</TooltipContent>
+          </Tooltip>
+          <PopoverContent className="w-48">
+            <PopoverTitle id={volumeLabelId}>Volume</PopoverTitle>
+            <Slider
+              aria-labelledby={volumeLabelId}
+              value={[volume]}
+              onValueChange={(value) => changeVolume(sliderValue(value))}
+            />
+          </PopoverContent>
+        </Popover>
 
         {canEdit && (
           <>
-            <Button
-              label={highlight ? 'Disable Highlight' : 'Highlight'}
-              onClick={handleHighlight}
-            />
-            <Button label={editing ? 'Disable Editing' : 'Editing'} onClick={handleEditing} />
-            <Button label="Delete" onClick={handleDelete} />
+            <Toggle variant="outline" pressed={highlight} onPressedChange={setHighlight}>
+              Highlight
+            </Toggle>
+            <Toggle variant="outline" pressed={editing} onPressedChange={setEditing}>
+              Editing
+            </Toggle>
+            <Button variant="destructive" onClick={handleDelete}>
+              Delete
+            </Button>
           </>
         )}
-        <Button label="Zoom In" onClick={zoomIn} />
-        <Button label="Zoom Out" onClick={zoomOut} />
-        <Button label="Reset Zoom" onClick={resetZoom} />
-        <Button label="Toggle Spectrogram" onClick={() => setSpectro(!spectro)} />
+        <ButtonGroup aria-label="Zoom">
+          <Button variant="outline" onClick={zoomOut}>
+            Zoom Out
+          </Button>
+          <Button variant="outline" onClick={resetZoom}>
+            Reset
+          </Button>
+          <Button variant="outline" onClick={zoomIn}>
+            Zoom In
+          </Button>
+        </ButtonGroup>
+        <Toggle variant="outline" pressed={spectro} onPressedChange={setSpectro}>
+          Spectrogram
+        </Toggle>
       </div>
     </div>
   )

@@ -1,19 +1,24 @@
-import Card from '../Components/Common/Card'
+import { toast } from 'sonner'
+import ItemCard from '../Components/Common/ItemCard'
 import AudioUploader from '../Components/AudioUploader'
 import type { AudioFile } from '../Types/audio'
+import type { MenuAction } from '../Types/actions'
 import { useEffect, useState } from 'react'
 import { fetchProject, fetchProjectAudioFiles } from '../Api/projects'
 import { useNavigate, useParams } from 'react-router-dom'
 import type { Project } from '../Types/projects'
 import AddProjectMemberForm from '../Components/Projects/AddProjectMemberForm'
+import PageHeader from '../Components/Common/PageHeader'
+import EmptyState from '../Components/Common/EmptyState'
+import { Badge } from '../Components/Shadcn/badge'
 import Grid from '../Components/Common/Grid'
-import { LuAudioLines } from 'react-icons/lu'
-import Modal from '../Components/Common/Modal'
+import { LuAudioLines, LuCircleAlert } from 'react-icons/lu'
+import { Dialog, DialogContent } from '../Components/Shadcn/dialog'
 import RenameAudioForm from '../Components/Audio/RenameAudioForm'
 import { deleteAudioFile, renameAudioFile } from '../Api/audio'
-import DeleteAudioForm from '../Components/Audio/DeleteAudioForm'
 import { exportFile } from '../Api/exports'
 import { downloadJsonFile } from '../Utilities/download'
+import ConfirmDeleteDialog from '../Components/Common/ConfirmDeleteDialog'
 
 type PageParams = {
   projectId: string
@@ -29,7 +34,7 @@ export default function ProjectOverviewPage() {
   const { projectId } = useParams<PageParams>()
   const navigate = useNavigate()
 
-  const audioActions = (audio: AudioFile) => [
+  const audioActions = (audio: AudioFile): MenuAction[] => [
     {
       label: 'Rename',
       onClick: () => {
@@ -45,7 +50,7 @@ export default function ProjectOverviewPage() {
             downloadJsonFile(res.value, `${audio.fileName || 'file'}_export.json`)
           } else {
             console.error(res.error)
-            alert(res.error?.detail || 'Failed to export file.')
+            toast.error(res.error?.detail || 'Failed to export file.')
           }
         })
       },
@@ -56,7 +61,7 @@ export default function ProjectOverviewPage() {
         setIsOpenDelete(true)
         setSelectedAudio(audio)
       },
-      classname: 'text-red font-bold',
+      variant: 'destructive',
     },
   ]
 
@@ -120,59 +125,69 @@ export default function ProjectOverviewPage() {
     setIsOpenDelete(false)
   }
 
-  if (error) return <p role="alert">{error}</p>
-  if (!project || project.id !== projectId) return <p role="status">Loading project…</p>
+  if (error) {
+    return <EmptyState icon={<LuCircleAlert />} title="Project unavailable" description={error} />
+  }
+  if (!project || project.id !== projectId) {
+    return (
+      <p role="status" className="text-muted-foreground">
+        Loading project…
+      </p>
+    )
+  }
   const canWrite = project.role === 'Owner' || project.role === 'Annotator'
 
   return (
-    <div className="mx-auto w-full max-w-6xl px-4 pb-10 pt-8 sm:px-6">
-      <header className="flex flex-wrap items-center justify-between gap-4 border-b border-slate-200 pb-6">
-        <div className="min-w-0">
-          <p className="mb-1 text-sm font-medium text-purple-700">Project overview</p>
-          <h1 className="wrap-break-word text-2xl font-semibold tracking-tight text-slate-900 sm:text-3xl">
-            {project.name}
-          </h1>
-          {project.role === 'Viewer' && (
-            <p className="mt-2 text-sm text-slate-600">Viewer access · Read only</p>
-          )}
-        </div>
-        {project.role === 'Owner' && (
-          <AddProjectMemberForm key={project.id} projectId={project.id} />
-        )}
-      </header>
-      <section aria-labelledby="audio-files-heading" className="pt-7">
-        <div className="mb-5 flex items-baseline justify-between gap-4">
-          <h2 id="audio-files-heading" className="text-lg font-semibold text-slate-900">
-            Audio files
-          </h2>
-          <span className="text-sm text-slate-500">
-            {audioFiles.length} {audioFiles.length === 1 ? 'file' : 'files'}
-          </span>
-        </div>
+    <div className="flex flex-col gap-6">
+      <PageHeader
+        breadcrumbs={[{ label: 'Projects', to: '/projects' }]}
+        title={project.name}
+        actions={
+          project.role === 'Owner' ? (
+            <AddProjectMemberForm key={project.id} projectId={project.id} />
+          ) : (
+            !canWrite && <Badge variant="secondary">Read only</Badge>
+          )
+        }
+      />
+      {canWrite && <AudioUploader projectId={project.id} onUploadFiles={onUploadFiles} />}
+      {audioFiles.length === 0 ? (
+        <EmptyState
+          icon={<LuAudioLines />}
+          title="No audio files yet"
+          description={
+            canWrite
+              ? 'Drop MP3 or WAV files above to add them to this project.'
+              : 'Audio uploaded to this project will appear here.'
+          }
+        />
+      ) : (
         <Grid>
-          {projectId && canWrite && (
-            <AudioUploader projectId={projectId} onUploadFiles={onUploadFiles} />
-          )}
           {audioFiles.map((audioFile) => (
-            <Card
+            <ItemCard
               key={audioFile.id}
               title={audioFile.fileName}
               onClick={() => {
                 navigate(`${audioFile.id}`)
               }}
               actions={canWrite ? audioActions(audioFile) : []}
-            >
-              <LuAudioLines className="icon-small" />
-            </Card>
+              icon={<LuAudioLines />}
+            />
           ))}
         </Grid>
-      </section>
-      <Modal modalHeader={''} state={isOpenRename} setState={setIsOpenRename}>
-        <RenameAudioForm onSubmit={handleRename} audio={selectedAudio} />
-      </Modal>
-      <Modal modalHeader={''} state={isOpenDelete} setState={setIsOpenDelete}>
-        <DeleteAudioForm onSubmit={handleDelete} audio={selectedAudio} />
-      </Modal>
+      )}
+      <Dialog open={isOpenRename} onOpenChange={setIsOpenRename}>
+        <DialogContent>
+          <RenameAudioForm onSubmit={handleRename} audio={selectedAudio} />
+        </DialogContent>
+      </Dialog>
+      <ConfirmDeleteDialog
+        open={isOpenDelete}
+        onOpenChange={setIsOpenDelete}
+        title="Delete Audio"
+        description={`Do you want to delete ${selectedAudio?.fileName}?`}
+        onConfirm={() => selectedAudio && handleDelete(selectedAudio)}
+      />
     </div>
   )
 }

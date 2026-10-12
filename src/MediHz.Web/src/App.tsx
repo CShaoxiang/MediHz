@@ -1,7 +1,8 @@
-import { Navigate, Route, Routes, useLocation, useNavigate } from 'react-router-dom'
+import { Link, Navigate, Route, Routes, useLocation } from 'react-router-dom'
 import ProtectedRoute from './Auth/ProtectedRoute'
-import Button from './Components/Common/Button'
+import { Button } from './Components/Shadcn/button'
 import NavBar from './Components/Common/NavBar'
+import { Toaster } from './Components/Shadcn/sonner'
 import LoginPage from './Pages/login'
 import ProjectOverviewPage from './Pages/ProjectOverview'
 import Projects from './Pages/ProjectsListing'
@@ -9,59 +10,64 @@ import LabelsPage from './Pages/LabelsPage'
 import AnnotationPage from './Pages/annotationPage'
 
 function App() {
-  const navigate = useNavigate()
-
   const location = useLocation()
   const isLoginPage = location.pathname === '/login'
 
   return (
-    <main className="App p-3 h-screen">
+    <div className="flex h-screen flex-col gap-3 p-3">
       {!isLoginPage && (
-        <header className="pb-3">
+        <header>
           <NavBar>
-            <Button label="Projects" onClick={() => navigate('/projects')} />
-            <Button label="Labels" onClick={() => navigate('/labels')} />
+            <Button variant="secondary" nativeButton={false} render={<Link to="/projects" />}>
+              Projects
+            </Button>
+            <Button variant="secondary" nativeButton={false} render={<Link to="/labels" />}>
+              Labels
+            </Button>
           </NavBar>
         </header>
       )}
 
-      <Routes>
-        <Route path="/" element={<Navigate to="/projects" replace />} />
-        <Route path="/login" element={<LoginPage />} />
-        <Route
-          path="/projects"
-          element={
-            <ProtectedRoute>
-              <Projects />
-            </ProtectedRoute>
-          }
-        />
-        <Route
-          path="/projects/:projectId"
-          element={
-            <ProtectedRoute>
-              <ProjectOverviewPage />
-            </ProtectedRoute>
-          }
-        />
-        <Route
-          path="/projects/:projectId/:audioId"
-          element={
-            <ProtectedRoute>
-              <AnnotationPage />
-            </ProtectedRoute>
-          }
-        />
-        <Route
-          path="/labels"
-          element={
-            <ProtectedRoute>
-              <LabelsPage />
-            </ProtectedRoute>
-          }
-        />
-      </Routes>
-    </main>
+      <main className="min-h-0 flex-1 overflow-y-auto p-2">
+        <Routes>
+          <Route path="/" element={<Navigate to="/projects" replace />} />
+          <Route path="/login" element={<LoginPage />} />
+          <Route
+            path="/projects"
+            element={
+              <ProtectedRoute>
+                <Projects />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/projects/:projectId"
+            element={
+              <ProtectedRoute>
+                <ProjectOverviewPage />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/projects/:projectId/:audioId"
+            element={
+              <ProtectedRoute>
+                <AnnotationPage />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/labels"
+            element={
+              <ProtectedRoute>
+                <LabelsPage />
+              </ProtectedRoute>
+            }
+          />
+        </Routes>
+      </main>
+      <Toaster />
+    </div>
   )
 }
 
