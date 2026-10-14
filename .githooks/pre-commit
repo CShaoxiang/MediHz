@@ -12,7 +12,10 @@ FRONTEND_DIR="src/MediHz.Web"
 FE=$(printf '%s\n' "$STAGED" | grep -E "^${FRONTEND_DIR}/.*\.(ts|tsx|js|jsx|json|css|md)$" || true)
 if [ -n "$FE" ]; then
   REL=$(printf '%s\n' "$FE" | sed "s#^${FRONTEND_DIR}/##")
-  ( cd "$FRONTEND_DIR" && printf '%s\n' "$REL" | xargs npx eslint --fix )
+  LINTABLE=$(printf '%s\n' "$REL" | grep -E "\.(ts|tsx|js|jsx)$" || true)
+  if [ -n "$LINTABLE" ]; then
+    ( cd "$FRONTEND_DIR" && printf '%s\n' "$LINTABLE" | xargs npx eslint --fix )
+  fi
   ( cd "$FRONTEND_DIR" && printf '%s\n' "$REL" | xargs npx prettier --write )
   printf '%s\n' "$FE" | xargs git add
 fi
