@@ -16,10 +16,6 @@ body {
 @theme inline {
   --color-waveform: var(--waveform);
   --color-waveform-progress: var(--waveform-progress);
-  --color-region: var(--region);
-  --color-region-selected: var(--region-selected);
-  --color-spectrogram-region: var(--spectrogram-region);
-  --color-spectrogram-region-selected: var(--spectrogram-region-selected);
   --font-heading: var(--font-sans);
   --font-sans: 'Geist Variable', sans-serif;
   --color-sidebar-ring: var(--sidebar-ring);
@@ -97,10 +93,9 @@ body {
   --sidebar-ring: oklch(0.684 0.107 311.296);
   --waveform: oklch(0.496 0.265 301.924 / 50%);
   --waveform-progress: oklch(0.623 0.247 8.055);
-  --region: oklch(0.507 0.106 137.26 / 20%);
-  --region-selected: oklch(0.496 0.265 301.924 / 20%);
-  --spectrogram-region: oklch(0.863 0.141 189.793 / 40%);
-  --spectrogram-region-selected: oklch(0.494 0.26 277.098 / 40%);
+  --region-highlighting: oklch(0.556 0 0);
+  --region-unsaved: oklch(0.769 0.188 70.08);
+  --region-own: oklch(0.627 0.265 303.9);
 }
 /*---break---*/
 .dark {
@@ -137,10 +132,9 @@ body {
   --sidebar-ring: oklch(0.684 0.107 311.296);
   --waveform: oklch(0.714 0.203 305.504 / 50%);
   --waveform-progress: oklch(0.623 0.247 8.055);
-  --region: oklch(0.507 0.106 137.26 / 30%);
-  --region-selected: oklch(0.714 0.203 305.504 / 30%);
-  --spectrogram-region: oklch(0.863 0.141 189.793 / 40%);
-  --spectrogram-region-selected: oklch(0.494 0.26 277.098 / 40%);
+  --region-highlighting: oklch(0.708 0 0);
+  --region-unsaved: oklch(0.828 0.189 84.429);
+  --region-own: oklch(0.714 0.203 305.504);
 }
 /*---break---*/
 @layer base {

@@ -10,9 +10,7 @@ import { ButtonGroup } from '../Shadcn/button-group'
 import { Popover, PopoverContent, PopoverTitle, PopoverTrigger } from '../Shadcn/popover'
 import { Tooltip, TooltipContent, TooltipTrigger } from '../Shadcn/tooltip'
 import type { AnnotationRegion } from '../../Interfaces/AnnotationRegion'
-
-const NEUTRAL_REGION_COLOR = 'var(--region)'
-const SELECTED_REGION_COLOR = 'var(--region-selected)'
+import { highlightColour } from './highlightColour'
 
 const sliderValue = (value: number | readonly number[]) =>
   typeof value === 'number' ? value : value[0]
@@ -20,13 +18,11 @@ const sliderValue = (value: number | readonly number[]) =>
 const themeColor = (name: string) =>
   getComputedStyle(document.documentElement).getPropertyValue(name)
 
-const NEUTRAL_REGION_SPECTROGRAM_COLOR = 'var(--spectrogram-region)'
-const SELECTED_REGION_SPECTROGRAM_COLOR = 'var(--spectrogram-region-selected)'
-
 interface WaveformProp {
   canEdit?: boolean
   audio?: string
   annotations: Map<string, AnnotationRegion>
+  currentUserId?: string
   selectedId: string | null
   onSelect: (id: string) => void
   onDraw: (id: string, startTime: number, endTime: number) => void
@@ -38,6 +34,7 @@ export default function WaveformRender({
   canEdit = false,
   audio,
   annotations,
+  currentUserId,
   selectedId,
   onSelect,
   onDraw,
@@ -52,8 +49,6 @@ export default function WaveformRender({
   const regionInstance = useRef<RegionsPlugin>(null)
   const spectrogramInstance = useRef<Spectrogram>(null)
 
-  const regionNeturalColor = useRef<string>(NEUTRAL_REGION_COLOR)
-  const regionSelectedColor = useRef<string>(SELECTED_REGION_COLOR)
   const [regions, setRegions] = useState<RegionsPlugin | null>(null)
   const syncingRegions = useRef(false)
 
@@ -186,22 +181,26 @@ export default function WaveformRender({
       const options = {
         start: annotation.startTime,
         end: annotation.endTime,
-        color: id === selectedId ? regionSelectedColor.current : regionNeturalColor.current,
+        color: highlightColour(annotation, currentUserId, spectro),
         drag: canEdit && editing,
         resize: canEdit && editing,
       }
 
-      const region = existing.get(id)
+      let region = existing.get(id)
       if (region) {
         region.setOptions(options)
-        return
+      } else {
+        syncingRegions.current = true
+        region = regions.addRegion({ id, ...options })
+        syncingRegions.current = false
       }
 
-      syncingRegions.current = true
-      regions.addRegion({ id, ...options })
-      syncingRegions.current = false
+      if (region.element) {
+        region.element.style.outline = id === selectedId ? '2px solid var(--foreground)' : ''
+        region.element.style.outlineOffset = '-2px'
+      }
     })
-  }, [regions, annotations, selectedId, editing, canEdit])
+  }, [regions, annotations, currentUserId, selectedId, editing, canEdit, spectro])
 
   // React's onWheel is passive, so preventDefault only works on a listener added directly
   useEffect(() => {
@@ -217,35 +216,25 @@ export default function WaveformRender({
     return () => container.removeEventListener('wheel', handleWheel)
   }, [regions])
 
-  // Spectrogram and waveform use the same regions plugin and selection colors.
   useEffect(() => {
     const wave = waveSurferInstance.current
     if (!wave || !regions) return
     if (spectro) {
-      regionNeturalColor.current = NEUTRAL_REGION_SPECTROGRAM_COLOR
-      regionSelectedColor.current = SELECTED_REGION_SPECTROGRAM_COLOR
       wave.setOptions({ height: 0 })
       if (!spectrogramInstance.current) {
         spectrogramInstance.current = wave.registerPlugin(Spectrogram.create())
       }
     } else {
-      regionNeturalColor.current = NEUTRAL_REGION_COLOR
-      regionSelectedColor.current = SELECTED_REGION_COLOR
       wave.setOptions({ height: 200 })
       spectrogramInstance.current?.destroy()
       spectrogramInstance.current = null
     }
-    regions.getRegions().forEach((region) => {
-      region.setOptions({
-        color: region.id === selectedId ? regionSelectedColor.current : regionNeturalColor.current,
-      })
-    })
-  }, [spectro, regions, selectedId])
+  }, [spectro, regions])
 
   useEffect(() => {
     if (!regions || !canEdit || !highlight) return
-    return regions.enableDragSelection({ color: regionNeturalColor.current })
-  }, [regions, canEdit, highlight])
+    return regions.enableDragSelection({ color: highlightColour(null, currentUserId, spectro) })
+  }, [regions, canEdit, highlight, currentUserId, spectro])
 
   const playPause = () => {
     setPlay(!play)

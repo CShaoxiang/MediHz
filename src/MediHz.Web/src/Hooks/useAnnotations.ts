@@ -32,6 +32,7 @@ function fromDto(dto: AnnotationDto): AnnotationRegion {
     startTime: dto.startTimeSeconds,
     endTime: dto.endTimeSeconds,
     tags: new Set(dto.labelNames),
+    authorId: dto.authorId,
     authorDisplayName: dto.authorDisplayName,
   }
 }

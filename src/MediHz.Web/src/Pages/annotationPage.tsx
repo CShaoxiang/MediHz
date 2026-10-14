@@ -7,6 +7,7 @@ import Annotations from '../Components/Annotations/Annotation'
 import AnnotationList from '../Components/Annotations/AnnotationList'
 import WaveformRender from '../Components/Waveform/WaveformRender'
 import { useAnnotations } from '../Hooks/useAnnotations'
+import { useAuth } from '../Auth/AuthContext'
 import PageHeader from '../Components/Common/PageHeader'
 import EmptyState from '../Components/Common/EmptyState'
 import { Badge } from '../Components/Shadcn/badge'
@@ -33,6 +34,7 @@ export default function AnnotationPage() {
 function AnnotationWorkspace({ projectId, audioId }: PageParams) {
   const { annotations, addAnnotation, moveAnnotation, saveTags, removeAnnotation } =
     useAnnotations(audioId)
+  const { user } = useAuth()
   const [selectedId, setSelectedId] = useState<string | null>(null)
   const [loaded, setLoaded] = useState<{
     url: string
@@ -117,6 +119,7 @@ function AnnotationWorkspace({ projectId, audioId }: PageParams) {
       <WaveformRender
         audio={loaded.url}
         annotations={annotations}
+        currentUserId={user?.userId}
         selectedId={selectedId}
         canEdit={loaded.canEdit}
         onSelect={setSelectedId}
