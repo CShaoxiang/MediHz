@@ -29,6 +29,7 @@ function fromDto(dto: AnnotationDto): AnnotationRegion {
   return {
     id: dto.id,
     saved: true,
+    changed: false,
     startTime: dto.startTimeSeconds,
     endTime: dto.endTimeSeconds,
     tags: new Set(dto.labelNames),
@@ -99,6 +100,7 @@ export function useAnnotations(audioId: string) {
       withAnnotation(current, {
         id,
         saved: false,
+        changed: false,
         startTime: roundTime(startTime),
         endTime: roundTime(endTime),
         tags: new Set(),
@@ -114,6 +116,20 @@ export function useAnnotations(audioId: string) {
         ...annotation,
         startTime: roundTime(startTime),
         endTime: roundTime(endTime),
+        changed: true,
+      })
+    })
+  }, [])
+
+  const restoreAnnotationTime = useCallback((id: string, startTime: number, endTime: number) => {
+    setAnnotations((current) => {
+      const annotation = current.get(id)
+      if (!annotation) return current
+      return withAnnotation(current, {
+        ...annotation,
+        startTime,
+        endTime,
+        changed: false,
       })
     })
   }, [])
@@ -123,7 +139,7 @@ export function useAnnotations(audioId: string) {
     if (!annotation) return { ok: false, error: ANNOTATION_DELETED }
     if (!connection) return { ok: false, error: HUB_UNAVAILABLE }
 
-    const next = { ...annotation, tags, saved: true }
+    const next = { ...annotation, tags, saved: true , changed: false}
     setAnnotations((current) => withAnnotation(current, next))
 
     const result = annotation.saved
@@ -157,5 +173,12 @@ export function useAnnotations(audioId: string) {
     return result
   }
 
-  return { annotations, addAnnotation, moveAnnotation, saveTags, removeAnnotation }
+  return {
+    annotations,
+    addAnnotation,
+    moveAnnotation,
+    restoreAnnotationTime,
+    saveTags,
+    removeAnnotation,
+  }
 }

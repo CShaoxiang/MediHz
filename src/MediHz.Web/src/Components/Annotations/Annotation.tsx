@@ -18,16 +18,21 @@ import { Spinner } from '../Shadcn/spinner'
 
 interface AnnotationProp {
   annotation: AnnotationRegion
+  selectedTimestamp: { start: number; end: number } | null
+  
   canEdit: boolean
+  onChange: (startTime: number, endTime: number) => void
   onSave: (tags: Set<string>) => Promise<ApiResult<null>>
 }
 
-export default function Annotations({ annotation, canEdit, onSave }: AnnotationProp) {
+export default function Annotations({ annotation,selectedTimestamp, canEdit, onChange, onSave }: AnnotationProp) {
   const [customTag, setCustomTag] = useState('')
   const [draftTags, setDraftTags] = useState<Set<string> | null>(null)
   const [saving, setSaving] = useState(false)
   const [error, setError] = useState('')
   const tags = draftTags ?? annotation.tags
+
+  const [timestamp, setTimestamp] = useState<{start: number, end: number}>({start: annotation.startTime, end: annotation.endTime})
 
   const editTags = (edit: (tags: Set<string>) => void) => {
     if (!canEdit) return
@@ -36,6 +41,8 @@ export default function Annotations({ annotation, canEdit, onSave }: AnnotationP
     setDraftTags(nextTags)
     setError('')
   }
+
+  const changeinTimestamp = !(selectedTimestamp?.start == annotation.startTime && selectedTimestamp.end == annotation.endTime)
 
   const addCustomTag = (event: FormEvent) => {
     event.preventDefault()
@@ -58,6 +65,7 @@ export default function Annotations({ annotation, canEdit, onSave }: AnnotationP
     setSaving(true)
     const result = await onSave(nextTags)
     setSaving(false)
+    onChange(annotation.startTime, annotation.endTime)
     if (result.ok) {
       setCustomTag('')
       setDraftTags(null)
@@ -127,7 +135,7 @@ export default function Annotations({ annotation, canEdit, onSave }: AnnotationP
       </CardContent>
       {canEdit && (
         <CardFooter className="justify-end gap-4">
-          {draftTags && <span className="text-muted-foreground">Unsaved</span>}
+          {(!annotation.saved||changeinTimestamp || draftTags) && <span className="text-muted-foreground">Unsaved</span>}
           <Button disabled={saving} onClick={handleSave}>
             {saving && <Spinner data-icon="inline-start" />}
             {saving ? 'Saving' : 'Save'}
@@ -135,5 +143,5 @@ export default function Annotations({ annotation, canEdit, onSave }: AnnotationP
         </CardFooter>
       )}
     </Card>
-  )
+    )
 }

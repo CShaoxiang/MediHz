@@ -10,6 +10,8 @@ export function highlightColour(
     colour = 'var(--region-highlighting)'
   } else if (!annotation.saved) {
     colour = 'var(--region-unsaved)'
+  } else if (annotation.changed){
+    colour = 'var(--region-changed)'
   } else if (!annotation.authorId || annotation.authorId === currentUserId) {
     colour = 'var(--region-own)'
   } else {

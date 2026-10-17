@@ -61,6 +61,7 @@ body {
 :root {
   --background: oklch(1 0 0);
   --foreground: oklch(0.145 0 0);
+  --foreground-white: oklch(100% 0.00011 271.152);
   --card: oklch(1 0 0);
   --card-foreground: oklch(0.145 0 0);
   --popover: oklch(1 0 0);
@@ -95,12 +96,14 @@ body {
   --waveform-progress: oklch(0.623 0.247 8.055);
   --region-highlighting: oklch(0.556 0 0);
   --region-unsaved: oklch(0.769 0.188 70.08);
+  --region-changed: oklch(76.123% 0.24191 144.593);
   --region-own: oklch(0.627 0.265 303.9);
 }
 /*---break---*/
 .dark {
   --background: oklch(0.145 0 0);
   --foreground: oklch(0.985 0 0);
+  --foreground-white: oklch(0% 0 0);
   --card: oklch(0.205 0 0);
   --card-foreground: oklch(0.985 0 0);
   --popover: oklch(0.205 0 0);
@@ -134,6 +137,7 @@ body {
   --waveform-progress: oklch(0.623 0.247 8.055);
   --region-highlighting: oklch(0.708 0 0);
   --region-unsaved: oklch(0.828 0.189 84.429);
+  --region-changed: oklch(76.123% 0.24191 144.593);
   --region-own: oklch(0.714 0.203 305.504);
 }
 /*---break---*/
@@ -147,4 +151,8 @@ body {
   html {
     @apply font-sans;
   }
+}
+
+.waveform-render ::part(cursor) {
+  z-index: 6;
 }
