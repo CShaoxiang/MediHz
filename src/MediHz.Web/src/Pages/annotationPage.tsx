@@ -36,6 +36,7 @@ function AnnotationWorkspace({ projectId, audioId }: PageParams) {
     useAnnotations(audioId)
   const { user } = useAuth()
   const [selectedId, setSelectedId] = useState<string | null>(null)
+  const [selectedTimestamp, setSelectedTimestamp] = useState<{start: number, end: number}|null>(null)
   const [loaded, setLoaded] = useState<{
     url: string
     name: string
@@ -82,13 +83,19 @@ function AnnotationWorkspace({ projectId, audioId }: PageParams) {
       if (!loaded?.canEdit) return
       addAnnotation(id, startTime, endTime)
       setSelectedId(id)
+      setSelectedTimestamp({start: startTime, end: endTime})
     },
     [addAnnotation, loaded?.canEdit],
   )
 
+  const handleSwitch = (startTime: number, endTime: number) =>{
+    setSelectedTimestamp({start: startTime, end: endTime})
+  }
+
   const handleDelete = async (id: string) => {
     if (!loaded?.canEdit) return
     setSelectedId(null)
+    setSelectedTimestamp(null)
     const result = await removeAnnotation(id)
     if (!result.ok) showApiError(result.error)
   }
@@ -121,8 +128,10 @@ function AnnotationWorkspace({ projectId, audioId }: PageParams) {
         annotations={annotations}
         currentUserId={user?.userId}
         selectedId={selectedId}
+        selectedTimestamp={selectedTimestamp}
         canEdit={loaded.canEdit}
         onSelect={setSelectedId}
+        onChange={handleSwitch}
         onDraw={handleDraw}
         onMove={moveAnnotation}
         onDelete={handleDelete}
@@ -132,7 +141,9 @@ function AnnotationWorkspace({ projectId, audioId }: PageParams) {
           <Annotations
             key={selected.id}
             annotation={selected}
+            selectedTimestamp={selectedTimestamp}
             canEdit={loaded.canEdit}
+            onChange={handleSwitch}
             onSave={(tags) => saveTags(selected.id, tags)}
           />
         ) : (

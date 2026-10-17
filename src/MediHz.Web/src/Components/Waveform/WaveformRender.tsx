@@ -24,7 +24,9 @@ interface WaveformProp {
   annotations: Map<string, AnnotationRegion>
   currentUserId?: string
   selectedId: string | null
+  selectedTimestamp: { start: number; end: number } | null
   onSelect: (id: string) => void
+  onChange: (startTime: number, endTime: number) => void
   onDraw: (id: string, startTime: number, endTime: number) => void
   onMove: (id: string, startTime: number, endTime: number) => void
   onDelete: (id: string) => void
@@ -36,7 +38,9 @@ export default function WaveformRender({
   annotations,
   currentUserId,
   selectedId,
+  selectedTimestamp,
   onSelect,
+  onChange,
   onDraw,
   onMove,
   onDelete,
@@ -50,6 +54,7 @@ export default function WaveformRender({
   const spectrogramInstance = useRef<Spectrogram>(null)
 
   const [regions, setRegions] = useState<RegionsPlugin | null>(null)
+  const [selectedRegion, setRegion] = useState<Region | null>(null)
   const syncingRegions = useRef(false)
 
   // Waveform interactions
@@ -57,7 +62,7 @@ export default function WaveformRender({
   const [playbar, setPlaybar] = useState(0)
   const [highlight, setHighlight] = useState(false)
   const [editing, setEditing] = useState(false)
-  const [play, setPlay] = useState(false)
+  const [play, setPlay] = useState(true)
   const [audioDuration, setAudioDuration] = useState<number>(0)
   const zoom = useRef(0)
 
@@ -127,6 +132,30 @@ export default function WaveformRender({
     }
   }, [audio])
 
+  const setRegionContent = (region: Region) => {
+    region.setContent(`${region.start.toFixed(2)} - ${region.end.toFixed(2)}`)
+  }
+
+  const handleSwitchRegion = (region: Region) => {
+    if (selectedTimestamp && selectedRegion && selectedRegion != region) {
+      const annotation = annotations.get(selectedRegion.id)
+      if (annotation?.saved && annotation.changed) {
+        regions
+          ?.getRegions()
+          .forEach((region) =>
+            region.id == selectedId
+              ? region.setOptions({ start: selectedTimestamp?.start, end: selectedTimestamp?.end })
+              : null,
+          )
+
+        annotation.startTime = selectedTimestamp?.start
+        annotation.endTime = selectedTimestamp?.end
+        annotation.changed = false
+      }
+    }
+    setRegion(region)
+  }
+
   const validateRegion = (region: Region) => {
     if (region.end - region.start < 0.5) {
       region.setOptions({ end: region.start + 0.5 })
@@ -136,6 +165,7 @@ export default function WaveformRender({
   const playRegion = (region: Region, e: MouseEvent) => {
     e.stopPropagation()
     region.play(true)
+    setPlay(false)
   }
   useEffect(() => {
     if (!regions) return
@@ -150,23 +180,38 @@ export default function WaveformRender({
         // Drawn by the user: give it the ID the server will also use
         region.setOptions({ id: crypto.randomUUID() })
         validateRegion(region)
+        setRegionContent(region)
         onDraw(region.id, region.start, region.end)
       }),
       regions.on('region-clicked', (region, e) => {
+        handleSwitchRegion(region)
         onSelect(region.id)
+        if (selectedId != region.id) {
+          onChange(region.start, region.end)
+        }
         playRegion(region, e)
       }),
+
       // Tracks drags as they happen so a sync mid-drag doesn't snap the region back
       regions.on('region-update', (region) => {
+        handleSwitchRegion(region)
+
+        waveSurferInstance.current?.pause()
         if (!canEdit) return
         validateRegion(region)
+        if (selectedId != region.id) {
+          onChange(region.start, region.end)
+        }
+        onSelect(region.id)
         onMove(region.id, region.start, region.end)
       }),
-      regions.on('region-updated', (region) => onSelect(region.id)),
+      regions.on('region-updated', (region) => {
+        ;(onSelect(region.id), setRegionContent(region))
+      }),
     ]
 
     return () => unsubscribes.forEach((unsubscribe) => unsubscribe())
-  }, [regions, canEdit, onSelect, onDraw, onMove])
+  }, [regions, canEdit, onSelect, onDraw, onMove, onChange])
 
   // Make the waveform's regions match the annotations
   useEffect(() => {
@@ -184,6 +229,7 @@ export default function WaveformRender({
         color: highlightColour(annotation, currentUserId, spectro),
         drag: canEdit && editing,
         resize: canEdit && editing,
+        content: `${annotation.startTime.toFixed(2)} - ${annotation.endTime.toFixed(2)} `,
       }
 
       let region = existing.get(id)
@@ -220,12 +266,12 @@ export default function WaveformRender({
     const wave = waveSurferInstance.current
     if (!wave || !regions) return
     if (spectro) {
-      wave.setOptions({ height: 0 })
+      wave.setOptions({ height: 0, cursorColor: themeColor('--foreground-white') })
       if (!spectrogramInstance.current) {
         spectrogramInstance.current = wave.registerPlugin(Spectrogram.create())
       }
     } else {
-      wave.setOptions({ height: 200 })
+      wave.setOptions({ height: 200, cursorColor: themeColor('--foreground') })
       spectrogramInstance.current?.destroy()
       spectrogramInstance.current = null
     }
@@ -267,7 +313,10 @@ export default function WaveformRender({
   }
   return (
     <div className="space-y-4">
-      <div ref={waveformRef} className="w-full bg-secondary rounded-3xl shadow overflow-hidden" />
+      <div
+        ref={waveformRef}
+        className={`waveform-render ${spectro ? 'text-white' : 'text-gray-600'} w-full bg-secondary rounded-3xl shadow overflow-hidden`}
+      />
 
       <div className="flex items-center gap-3">
         <span id={playbarLabelId} className="sr-only">
@@ -292,14 +341,14 @@ export default function WaveformRender({
             render={
               <Button
                 size="icon"
-                aria-label={play ? 'Pause audio' : 'Play audio'}
+                aria-label={play ? 'Play audio' : 'Pause audio'}
                 onClick={playPause}
               />
             }
           >
-            {play ? <FiPause aria-hidden="true" /> : <FiPlay aria-hidden="true" />}
+            {play ? <FiPlay aria-hidden="true" /> : <FiPause aria-hidden="true" />}
           </TooltipTrigger>
-          <TooltipContent>{play ? 'Pause' : 'Play'}</TooltipContent>
+          <TooltipContent>{play ? 'Play' : 'Pause'}</TooltipContent>
         </Tooltip>
 
         <Popover>
