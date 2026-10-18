@@ -41,6 +41,7 @@ public static class DependencyInjection
         services.AddScoped<ICreateLabelGroupHandler, CreateLabelGroupHandler>();
         services.AddScoped<IDeleteLabelGroupHandler, DeleteLabelGroupHandler>();
         services.AddScoped<IGetAllLabelGroupsHandler, GetAllLabelGroupsHandler>();
+        services.AddScoped<IGetAllLabelsHandler, GetAllLabelsHandler>();
         services.AddScoped<ICreateLabelHandler, CreateLabelHandler>();
         services.AddScoped<IGetLabelsByGroupHandler, GetLabelsByGroupHandler>();
         services.AddScoped<IDeleteLabelHandler, DeleteLabelHandler>();

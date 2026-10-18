@@ -14,9 +14,20 @@ public class DeleteLabelHandler(ILabelService labelService, ILogger<DeleteLabelH
     {
         logger.LogInformation("Deleting label: {LabelId}", labelId);
 
-        var deleted = await labelService.DeleteAsync(labelId, cancellationToken);
-        return deleted
-            ? Result<LabelDto?>.Success(null, 204)
-            : Result<LabelDto?>.Failure("Not Found", "Label not found.", 404);
+        try
+        {
+            var deleted = await labelService.DeleteAsync(labelId, cancellationToken);
+            return deleted
+                ? Result<LabelDto?>.Success(null, 204)
+                : Result<LabelDto?>.Failure("Not Found", "Label not found.", 404);
+        }
+        catch (InvalidOperationException ex)
+        {
+            return Result<LabelDto?>.Failure(
+                "Forbidden",
+                ex.Message,
+                StatusCodes.Status403Forbidden
+            );
+        }
     }
 }

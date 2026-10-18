@@ -139,7 +139,7 @@ export function useAnnotations(audioId: string) {
     if (!annotation) return { ok: false, error: ANNOTATION_DELETED }
     if (!connection) return { ok: false, error: HUB_UNAVAILABLE }
 
-    const next = { ...annotation, tags, saved: true , changed: false}
+    const next = { ...annotation, tags, saved: true, changed: false }
     setAnnotations((current) => withAnnotation(current, next))
 
     const result = annotation.saved

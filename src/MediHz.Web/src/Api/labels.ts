@@ -8,6 +8,11 @@ export async function fetchLabelGroups() {
   return await apiFetch<LabelGroup[]>(`${LABELS_API_BASE}/groups`)
 }
 
+export async function fetchAllLabels() {
+  console.info('Fetching all labels')
+  return await apiFetch<Label[]>(`${LABELS_API_BASE}/all`)
+}
+
 export async function createLabelGroup(name: string) {
   console.info('Creating new label group:', name)
   return await apiFetchForm<LabelGroup>(`${LABELS_API_BASE}/groups`, { name })

@@ -10,7 +10,7 @@ import Grid from '../Components/Common/Grid'
 import PageHeader from '../Components/Common/PageHeader'
 import EmptyState from '../Components/Common/EmptyState'
 import { Button } from '../Components/Shadcn/button'
-import { LuPlus, LuTag, LuTags } from 'react-icons/lu'
+import { LuPlus, LuShieldCheck, LuTag, LuTags } from 'react-icons/lu'
 
 export default function LabelsPage() {
   const [labelGroups, setLabelGroups] = useState<LabelGroup[]>([])
@@ -67,17 +67,20 @@ export default function LabelsPage() {
             setIsGroupViewOpen(true)
           }}
         />
-        {labelGroups.map((group) => (
-          <ItemCard
-            key={group.id}
-            title={group.name}
-            icon={<LuTag />}
-            onClick={() => {
-              setSelectedGroupId(group.id)
-              setIsGroupViewOpen(true)
-            }}
-          />
-        ))}
+        {labelGroups.map((group) => {
+          const isPrePackaged = group.ownerId === null
+          return (
+            <ItemCard
+              key={group.id}
+              title={isPrePackaged ? `${group.name} (Pre-packaged)` : group.name}
+              icon={isPrePackaged ? <LuShieldCheck className="text-primary" /> : <LuTag />}
+              onClick={() => {
+                setSelectedGroupId(group.id)
+                setIsGroupViewOpen(true)
+              }}
+            />
+          )
+        })}
       </Grid>
       {!isLoading && labelGroups.length === 0 && (
         <EmptyState

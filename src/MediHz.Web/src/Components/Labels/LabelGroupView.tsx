@@ -58,6 +58,8 @@ export default function LabelGroupView({ groupId, groupName, allGroups, onGroupD
     else showApiError(result.error)
   }
 
+  const isPrePackaged = allGroups.find((g) => g.id === groupId)?.ownerId === null
+
   return (
     <>
       <DialogHeader>
@@ -83,7 +85,7 @@ export default function LabelGroupView({ groupId, groupName, allGroups, onGroupD
         </div>
       )}
       <CreateLabelForm groupId={groupId} labelGroups={allGroups} onSubmit={handleCreate} />
-      {groupId && (
+      {groupId && !isPrePackaged && (
         <DialogFooter>
           <Button variant="destructive" onClick={() => setIsConfirmOpen(true)}>
             Delete group

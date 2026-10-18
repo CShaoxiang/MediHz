@@ -3,10 +3,16 @@ import { useParams } from 'react-router-dom'
 import { getAudioFileUrl } from '../Api/audio'
 import { showApiError } from '../Api/helpers'
 import { fetchProject, fetchSingleAudio } from '../Api/projects'
+import type { ApiResult } from '../Types/api'
 import Annotations from '../Components/Annotations/Annotation'
 import AnnotationList from '../Components/Annotations/AnnotationList'
+import LabelPalette, {
+  ALL_GROUPS_ID,
+  UNASSIGNED_GROUP_ID,
+} from '../Components/Annotations/LabelPalette'
 import WaveformRender from '../Components/Waveform/WaveformRender'
 import { useAnnotations } from '../Hooks/useAnnotations'
+import { useLabels } from '../Hooks/useLabels'
 import { useAuth } from '../Auth/AuthContext'
 import PageHeader from '../Components/Common/PageHeader'
 import EmptyState from '../Components/Common/EmptyState'
@@ -34,9 +40,21 @@ export default function AnnotationPage() {
 function AnnotationWorkspace({ projectId, audioId }: PageParams) {
   const { annotations, addAnnotation, moveAnnotation, saveTags, removeAnnotation } =
     useAnnotations(audioId)
+  const { labels, labelsByGroup, prePackagedGroups } = useLabels()
   const { user } = useAuth()
   const [selectedId, setSelectedId] = useState<string | null>(null)
-  const [selectedTimestamp, setSelectedTimestamp] = useState<{start: number, end: number}|null>(null)
+  const [selectedTimestamp, setSelectedTimestamp] = useState<{
+    start: number
+    end: number
+  } | null>(null)
+  const [draftTags, setDraftTags] = useState<Set<string> | null>(null)
+  const [activeGroupId, setActiveGroupId] = useState<string>(() => {
+    try {
+      return localStorage.getItem('medihz:activeLabelGroup') || ALL_GROUPS_ID
+    } catch {
+      return ALL_GROUPS_ID
+    }
+  })
   const [loaded, setLoaded] = useState<{
     url: string
     name: string
@@ -78,29 +96,123 @@ function AnnotationWorkspace({ projectId, audioId }: PageParams) {
     }
   }, [projectId, audioId])
 
+  const hasStoredGroup = () => {
+    try {
+      return !!localStorage.getItem('medihz:activeLabelGroup')
+    } catch {
+      return false
+    }
+  }
+
+  const effectiveActiveGroupId =
+    activeGroupId === ALL_GROUPS_ID && prePackagedGroups.length > 0 && !hasStoredGroup()
+      ? prePackagedGroups[0].id
+      : activeGroupId
+
+  const handleActiveGroupChange = (groupId: string) => {
+    setActiveGroupId(groupId)
+    try {
+      localStorage.setItem('medihz:activeLabelGroup', groupId)
+    } catch {
+      // Ignore localStorage availability issues
+    }
+  }
+
+  const handleSelectRegion = (id: string) => {
+    setSelectedId(id)
+    setDraftTags(null)
+    const target = annotations.get(id)
+    if (target) {
+      setSelectedTimestamp({ start: target.startTime, end: target.endTime })
+    }
+  }
+
   const handleDraw = useCallback(
     (id: string, startTime: number, endTime: number) => {
       if (!loaded?.canEdit) return
       addAnnotation(id, startTime, endTime)
       setSelectedId(id)
-      setSelectedTimestamp({start: startTime, end: endTime})
+      setSelectedTimestamp({ start: startTime, end: endTime })
+      setDraftTags(null)
     },
     [addAnnotation, loaded?.canEdit],
   )
 
-  const handleSwitch = (startTime: number, endTime: number) =>{
-    setSelectedTimestamp({start: startTime, end: endTime})
+  const handleSwitch = (startTime: number, endTime: number) => {
+    setSelectedTimestamp({ start: startTime, end: endTime })
   }
 
   const handleDelete = async (id: string) => {
     if (!loaded?.canEdit) return
     setSelectedId(null)
     setSelectedTimestamp(null)
+    setDraftTags(null)
     const result = await removeAnnotation(id)
     if (!result.ok) showApiError(result.error)
   }
 
   const selected = selectedId ? annotations.get(selectedId) : undefined
+
+  const handleToggleTag = useCallback(
+    (tagName: string) => {
+      if (!selected || !loaded?.canEdit) return
+      const current = new Set(draftTags ?? selected.tags)
+      if (current.has(tagName)) {
+        current.delete(tagName)
+      } else {
+        current.add(tagName)
+      }
+      setDraftTags(current)
+    },
+    [selected, draftTags, loaded?.canEdit],
+  )
+
+  // Hotkeys 1-9 for rapid tagging
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (!selected || !loaded?.canEdit) return
+      const target = e.target as HTMLElement | null
+      if (
+        target?.tagName === 'INPUT' ||
+        target?.tagName === 'TEXTAREA' ||
+        target?.isContentEditable
+      ) {
+        return
+      }
+
+      const num = parseInt(e.key, 10)
+      if (num >= 1 && num <= 9) {
+        const groupLabels =
+          effectiveActiveGroupId === ALL_GROUPS_ID
+            ? labels
+            : effectiveActiveGroupId === UNASSIGNED_GROUP_ID
+              ? (labelsByGroup.get(null) ?? [])
+              : (labelsByGroup.get(effectiveActiveGroupId) ?? [])
+
+        const targetLabel = groupLabels[num - 1]
+        if (targetLabel) {
+          e.preventDefault()
+          handleToggleTag(targetLabel.name)
+        }
+      }
+    }
+
+    window.addEventListener('keydown', handleKeyDown)
+    return () => window.removeEventListener('keydown', handleKeyDown)
+  }, [selected, loaded?.canEdit, effectiveActiveGroupId, labels, labelsByGroup, handleToggleTag])
+
+  const handleSaveTags = async (tags: Set<string>): Promise<ApiResult<null>> => {
+    if (!selected)
+      return {
+        ok: false as const,
+        error: { title: 'No region', detail: 'No region selected', status: 400 },
+      }
+    const result = await saveTags(selected.id, tags)
+    if (result.ok) {
+      setDraftTags(null)
+    }
+    return result
+  }
 
   if (error) {
     return <EmptyState icon={<LuCircleAlert />} title="Audio unavailable" description={error} />
@@ -130,21 +242,31 @@ function AnnotationWorkspace({ projectId, audioId }: PageParams) {
         selectedId={selectedId}
         selectedTimestamp={selectedTimestamp}
         canEdit={loaded.canEdit}
-        onSelect={setSelectedId}
+        onSelect={handleSelectRegion}
         onChange={handleSwitch}
         onDraw={handleDraw}
         onMove={moveAnnotation}
         onDelete={handleDelete}
       />
-      <div className="grid items-start gap-6 lg:min-h-48 lg:flex-1 lg:grid-cols-2 lg:grid-rows-1">
+      <div className="grid items-start gap-6 lg:min-h-48 lg:flex-1 lg:grid-cols-3 lg:grid-rows-1">
+        <LabelPalette
+          activeGroupId={effectiveActiveGroupId}
+          onActiveGroupChange={handleActiveGroupChange}
+          selectedTags={selected ? (draftTags ?? selected.tags) : undefined}
+          onToggleTag={handleToggleTag}
+          canEdit={loaded.canEdit}
+          hasSelection={!!selected}
+        />
         {selected ? (
           <Annotations
             key={selected.id}
             annotation={selected}
             selectedTimestamp={selectedTimestamp}
+            draftTags={draftTags}
+            onDraftTagsChange={setDraftTags}
             canEdit={loaded.canEdit}
             onChange={handleSwitch}
-            onSave={(tags) => saveTags(selected.id, tags)}
+            onSave={handleSaveTags}
           />
         ) : (
           <EmptyState
@@ -160,7 +282,7 @@ function AnnotationWorkspace({ projectId, audioId }: PageParams) {
         <AnnotationList
           annotations={annotations}
           selectedId={selectedId}
-          onSelect={setSelectedId}
+          onSelect={handleSelectRegion}
         />
       </div>
     </div>

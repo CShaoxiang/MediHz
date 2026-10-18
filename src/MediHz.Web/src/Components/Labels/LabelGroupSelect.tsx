@@ -12,6 +12,7 @@ interface IProps {
   id?: string
   'aria-label'?: string
   className?: string
+  disabled?: boolean
   groups: LabelGroup[]
   value: string | null
   onValueChange: (groupId: string | null) => void
@@ -22,6 +23,7 @@ export default function LabelGroupSelect({
   value,
   onValueChange,
   className,
+  disabled,
   ...triggerProps
 }: IProps) {
   const items = [
@@ -30,8 +32,8 @@ export default function LabelGroupSelect({
   ]
 
   return (
-    <Select items={items} value={value} onValueChange={onValueChange}>
-      <SelectTrigger className={className} {...triggerProps}>
+    <Select items={items} value={value} onValueChange={onValueChange} disabled={disabled}>
+      <SelectTrigger className={className} disabled={disabled} {...triggerProps}>
         <SelectValue />
       </SelectTrigger>
       <SelectContent>

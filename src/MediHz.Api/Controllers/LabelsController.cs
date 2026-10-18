@@ -13,6 +13,7 @@ public class LabelsController(
     ICreateLabelGroupHandler createLabelGroupHandler,
     IDeleteLabelGroupHandler deleteLabelGroupHandler,
     IGetLabelsByGroupHandler getLabelsByGroupHandler,
+    IGetAllLabelsHandler getAllLabelsHandler,
     ICreateLabelHandler createLabelHandler,
     IDeleteLabelHandler deleteLabelHandler,
     IAssignLabelToGroupHandler assignLabelToGroupHandler
@@ -23,6 +24,14 @@ public class LabelsController(
     public async Task<IActionResult> GetAllLabelGroups(CancellationToken cancellationToken)
     {
         var response = await getAllLabelGroupsHandler.Handle(new(), cancellationToken);
+        return StatusCode(response.StatusCode, response.Body);
+    }
+
+    [HttpGet("all")]
+    [ProducesResponseType(typeof(IEnumerable<LabelDto>), StatusCodes.Status200OK)]
+    public async Task<IActionResult> GetAllLabels(CancellationToken cancellationToken)
+    {
+        var response = await getAllLabelsHandler.Handle(new(), cancellationToken);
         return StatusCode(response.StatusCode, response.Body);
     }
 

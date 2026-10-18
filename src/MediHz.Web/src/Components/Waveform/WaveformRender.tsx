@@ -206,7 +206,8 @@ export default function WaveformRender({
         onMove(region.id, region.start, region.end)
       }),
       regions.on('region-updated', (region) => {
-        ;(onSelect(region.id), setRegionContent(region))
+        onSelect(region.id)
+        setRegionContent(region)
       }),
     ]
 
