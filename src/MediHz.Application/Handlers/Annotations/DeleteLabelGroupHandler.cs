@@ -19,9 +19,20 @@ public class DeleteLabelGroupHandler(
     {
         logger.LogInformation("Deleting label group: {LabelGroupId}", labelGroupId);
 
-        var deleted = await labelGroupService.DeleteAsync(labelGroupId, cancellationToken);
-        return deleted
-            ? Result<LabelGroupDto?>.Success(null, 204)
-            : Result<LabelGroupDto?>.Failure("Not Found", "Label group not found.", 404);
+        try
+        {
+            var deleted = await labelGroupService.DeleteAsync(labelGroupId, cancellationToken);
+            return deleted
+                ? Result<LabelGroupDto?>.Success(null, 204)
+                : Result<LabelGroupDto?>.Failure("Not Found", "Label group not found.", 404);
+        }
+        catch (InvalidOperationException ex)
+        {
+            return Result<LabelGroupDto?>.Failure(
+                "Forbidden",
+                ex.Message,
+                StatusCodes.Status403Forbidden
+            );
+        }
     }
 }

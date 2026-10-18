@@ -53,4 +53,22 @@ public class DeleteLabelHandlerTests : UnitTestBase
         result.Problem.Should().NotBeNull();
         result.Problem.Title.Should().Be("Not Found");
     }
+
+    [Fact]
+    public async Task Handle_ShouldReturnForbidden_WhenLabelIsPrePackaged()
+    {
+        // Arrange
+        var labelId = Guid.NewGuid();
+        _labelServiceMock
+            .Setup(s => s.DeleteAsync(labelId, CancellationToken.None))
+            .ThrowsAsync(new InvalidOperationException("Cannot delete pre-packaged labels."));
+
+        // Act
+        var result = await _handler.Handle(labelId, CancellationToken.None);
+
+        // Assert
+        result.StatusCode.Should().Be(StatusCodes.Status403Forbidden);
+        result.Problem.Should().NotBeNull();
+        result.Problem.Title.Should().Be("Forbidden");
+    }
 }

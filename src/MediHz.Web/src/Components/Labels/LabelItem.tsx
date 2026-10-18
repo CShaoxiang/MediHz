@@ -1,9 +1,11 @@
 import { Button } from '../Shadcn/button'
+import { Badge } from '../Shadcn/badge'
 import LabelGroupSelect from './LabelGroupSelect'
 import { Card, CardContent, CardHeader, CardTitle } from '../Shadcn/card'
 import type { Label, LabelGroup } from '../../Types/labels'
 import { deleteLabel, moveLabelToGroup } from '../../Api/labels'
 import { showApiError } from '../../Api/helpers'
+import { LuShieldCheck } from 'react-icons/lu'
 
 interface IProps {
   label: Label
@@ -13,6 +15,8 @@ interface IProps {
 }
 
 export default function LabelItem({ label, allGroups, onDelete, onMove }: IProps) {
+  const isPrePackaged = label.ownerId === null
+
   const handleDelete = async () => {
     const result = await deleteLabel(label.id)
     if (result.ok) onDelete(label.id)
@@ -28,8 +32,14 @@ export default function LabelItem({ label, allGroups, onDelete, onMove }: IProps
 
   return (
     <Card size="sm">
-      <CardHeader>
+      <CardHeader className="flex flex-row items-center justify-between">
         <CardTitle className="break-words">{label.name}</CardTitle>
+        {isPrePackaged && (
+          <Badge variant="outline" className="flex items-center gap-1 text-xs">
+            <LuShieldCheck className="size-3 text-primary" />
+            Pre-packaged
+          </Badge>
+        )}
       </CardHeader>
       <CardContent className="flex items-center gap-2">
         <LabelGroupSelect
@@ -38,10 +48,13 @@ export default function LabelItem({ label, allGroups, onDelete, onMove }: IProps
           groups={allGroups}
           value={label.labelGroupId}
           onValueChange={handleMove}
+          disabled={isPrePackaged}
         />
-        <Button variant="destructive" onClick={handleDelete}>
-          Delete
-        </Button>
+        {!isPrePackaged && (
+          <Button variant="destructive" onClick={handleDelete}>
+            Delete
+          </Button>
+        )}
       </CardContent>
     </Card>
   )

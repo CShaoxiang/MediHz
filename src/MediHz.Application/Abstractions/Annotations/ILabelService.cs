@@ -9,6 +9,8 @@ public interface ILabelService
         CancellationToken cancellationToken = default
     );
 
+    Task<IReadOnlyList<LabelDto>> GetAllAsync(CancellationToken cancellationToken = default);
+
     Task<LabelDto> CreateAsync(
         Guid ownerId,
         CreateLabelRequest request,

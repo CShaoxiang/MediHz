@@ -19,20 +19,30 @@ import { Spinner } from '../Shadcn/spinner'
 interface AnnotationProp {
   annotation: AnnotationRegion
   selectedTimestamp: { start: number; end: number } | null
-  
   canEdit: boolean
+  draftTags?: Set<string> | null
+  onDraftTagsChange?: (tags: Set<string> | null) => void
   onChange: (startTime: number, endTime: number) => void
   onSave: (tags: Set<string>) => Promise<ApiResult<null>>
 }
 
-export default function Annotations({ annotation,selectedTimestamp, canEdit, onChange, onSave }: AnnotationProp) {
+export default function Annotations({
+  annotation,
+  selectedTimestamp,
+  canEdit,
+  draftTags: externalDraftTags,
+  onDraftTagsChange,
+  onChange,
+  onSave,
+}: AnnotationProp) {
   const [customTag, setCustomTag] = useState('')
-  const [draftTags, setDraftTags] = useState<Set<string> | null>(null)
+  const [internalDraftTags, setInternalDraftTags] = useState<Set<string> | null>(null)
   const [saving, setSaving] = useState(false)
   const [error, setError] = useState('')
-  const tags = draftTags ?? annotation.tags
 
-  const [timestamp, setTimestamp] = useState<{start: number, end: number}>({start: annotation.startTime, end: annotation.endTime})
+  const draftTags = externalDraftTags !== undefined ? externalDraftTags : internalDraftTags
+  const setDraftTags = onDraftTagsChange ?? setInternalDraftTags
+  const tags = draftTags ?? annotation.tags
 
   const editTags = (edit: (tags: Set<string>) => void) => {
     if (!canEdit) return
@@ -42,7 +52,9 @@ export default function Annotations({ annotation,selectedTimestamp, canEdit, onC
     setError('')
   }
 
-  const changeinTimestamp = !(selectedTimestamp?.start == annotation.startTime && selectedTimestamp.end == annotation.endTime)
+  const changeinTimestamp = !(
+    selectedTimestamp?.start == annotation.startTime && selectedTimestamp.end == annotation.endTime
+  )
 
   const addCustomTag = (event: FormEvent) => {
     event.preventDefault()
@@ -135,7 +147,9 @@ export default function Annotations({ annotation,selectedTimestamp, canEdit, onC
       </CardContent>
       {canEdit && (
         <CardFooter className="justify-end gap-4">
-          {(!annotation.saved||changeinTimestamp || draftTags) && <span className="text-muted-foreground">Unsaved</span>}
+          {(!annotation.saved || changeinTimestamp || draftTags) && (
+            <span className="text-muted-foreground">Unsaved</span>
+          )}
           <Button disabled={saving} onClick={handleSave}>
             {saving && <Spinner data-icon="inline-start" />}
             {saving ? 'Saving' : 'Save'}
@@ -143,5 +157,5 @@ export default function Annotations({ annotation,selectedTimestamp, canEdit, onC
         </CardFooter>
       )}
     </Card>
-    )
+  )
 }

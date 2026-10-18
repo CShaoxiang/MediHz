@@ -56,6 +56,9 @@ public class LabelGroupService(MediHzDbContext dbContext) : ILabelGroupService
         if (labelGroup == null)
             return false;
 
+        if (labelGroup.OwnerId == null)
+            throw new InvalidOperationException("Cannot delete pre-packaged label groups.");
+
         dbContext.LabelGroups.Remove(labelGroup);
         await dbContext.SaveChangesAsync(cancellationToken);
         return true;

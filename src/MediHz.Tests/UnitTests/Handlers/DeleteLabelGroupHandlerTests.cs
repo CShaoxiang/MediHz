@@ -53,4 +53,22 @@ public class DeleteLabelGroupHandlerTests : UnitTestBase
         result.Problem.Should().NotBeNull();
         result.Problem.Title.Should().Be("Not Found");
     }
+
+    [Fact]
+    public async Task Handle_ShouldReturnForbidden_WhenLabelGroupIsPrePackaged()
+    {
+        // Arrange
+        var labelGroupId = Guid.NewGuid();
+        _labelGroupServiceMock
+            .Setup(s => s.DeleteAsync(labelGroupId, CancellationToken.None))
+            .ThrowsAsync(new InvalidOperationException("Cannot delete pre-packaged label groups."));
+
+        // Act
+        var result = await _handler.Handle(labelGroupId, CancellationToken.None);
+
+        // Assert
+        result.StatusCode.Should().Be(StatusCodes.Status403Forbidden);
+        result.Problem.Should().NotBeNull();
+        result.Problem.Title.Should().Be("Forbidden");
+    }
 }

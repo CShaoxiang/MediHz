@@ -18,6 +18,21 @@ public class LabelService(MediHzDbContext dbContext) : ILabelService
             .ToListAsync(cancellationToken);
     }
 
+    public async Task<IReadOnlyList<LabelDto>> GetAllAsync(
+        CancellationToken cancellationToken = default
+    )
+    {
+        return await dbContext
+            .Labels.Select(l => new LabelDto(
+                l.Id,
+                l.Name,
+                l.LabelGroupId,
+                l.OwnerId,
+                l.CreatedAtUtc
+            ))
+            .ToListAsync(cancellationToken);
+    }
+
     public async Task<LabelDto> CreateAsync(
         Guid ownerId,
         CreateLabelRequest request,
@@ -58,6 +73,9 @@ public class LabelService(MediHzDbContext dbContext) : ILabelService
         var label = await dbContext.Labels.FindAsync([labelId], cancellationToken);
         if (label == null)
             return false;
+
+        if (label.OwnerId == null)
+            throw new InvalidOperationException("Cannot delete pre-packaged labels.");
 
         dbContext.Labels.Remove(label);
         await dbContext.SaveChangesAsync(cancellationToken);

@@ -36,11 +36,14 @@ public class AnnotationService(MediHzDbContext dbContext) : IAnnotationService
             throw new ArgumentException("Annotations must be at least 0.1 seconds long.");
 
         var labels = new List<Domain.Annotations.Label>();
-        foreach (var labelName in request.LabelNames)
-        {
-            if (string.IsNullOrWhiteSpace(labelName))
-                continue;
+        var distinctNames = request
+            .LabelNames.Where(n => !string.IsNullOrWhiteSpace(n))
+            .Select(n => n.Trim())
+            .Distinct(StringComparer.OrdinalIgnoreCase)
+            .ToList();
 
+        foreach (var labelName in distinctNames)
+        {
             var label = await dbContext.Labels.FirstOrDefaultAsync(
                 l => l.Name == labelName,
                 cancellationToken
@@ -166,11 +169,14 @@ public class AnnotationService(MediHzDbContext dbContext) : IAnnotationService
         annotation.UpdatedAtUtc = DateTime.UtcNow;
 
         annotation.Labels.Clear();
-        foreach (var labelName in request.LabelNames)
-        {
-            if (string.IsNullOrWhiteSpace(labelName))
-                continue;
+        var distinctNames = request
+            .LabelNames.Where(n => !string.IsNullOrWhiteSpace(n))
+            .Select(n => n.Trim())
+            .Distinct(StringComparer.OrdinalIgnoreCase)
+            .ToList();
 
+        foreach (var labelName in distinctNames)
+        {
             var label = await dbContext.Labels.FirstOrDefaultAsync(
                 l => l.Name == labelName,
                 cancellationToken
