@@ -9,6 +9,10 @@ export function fetchProject(projectId: string) {
   return apiFetch<Project>(`${PROJECTS_API_BASE}/${projectId}`)
 }
 
+export function fetchProjectMembers(projectId: string) {
+  return apiFetch<ProjectMember[]>(`${PROJECTS_API_BASE}/${projectId}/members`)
+}
+
 export function addProjectMember(projectId: string, email: string, role: AddMemberRole) {
   return apiFetch<ProjectMember>(
     `${PROJECTS_API_BASE}/${projectId}/members`,

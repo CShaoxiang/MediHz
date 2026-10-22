@@ -9,6 +9,8 @@ public static class HubRegistration
     public static IEndpointRouteBuilder MapHubs(this IEndpointRouteBuilder endpoints)
     {
         endpoints.MapHub<AudioHub>($"{Prefix}/audio");
+        endpoints.MapHub<ProjectPresenceHub>($"{Prefix}/presence", options =>
+            options.CloseOnAuthenticationExpiration = true);
         return endpoints;
     }
 }

@@ -67,9 +67,9 @@ const AudioUploader = ({ projectId, onUploadFiles }: IProps) => {
       ) : isDragReject ? (
         <p className="text-destructive">Unsupported file format. Please upload MP3 or WAV files.</p>
       ) : isDragActive ? (
-        <p>Drop your audio files here...</p>
+        <p>Drop up to 5 MP3 or WAV files here...</p>
       ) : (
-        <p>Drag and drop some MP3 or WAV files here, or click to select</p>
+        <p>Drag and drop MP3 or WAV files here, or click to select. Maximum 5 files per batch.</p>
       )}
     </Card>
   )

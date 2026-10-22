@@ -191,7 +191,7 @@ public class ProjectService(MediHzDbContext dbContext) : IProjectService
         CancellationToken cancellationToken = default
     )
     {
-        return await dbContext
+        var members = await dbContext
             .ProjectMembers.Where(m => m.ProjectId == projectId)
             .Select(m => new ProjectMemberDto(
                 m.ProjectId,
@@ -202,6 +202,17 @@ public class ProjectService(MediHzDbContext dbContext) : IProjectService
                 m.JoinedAt
             ))
             .ToListAsync(cancellationToken);
+        // Owners have access through Projects.OwnerId and may not have a membership row.
+        var owner = await dbContext.Projects.Where(p => p.Id == projectId)
+            .Select(p => new ProjectMemberDto(p.Id, p.OwnerId, p.Owner.Email,
+                p.Owner.DisplayName, ProjectMemberRole.Owner, p.CreatedAtUtc))
+            .SingleOrDefaultAsync(cancellationToken);
+        if (owner is not null)
+        {
+            members.RemoveAll(m => m.UserId == owner.UserId);
+            members.Insert(0, owner);
+        }
+        return members;
     }
 
     public async Task<bool> RemoveMemberAsync(

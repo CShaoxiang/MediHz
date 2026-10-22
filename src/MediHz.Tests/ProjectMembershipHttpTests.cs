@@ -6,6 +6,7 @@ using System.Security.Claims;
 using System.Text;
 using System.Text.Json;
 using MediHz.Api.Controllers;
+using MediHz.Api.Hubs;
 using MediHz.Application;
 using MediHz.Application.Abstractions.Annotations;
 using MediHz.Application.Abstractions.AudioFiles;
@@ -43,6 +44,8 @@ public class ProjectMembershipHttpTests
         builder.Logging.ClearProviders();
         builder.WebHost.UseUrls("http://127.0.0.1:0");
         builder.Services.AddControllers().AddApplicationPart(typeof(ProjectsController).Assembly);
+        builder.Services.AddSignalR();
+        builder.Services.AddSingleton<ProjectPresenceTracker>();
         builder.Services.AddApplication(builder.Configuration);
         var database = Guid.NewGuid().ToString();
         builder.Services.AddDbContext<MediHzDbContext>(options =>
@@ -81,6 +84,7 @@ public class ProjectMembershipHttpTests
         app.UseAuthentication();
         app.UseAuthorization();
         app.MapControllers();
+        app.MapHub<ProjectPresenceHub>("/hubs/presence");
 
         var owner = new User
         {
@@ -137,6 +141,11 @@ public class ProjectMembershipHttpTests
         );
         Assert.Empty((await memberClient.GetFromJsonAsync<ProjectDto[]>("/api/Projects/all"))!);
         Assert.Equal(HttpStatusCode.NotFound, (await memberClient.GetAsync(url)).StatusCode);
+        Assert.Equal(HttpStatusCode.Unauthorized, (await anonymous.GetAsync(url + "/members")).StatusCode);
+        Assert.Equal(HttpStatusCode.NotFound, (await memberClient.GetAsync(url + "/members")).StatusCode);
+        var initialMembers = (await ownerClient.GetFromJsonAsync<ProjectMemberDto[]>(url + "/members"))!;
+        Assert.Equal(owner.Id, Assert.Single(initialMembers).UserId);
+        Assert.Equal(ProjectMemberRole.Owner, initialMembers[0].Role);
         Assert.Equal(
             HttpStatusCode.NotFound,
             (await memberClient.GetAsync(url + "/files")).StatusCode
@@ -217,6 +226,30 @@ public class ProjectMembershipHttpTests
                 .Id
         );
         Assert.Equal(role, (await memberClient.GetFromJsonAsync<ProjectDto>(url))!.Role.ToString());
+        var projectMembers = (await memberClient.GetFromJsonAsync<ProjectMemberDto[]>(url + "/members"))!;
+        Assert.Equal(2, projectMembers.Length);
+        Assert.Contains(projectMembers, m => m.UserId == owner.Id && m.Role == ProjectMemberRole.Owner);
+        Assert.Contains(projectMembers, m => m.UserId == member.Id && m.Role.ToString() == role);
+        // Exercise real authenticated WebSockets: two tabs count once, and disconnects broadcast.
+        using (var ownerTab = new PresenceTestClient())
+        using (var ownerSecondTab = new PresenceTestClient())
+        using (var memberTab = new PresenceTestClient())
+        {
+            var hubUri = new UriBuilder(ownerClient.BaseAddress!)
+            {
+                Scheme = "ws", Path = "/hubs/presence", Query = $"projectId={project.Id}",
+            }.Uri;
+            await ownerTab.ConnectAsync(hubUri, Token(owner.Id));
+            await ownerTab.ExpectOnlineAsync(owner.Id);
+            await ownerSecondTab.ConnectAsync(hubUri, Token(owner.Id));
+            await ownerSecondTab.ExpectOnlineAsync(owner.Id);
+            await memberTab.ConnectAsync(hubUri, Token(member.Id));
+            await memberTab.ExpectOnlineAsync(owner.Id, member.Id);
+            ownerTab.Dispose();
+            await ownerSecondTab.ExpectOnlineAsync(owner.Id, member.Id);
+            ownerSecondTab.Dispose();
+            await memberTab.ExpectOnlineAsync(member.Id);
+        }
         Assert.Equal(HttpStatusCode.OK, (await memberClient.GetAsync(url + "/files")).StatusCode);
         Assert.Equal(
             HttpStatusCode.Forbidden,

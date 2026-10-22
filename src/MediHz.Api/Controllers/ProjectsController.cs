@@ -1,4 +1,5 @@
 using MediHz.Application.DTOs.AudioFiles;
+using MediHz.Application.Abstractions.Projects;
 using MediHz.Application.DTOs.Projects;
 using MediHz.Application.Handlers.Projects;
 using Microsoft.AspNetCore.Authorization;
@@ -16,6 +17,8 @@ public class ProjectsController(
     IGetProjectSingleAudioHandler getProjectSingleAudio,
     IPatchProjectHandler projectPatchHandler,
     IAddProjectMemberHandler addProjectMemberHandler,
+    IProjectService projects,
+    IProjectAccessService access,
     IDeleteProjectHandler projectDeleteHandler
 ) : ControllerBase
 {
@@ -95,6 +98,16 @@ public class ProjectsController(
     {
         var response = await getProjectsHandler.GetByIdAsync(projectId, cancellationToken);
         return StatusCode(response.StatusCode, response.Body);
+    }
+
+    [HttpGet("{projectId:guid}/members")]
+    [ProducesResponseType(typeof(IReadOnlyList<ProjectMemberDto>), StatusCodes.Status200OK)]
+    public async Task<IActionResult> GetMembers(Guid projectId, CancellationToken cancellationToken)
+    {
+        var denied = await access.CheckProjectAsync(projectId, ProjectPermission.Read, cancellationToken);
+        if (denied is not null)
+            return StatusCode(denied.Status ?? 403, denied);
+        return Ok(await projects.GetMembersAsync(projectId, cancellationToken));
     }
 
     [HttpPost("{projectId:guid}/members")]
