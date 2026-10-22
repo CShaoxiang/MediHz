@@ -18,6 +18,7 @@ import PageHeader from '../Components/Common/PageHeader'
 import EmptyState from '../Components/Common/EmptyState'
 import { Badge } from '../Components/Shadcn/badge'
 import { LuCircleAlert, LuMousePointerClick } from 'react-icons/lu'
+import MemberPresence from '../Components/Projects/MemberPresence'
 
 type PageParams = { projectId: string; audioId: string }
 
@@ -233,7 +234,12 @@ function AnnotationWorkspace({ projectId, audioId }: PageParams) {
           { label: loaded.projectName, to: `/projects/${projectId}` },
         ]}
         title={loaded.name}
-        actions={!loaded.canEdit && <Badge variant="secondary">Read only</Badge>}
+        actions={
+          <div className="flex flex-wrap items-center gap-4">
+            <MemberPresence projectId={projectId} />
+            {!loaded.canEdit && <Badge variant="secondary">Read only</Badge>}
+          </div>
+        }
       />
       <WaveformRender
         audio={loaded.url}

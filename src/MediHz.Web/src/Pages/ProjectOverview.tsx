@@ -19,6 +19,7 @@ import { deleteAudioFile, renameAudioFile } from '../Api/audio'
 import { exportFile } from '../Api/exports'
 import { downloadJsonFile } from '../Utilities/download'
 import ConfirmDeleteDialog from '../Components/Common/ConfirmDeleteDialog'
+import MemberPresence from '../Components/Projects/MemberPresence'
 
 type PageParams = {
   projectId: string
@@ -143,11 +144,14 @@ export default function ProjectOverviewPage() {
         breadcrumbs={[{ label: 'Projects', to: '/projects' }]}
         title={project.name}
         actions={
-          project.role === 'Owner' ? (
-            <AddProjectMemberForm key={project.id} projectId={project.id} />
-          ) : (
-            !canWrite && <Badge variant="secondary">Read only</Badge>
-          )
+          <div className="flex flex-wrap items-center gap-4">
+            <MemberPresence projectId={project.id} />
+            {project.role === 'Owner' ? (
+              <AddProjectMemberForm key={project.id} projectId={project.id} />
+            ) : (
+              !canWrite && <Badge variant="secondary">Read only</Badge>
+            )}
+          </div>
         }
       />
       {canWrite && <AudioUploader projectId={project.id} onUploadFiles={onUploadFiles} />}

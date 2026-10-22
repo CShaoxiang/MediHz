@@ -60,6 +60,7 @@ export default function AddProjectMemberForm({ projectId }: { projectId: string 
     try {
       const result = await addProjectMember(projectId, email.trim(), role)
       if (result.ok) {
+        window.dispatchEvent(new Event('project-members-changed'))
         toast.success(`${result.value.email} now has ${result.value.role} access.`)
         setEmail('')
         setAdded(true)

@@ -12,6 +12,7 @@ var builder = WebApplication.CreateBuilder(args);
 // Add services to the container.
 builder.Services.AddControllers();
 builder.Services.AddSignalR();
+builder.Services.AddSingleton<MediHz.Api.Hubs.ProjectPresenceTracker>();
 builder.Services.AddHealthChecks();
 builder.Services.AddOpenApi();
 builder.Services.AddApplication(builder.Configuration);
